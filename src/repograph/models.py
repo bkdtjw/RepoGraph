@@ -115,6 +115,10 @@ class ImportFacts:
     # from a.b import f as g → {"g": ("a.b", "f")}；相对导入需已解析为绝对点分名
     external_imports: list[str] = field(default_factory=list)
     # 解析后不在仓库内的目标（点分名），只记属性不建边
+    module_imports: list[str] = field(default_factory=list)
+    # 整体模块导入的完整点分名：import a.b [as c] → "a.b"。
+    # import_map 对无 as 形态只保留顶层名 a（namespace 绑定语义，callgraph 依赖），
+    # 会把子模块依赖误并到包根；本字段保留完整 a.b，供 build 建 IMPORTS 边时解析真实子模块依赖。
 
 
 @dataclass

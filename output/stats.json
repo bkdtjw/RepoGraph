@@ -1,0 +1,33 @@
+{
+ "nodes": {
+  "Module": 22,
+  "Class": 15,
+  "Function": 259,
+  "Commit": 75,
+  "Concept": 139
+ },
+ "edges": {
+  "CONTAINS": 274,
+  "IMPORTS": 45,
+  "CALLS": 352,
+  "MODIFIES": 533,
+  "DESCRIBES": 104,
+  "IMPLEMENTS": 390
+ },
+ "total_nodes": 510,
+ "total_edges": 1698,
+ "call_resolved_rate": 0.2547,
+ "call_resolved": 463,
+ "call_unresolved": 1355,
+ "modifies_coverage": 0.8269,
+ "dangling_modifies": 833,
+ "parse_skips": {
+  "worktree": 0,
+  "blob": 0
+ },
+ "blob_cache_hit_rate": 0.459,
+ "semantic_extracted": 144,
+ "extraction_reject_by_reason": {
+  "bad_target": 1
+ }
+}
