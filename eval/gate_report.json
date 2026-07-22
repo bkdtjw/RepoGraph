@@ -2,8 +2,10 @@
   "meta": {
     "phase": "A (治理与再基线) · 任务 A4 门禁基线",
     "git": {
-      "head": "6d7ce9a5d9c6e75c5652ecd759cfb5f02392c294",
-      "tags_at_head": [],
+      "head": "5b52bb9bfb808f4826faa7906cf1e7297589d47f",
+      "tags_at_head": [
+        "phase-c-20260722"
+      ],
       "expected_tag": "rebaseline-20260723",
       "tag_bound": false
     },

@@ -1,0 +1,239 @@
+禁止使用任何工具、禁止读文件，只依据下方内嵌代码直接作答。
+你是资深 Python/JS 代码审查员，审查 RepoGraph v0.3 Phase C 新增/改动代码。
+只按四个维度找**真实缺陷**，逐条给：文件:行号 + 一句问题 + 触发场景/输入 + 修法。
+没有缺陷就明说“未发现缺陷”。不要复述代码、不要风格建议、不要臆测未给出的代码。
+四维度：
+ 1) 正确性：边界条件、异常吞掉后状态、并发（若涉及锁）、off-by-one、类型误判；
+ 2) 契约一致：是否与下方【契约摘录】逐字段吻合（字段名/取值域/优先级/阈值）；
+ 3) 假数据：任何写死的统计数字/标注/伪造的模型输出/占位真值（本项目铁律：无假数据）；
+ 4) 密钥处理：鉴权 token 是否只入请求头、绝不打印/写文件/入异常消息（提及应为 sk-****）。
+
+【被审文件】代码库知识图谱/src/repograph/retrieve/context.py  行段 243-462
+
+【契约 spec §5.1 schema v2 + §4.3 瀑布】build_repo_context 单出口挂 schema v2 纯增字段(v1兼容)：route_label(五分类,§6.2判定基准)、route_source(rule:<id>|fallback:default)、premise_flags、needs_disambiguation、candidates、resolved_query。stats 恒含 {symbols,topics,impact_callers,commits,concepts}。meta/global/structural 展示 mode=overview，route_label 承载五分类。entity_local 四档瀑布 L0符号→L1主题→L3概览兜底(永不失联,裸拒率0)；allow_overview=False 回落 none。extra_queries 仅非空且无 linked 时启用(gate 离线不传)。
+
+===== 内嵌代码（行号即源文件真实行号）=====
+ 243	def _finalize(ctx: dict, route_label: str, route_source: str,
+ 244	              mode: Optional[str] = None, degraded: Optional[bool] = None,
+ 245	              suggestions: Optional[list] = None) -> dict:
+ 246	    """给上下文 dict 挂 schema v2 的路由回显字段（纯增字段，v1 消费方兼容）。
+ 247	
+ 248	    ``route_label`` = S1 五分类（§6.2 路由准确率判定基准）；``route_source`` =
+ 249	    ``rule:<id>`` / ``fallback:default``；``mode`` 传入则覆盖（global 路由把 overview
+ 250	    改回显为 global）；``degraded``/``suggestions`` 按需附（S6 回退阶梯 / oos）。
+ 251	    """
+ 252	    ctx["route_label"] = route_label
+ 253	    ctx["route_source"] = route_source
+ 254	    if mode is not None:
+ 255	        ctx["mode"] = mode
+ 256	    if degraded is not None:
+ 257	        ctx["degraded"] = degraded
+ 258	    if suggestions is not None:
+ 259	        ctx["suggestions"] = suggestions
+ 260	    return ctx
+ 261	
+ 262	
+ 263	def build_repo_context(
+ 264	    store: GraphStore,
+ 265	    question: str,
+ 266	    budget_chars: int = 6000,
+ 267	    impact_depth: int = 2,
+ 268	    allow_overview: bool = True,
+ 269	    extra_queries: Optional[list] = None,
+ 270	) -> dict:
+ 271	    """S1 五路路由器 + 四档瀑布装配上下文（契约 A 主入口，v0.3 Phase C1）。
+ 272	
+ 273	    时序（落地设计 §4.2，消除 route↔linker 先后歧义）：``normalize`` → ``link_entities``
+ 274	    + ``is_code_token``（+ 无链接时 ``topic_recall``，供 oos 组合谓词与 topic 档复用）→
+ 275	    ``route()`` 分诊到 5 标签 → 分派（确定性、不碰网关）：
+ 276	
+ 277	    - **meta**         → 注入 repo_card（``build_meta_context``），``mode='meta'``；
+ 278	    - **global**       → ``build_overview`` 顶层概览，``mode='global'``；
+ 279	    - **entity_local** → 现四档瀑布（L0 符号→L1 主题→L2 LLM→L3 概览），``mode∈{symbol,topic,llm,overview}``；
+ 280	    - **structural**   → 能定量者走 ``build_overview`` 字段，``route_label=structural`` + ``degraded``；
+ 281	    - **out_of_scope** → 界外声明 + ≥1 建议问法 + ``degraded``，``mode='out_of_scope'``（P4 不裸拒）。
+ 282	
+ 283	    统一返回 ``{mode, linked, context_text, stats, route_label, route_source[, degraded, suggestions]}``。
+ 284	    ``stats`` 恒含 ``{symbols, topics, impact_callers, commits, concepts}`` 五键。规则全不中 →
+ 285	    entity_local 兜底（离线确定性；网关侧 ``semantic_mode=='llm'`` 的 LLM 兜底分类非本函数职责）。
+ 286	
+ 287	    向后兼容：``mode`` 语义按 spec §5.1 扩展 meta/global；旧 ``_is_meta_question`` 由 meta
+ 288	    路由取代（函数保留不删）；symbol/topic/llm/overview/none 行为不变。
+ 289	    """
+ 290	    norm_q = normalize(question)
+ 291	    linked = link_entities(store, norm_q, top_k=5)
+ 292	    has_ct = is_code_token(norm_q)
+ 293	    # topic_recall 仅在无链接时需要（symbol 档不经 topic；oos 组合谓词要求 no_linker_hit），
+ 294	    # 且结果回灌 entity_local 的 topic 档避免二次计算。
+ 295	    topic_hits = [] if linked else topic_recall(store, norm_q, top_k=8)
+ 296	
+ 297	    # S2 改写二次召回（落地设计 §4.3/§4.4 / D-N2）：``extra_queries`` 由**网关侧** S2 改写
+ 298	    # 产出并传入（entity_local 无主锚时的同义改述 query）；本函数纯确定性，只做二次 link/topic
+ 299	    # 合并。**gate 离线永不传 extra_queries**（离线四层瀑布行为不变，S2 不进 gate 指标）。
+ 300	    if extra_queries and not linked:
+ 301	        linked, topic_hits = _augment_with_extra_queries(
+ 302	            store, linked, topic_hits, extra_queries)
+ 303	
+ 304	    label, rule_id = route(norm_q, linked, topic_hits, has_ct)
+ 305	    src = f"rule:{rule_id}" if rule_id else "fallback:default"
+ 306	
+ 307	    if label == "meta":
+ 308	        ctx = _finalize(build_meta_context(store), "meta", src)
+ 309	    elif label == "global":
+ 310	        # 展示 mode 保持 overview（spec §5.1：build_overview 恒返回 overview，global 的事件
+ 311	        # mode 改写在网关侧据 route_label 完成）；route_label='global' 承载精确五分类。
+ 312	        ctx = _finalize(build_overview(store), "global", src)
+ 313	    elif label == "structural":
+ 314	        # 能确定性计数者走 build_overview 字段（模块/函数/概念总数等）；route_label 独立
+ 315	        # 回显不被 overview 吞没（保 P2 可评测），degraded 标注模板层未建（落地设计 §4.2/F8）。
+ 316	        ctx = _finalize(build_overview(store), "structural", src,
+ 317	                        degraded=True, suggestions=default_suggestions())
+ 318	    elif label == "out_of_scope":
+ 319	        ctx = _build_oos_context(store, src)
+ 320	    else:
+ 321	        # entity_local（entity-1 规则或兜底）——现四档瀑布 + 消歧协议（C4），行为向后兼容
+ 322	        ctx = _entity_local_waterfall(
+ 323	            store, norm_q, linked, topic_hits, budget_chars, impact_depth,
+ 324	            allow_overview, src)
+ 325	
+ 326	    # 单出口挂 schema v2 纯增字段（v1 消费方兼容）：S7 前提校验 + 消歧/解读回显默认。
+ 327	    return _attach_schema_v2(ctx, store, norm_q)
+ 328	
+ 329	
+ 330	def _attach_schema_v2(ctx: dict, store: GraphStore, norm_q: str) -> dict:
+ 331	    """给上下文挂 schema v2 纯增字段（落地设计 §5.1）——只加不覆盖已设者。
+ 332	
+ 333	    - ``premise_flags``：S7 前提校验（``extract_lexical_premises`` → ``verify_premises``，
+ 334	      lexical 规则，纯确定性；gate 离线判定读此字段，B-3 由此翻绿）；
+ 335	    - ``needs_disambiguation`` / ``candidates`` / ``resolved_query``：消歧层（C4）未设时给默认，
+ 336	      消歧层已设者（``entity_local`` 消歧）保留不覆盖。
+ 337	    """
+ 338	    if "premise_flags" not in ctx:
+ 339	        ctx["premise_flags"] = verify_premises(store, extract_lexical_premises(norm_q))
+ 340	    ctx.setdefault("needs_disambiguation", False)
+ 341	    ctx.setdefault("candidates", [])
+ 342	    ctx.setdefault("resolved_query", norm_q)
+ 343	    return ctx
+ 344	
+ 345	
+ 346	_MAX_EXTRA_QUERIES = 4
+ 347	
+ 348	
+ 349	def _augment_with_extra_queries(
+ 350	    store: GraphStore, linked: list[dict], topic_hits: list, extra_queries: list,
+ 351	) -> tuple[list[dict], list]:
+ 352	    """用 S2 改写 query 补链接/主题召回（无主锚时）：对每条改写 query 各跑一次
+ 353	    ``link_entities`` / ``topic_recall``，按 entity_id / node_id 取并集去重、分数取高，
+ 354	    重排取 Top-N。纯确定性、无网关（改写 query 由 server 侧网关产出后传入）。"""
+ 355	    link_by_id = {c["entity_id"]: c for c in linked}
+ 356	    topic_by_id = {r["node_id"]: r for r in topic_hits}
+ 357	    for eq in (extra_queries or [])[:_MAX_EXTRA_QUERIES]:
+ 358	        if not eq or not str(eq).strip():
+ 359	            continue
+ 360	        neq = normalize(str(eq))
+ 361	        for c in link_entities(store, neq, top_k=5):
+ 362	            cur = link_by_id.get(c["entity_id"])
+ 363	            if cur is None or c["score"] > cur["score"]:
+ 364	                link_by_id[c["entity_id"]] = c
+ 365	        for r in topic_recall(store, neq, top_k=8):
+ 366	            cur = topic_by_id.get(r["node_id"])
+ 367	            if cur is None or r["score"] > cur["score"]:
+ 368	                topic_by_id[r["node_id"]] = r
+ 369	    merged_link = sorted(link_by_id.values(),
+ 370	                         key=lambda c: (-c["score"], c["entity_id"]))[:5]
+ 371	    merged_topic = sorted(topic_by_id.values(),
+ 372	                          key=lambda r: (-r["score"], r["node_id"]))[:8]
+ 373	    return merged_link, merged_topic
+ 374	
+ 375	
+ 376	def _entity_local_waterfall(
+ 377	    store: GraphStore, question: str, linked: list[dict], topic_hits: list,
+ 378	    budget_chars: int, impact_depth: int, allow_overview: bool, src: str,
+ 379	) -> dict:
+ 380	    """entity_local 路由之下的现四档瀑布（L0 符号→L1 主题→L3 概览兜底），行为不变。
+ 381	
+ 382	    S6 回退阶梯形式化（落地设计 §5.8 / D-05）：符号空且主题空 → ``build_overview``
+ 383	    + ``degraded`` + 建议问法（低置信度）；``allow_overview=False`` 时回落 ``mode='none'``
+ 384	    交后端 L2 决策（保持 v0.1 契约）。裸拒率 0 由 overview 恒兜底达成（P4）。
+ 385	
+ 386	    分带（§4.6 / D-N1，C2 上线）：``candidates`` = merge_link_candidates(link ∪ bm25_card)
+ 387	    作 schema v2 观测字段附上；**不改 symbol/topic 路由决策**（改路由会回归 AMB 短名档，
+ 388	    实测证），过渡规则「仅方法档≥80 自动锚定」由 router.can_auto_anchor 在消歧层（C4）消费。
+ 389	    """
+ 390	    # 分带候选合并（观测用，不改路由）：link_entities ∪ bm25-over-卡片（Function/Class 召回）
+ 391	    card_cands = card_hits_to_candidates(topic_hits)
+ 392	    candidates = merge_link_candidates(linked, card_cands)
+ 393	
+ 394	    # L0 符号 + S4 消歧协议（落地设计 §4.5/§4.6 / D-04）
+ 395	    if linked:
+ 396	        dis = disambiguate(linked)
+ 397	        if dis["needs_disambiguation"]:
+ 398	            # 多合法弱候选近并列 → 交上游澄清（附区分性 candidates，actionable 不裸拒）
+ 399	            return _build_disambiguation_context(store, linked, question, src)
+ 400	        # autopick：现符号档聚合上下文，回显解读（P5）+ 单一弱候选降级披露
+ 401	        ctx = _build_symbol_context(store, linked, budget_chars, impact_depth)
+ 402	        ctx["candidates"] = candidates
+ 403	        ctx["needs_disambiguation"] = False
+ 404	        ctx["resolved_query"] = dis.get("resolved_note") or question
+ 405	        if dis.get("degraded"):
+ 406	            ctx["degraded"] = True
+ 407	        return _finalize(ctx, "entity_local", src)
+ 408	    # L1 主题（复用已算的 topic_hits，避免二次召回）
+ 409	    topic = _build_topic_context(store, question, budget_chars, recall=topic_hits)
+ 410	    if topic is not None:
+ 411	        topic["candidates"] = candidates
+ 412	        return _finalize(topic, "entity_local", src)
+ 413	    # L3 概览兜底（永不失联）+ S6 建议问法；allow_overview=False 回落 none
+ 414	    if allow_overview:
+ 415	        return _finalize(build_overview(store), "entity_local", src,
+ 416	                         degraded=True, suggestions=default_suggestions())
+ 417	    return _finalize({"mode": "none", "linked": [], "context_text": "", "stats": _stats()},
+ 418	                     "entity_local", src, degraded=True)
+ 419	
+ 420	
+ 421	def _build_disambiguation_context(store: GraphStore, linked: list[dict],
+ 422	                                  question: str, src: str) -> dict:
+ 423	    """S4 多合法弱候选 → needs_disambiguation + 区分性 candidates（path/doc_head/fan_in）交上游。
+ 424	
+ 425	    context_text 列出候选（actionable，绝不裸拒 P4）；mode 保持 symbol（确有符号命中，仅歧义）。
+ 426	    resolved_query 留待上游澄清后回填，本轮回显原问题 + 候选清单。
+ 427	    """
+ 428	    cands = enrich_candidates(store, linked)
+ 429	    lines = ["【候选消歧】（来源: 词面链接多合法候选，需澄清）",
+ 430	             f"「{question}」匹配到 {len(cands)} 个同名符号，请指明具体是哪一个："]
+ 431	    for c in cands:
+ 432	        eid = c.get("entity_id", "")
+ 433	        lines.append(
+ 434	            f"- {_qn(store, eid)}  （文件: {c.get('path', '?')}, "
+ 435	            f"fan_in={c.get('fan_in', 0)}）{c.get('doc_head', '')}".rstrip())
+ 436	    text = "\n".join(lines) + "\n"
+ 437	    ctx = {
+ 438	        "mode": "symbol",
+ 439	        "linked": linked,
+ 440	        "context_text": text,
+ 441	        "stats": _stats(symbols=len(linked)),
+ 442	        "needs_disambiguation": True,
+ 443	        "candidates": cands,
+ 444	        "degraded": False,
+ 445	        "suggestions": [
+ 446	            "可以追问：上面第 N 个（或直接点名 类名.方法名）",
+ 447	        ],
+ 448	    }
+ 449	    return _finalize(ctx, "entity_local", src)
+ 450	
+ 451	
+ 452	def _build_oos_context(store: GraphStore, src: str) -> dict:
+ 453	    """out_of_scope 路由：界外声明 + ≥1 本仓库可答建议问法 + degraded（P4 绝不裸拒）。"""
+ 454	    text = (
+ 455	        "【超出仓库范围】（来源: 路由判定 out_of_scope）\n"
+ 456	        "这个问题看起来不指向本代码库的具体内容。本系统基于代码知识图谱 RepoGraph，"
+ 457	        "擅长回答与本仓库结构 / 实现 / 历史相关的问题。"
+ 458	    )
+ 459	    return _finalize(
+ 460	        {"mode": "out_of_scope", "linked": [], "context_text": text, "stats": _stats()},
+ 461	        "out_of_scope", src, degraded=True, suggestions=default_suggestions())
+ 462	
+
+===== 代码结束 =====
+
+请逐条列出真实缺陷（文件:行号 + 问题 + 触发场景 + 修法）；无则答“未发现缺陷”。

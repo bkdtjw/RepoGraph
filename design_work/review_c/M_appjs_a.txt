@@ -1,0 +1,213 @@
+禁止使用任何工具、禁止读文件，只依据下方内嵌代码直接作答。
+你是资深 Python/JS 代码审查员，审查 RepoGraph v0.3 Phase C 新增/改动代码。
+只按四个维度找**真实缺陷**，逐条给：文件:行号 + 一句问题 + 触发场景/输入 + 修法。
+没有缺陷就明说“未发现缺陷”。不要复述代码、不要风格建议、不要臆测未给出的代码。
+四维度：
+ 1) 正确性：边界条件、异常吞掉后状态、并发（若涉及锁）、off-by-one、类型误判；
+ 2) 契约一致：是否与下方【契约摘录】逐字段吻合（字段名/取值域/优先级/阈值）；
+ 3) 假数据：任何写死的统计数字/标注/伪造的模型输出/占位真值（本项目铁律：无假数据）；
+ 4) 密钥处理：鉴权 token 是否只入请求头、绝不打印/写文件/入异常消息（提及应为 sk-****）。
+
+【被审文件】claude-ui/web/app.js  行段 394-587
+
+【契约 spec §5.3 前端展示】renderRepoRef 按 mode 渲染 9 档；服务把 meta/global/structural 展示 mode 归一 overview，前端据 route_label 在 mode==='overview' 时还原细分(不触碰 symbol/topic/llm/none/out_of_scope)。全部字段可选、缺失=不渲染该块，绝不臆造数字/卡片；textContent 防注入。num() 只接受有限数字。
+
+===== 内嵌代码（行号即源文件真实行号）=====
+ 394	  function renderRepoRef(msgEl, data) {
+ 395	    if (!msgEl || !msgEl.parentNode) return;
+ 396	    data = data || {};
+ 397	    var mode = data.mode;
+ 398	    var stats = (data.stats && typeof data.stats === 'object') ? data.stats : {};
+ 399	    var linked = Array.isArray(data.linked) ? data.linked : [];
+ 400	    // 服务把 meta/global/structural 的展示 mode 归一为 overview (v1 兼容), 精确五分类落在
+ 401	    // route_label (spec §5.1/§5.3, D-01/D-20); out_of_scope 的 mode 已如实透传。据 route_label
+ 402	    // 把"概览族"还原到细分档, 令下方 meta/global/structural 分支真正生效 (否则恒被通用 overview
+ 403	    // 吞没)。仅在 mode 确为 overview 时按 route_label 细分, 不触碰 symbol/topic/llm/none/out_of_scope。
+ 404	    var routeLabel = (typeof data.route_label === 'string') ? data.route_label : '';
+ 405	    if (mode === 'overview' &&
+ 406	        (routeLabel === 'meta' || routeLabel === 'global' || routeLabel === 'structural')) {
+ 407	      mode = routeLabel;
+ 408	    }
+ 409	
+ 410	    var ref = document.createElement('div');
+ 411	    ref.className = 'repo-ref';
+ 412	
+ 413	    // 仅接受有限数字, 否则回退 (防止 null/字符串污染标注文案)
+ 414	    function num(v, fallback) {
+ 415	      return (typeof v === 'number' && isFinite(v)) ? v : fallback;
+ 416	    }
+ 417	
+ 418	    // 可展开卡片: 传入标签文字与「填充详情」回调。fillDetail 非函数 → 只出标签、
+ 419	    // 不加 chevron、不可点开 (用于无可列详情的档, 如 topic 恰好 0 概念 / overview 无 linked)。
+ 420	    function buildExpandable(labelText, fillDetail) {
+ 421	      var toggle = document.createElement('button');
+ 422	      toggle.type = 'button';
+ 423	      toggle.className = 'repo-ref-toggle';
+ 424	
+ 425	      var label = document.createElement('span');
+ 426	      label.className = 'repo-ref-label';
+ 427	      label.textContent = labelText;
+ 428	      toggle.appendChild(label);
+ 429	
+ 430	      if (typeof fillDetail !== 'function') {
+ 431	        // 无详情: 静态标签 (不可展开), 去掉点击/指针暗示, 与可展开态区分。
+ 432	        toggle.classList.add('static');
+ 433	        toggle.disabled = true;
+ 434	        ref.appendChild(toggle);
+ 435	        return;
+ 436	      }
+ 437	
+ 438	      var chev = document.createElement('span');
+ 439	      chev.className = 'repo-ref-chev';
+ 440	      chev.innerHTML = REPO_CHEV_SVG; // 纯静态图标, 无数据
+ 441	      toggle.appendChild(chev);
+ 442	
+ 443	      var detail = document.createElement('div');
+ 444	      detail.className = 'repo-ref-detail';
+ 445	      detail.hidden = true;
+ 446	      fillDetail(detail);
+ 447	
+ 448	      toggle.addEventListener('click', function () {
+ 449	        detail.hidden = !detail.hidden;
+ 450	        ref.classList.toggle('open', !detail.hidden);
+ 451	      });
+ 452	      ref.appendChild(toggle);
+ 453	      ref.appendChild(detail);
+ 454	    }
+ 455	
+ 456	    // 概念/符号清单: 每项 name + 次要信息 (kind==='method' 用 item.method;
+ 457	    // kind==='terms' 用 item.matched_terms 词面命中; kind==='name' 仅名字)。
+ 458	    // 次要信息缺失时该项仅显示名字 —— 真实字段, textContent 防注入。
+ 459	    function fillLinkedList(detail, kind, items) {
+ 460	      items = items || linked;      // 省略=用全部 linked; 传入具体子集则只列该子集
+ 461	      if (!items.length) return;
+ 462	      var ul = document.createElement('ul');
+ 463	      items.forEach(function (item) {
+ 464	        item = item || {};
+ 465	        var li = document.createElement('li');
+ 466	        var nm = document.createElement('span');
+ 467	        nm.className = 'repo-ref-name';
+ 468	        nm.textContent = item.name || item.entity_id || item.node_id || '';
+ 469	        li.appendChild(nm);
+ 470	
+ 471	        if (kind === 'method' && item.method) {
+ 472	          var mth = document.createElement('span');
+ 473	          mth.className = 'repo-ref-method';
+ 474	          mth.textContent = item.method;
+ 475	          li.appendChild(mth);
+ 476	        } else if (kind === 'terms') {
+ 477	          var terms = Array.isArray(item.matched_terms) ? item.matched_terms : [];
+ 478	          if (terms.length) {
+ 479	            var box = document.createElement('span');
+ 480	            box.className = 'repo-ref-terms';
+ 481	            terms.forEach(function (t) {
+ 482	              var tag = document.createElement('span');
+ 483	              tag.className = 'repo-ref-term';
+ 484	              tag.textContent = String(t);
+ 485	              box.appendChild(tag);
+ 486	            });
+ 487	            li.appendChild(box);
+ 488	          }
+ 489	        }
+ 490	        ul.appendChild(li);
+ 491	      });
+ 492	      detail.appendChild(ul);
+ 493	    }
+ 494	
+ 495	    // 从 stats 按 (键,单位) 规格取存在的数值项 → ['N 单位', ...] (纯事件数据, 缺失即略, 不臆造)
+ 496	    function statsParts(specs) {
+ 497	      var parts = [];
+ 498	      specs.forEach(function (sp) {
+ 499	        var v = num(stats[sp[0]], null);
+ 500	        if (v != null) parts.push(v + ' ' + sp[1]);
+ 501	      });
+ 502	      return parts;
+ 503	    }
+ 504	
+ 505	    // meta(仓库卡片)/global(全局概览) 复用 overview 视觉档: 同一确定性计数骨架 (函数/模块/概念),
+ 506	    // 仅标签/提示文案区分 (spec §5.3)。计数字段缺失时优雅省略。
+ 507	    function overviewLike(cssClass, labelPrefix, hintText) {
+ 508	      ref.classList.add(cssClass);
+ 509	      var parts = statsParts([['functions', '函数'], ['modules', '模块'], ['concepts', '概念']]);
+ 510	      var lbl = labelPrefix + (parts.length ? '：' + parts.join(' · ') : '');
+ 511	      buildExpandable(lbl, function (detail) {
+ 512	        var hint = document.createElement('div');
+ 513	        hint.className = 'repo-ref-hint';
+ 514	        hint.textContent = hintText;
+ 515	        detail.appendChild(hint);
+ 516	        fillLinkedList(detail, 'name');
+ 517	      });
+ 518	    }
+ 519	
+ 520	    // ---- 跨 mode 的诚实标注块 (spec §5.1 冻结 schema, 全部可选; 字段缺失=不渲染该块) ----
+ 521	    // resolved_query: "系统这样理解你的问题" 一行回显 —— P5 前端落点。
+ 522	    function renderResolvedQuery() {
+ 523	      var rq = data.resolved_query;
+ 524	      if (typeof rq !== 'string' || !rq.trim()) return;
+ 525	      var box = document.createElement('div');
+ 526	      box.className = 'repo-ref-resolved';
+ 527	      var lab = document.createElement('span');
+ 528	      lab.className = 'repo-ref-resolved-label';
+ 529	      lab.textContent = '系统这样理解你的问题：';
+ 530	      var val = document.createElement('span');
+ 531	      val.className = 'repo-ref-resolved-text';
+ 532	      val.textContent = rq;            // textContent 防注入
+ 533	      box.appendChild(lab);
+ 534	      box.appendChild(val);
+ 535	      ref.appendChild(box);
+ 536	    }
+ 537	
+ 538	    // needs_disambiguation=true 且有候选: 渲染候选列表卡片 (path + doc_head + fan_in),
+ 539	    // 提示上游可继续追问。无 candidates 数据则不渲染 (不臆造卡片)。
+ 540	    function renderDisambiguation() {
+ 541	      if (data.needs_disambiguation !== true) return;
+ 542	      var cands = Array.isArray(data.candidates) ? data.candidates : [];
+ 543	      if (!cands.length) return;
+ 544	      var box = document.createElement('div');
+ 545	      box.className = 'repo-ref-disambig';
+ 546	      var head = document.createElement('div');
+ 547	      head.className = 'repo-ref-disambig-head';
+ 548	      head.textContent = '存在多个候选，可继续追问以澄清：';
+ 549	      box.appendChild(head);
+ 550	      var ul = document.createElement('ul');
+ 551	      ul.className = 'repo-ref-cand-list';
+ 552	      cands.forEach(function (c) {
+ 553	        c = c || {};
+ 554	        var li = document.createElement('li');
+ 555	        li.className = 'repo-ref-cand';
+ 556	        var primary = c.entity_id || c.path || '';
+ 557	        if (primary) {
+ 558	          var nm = document.createElement('div');
+ 559	          nm.className = 'repo-ref-cand-name';
+ 560	          nm.textContent = primary;
+ 561	          li.appendChild(nm);
+ 562	        }
+ 563	        if (c.path && c.path !== c.entity_id) {
+ 564	          var p = document.createElement('div');
+ 565	          p.className = 'repo-ref-cand-path';
+ 566	          p.textContent = c.path;
+ 567	          li.appendChild(p);
+ 568	        }
+ 569	        if (c.doc_head) {
+ 570	          var dh = document.createElement('div');
+ 571	          dh.className = 'repo-ref-cand-doc';
+ 572	          dh.textContent = c.doc_head;
+ 573	          li.appendChild(dh);
+ 574	        }
+ 575	        var fi = num(c.fan_in, null);
+ 576	        if (fi != null) {
+ 577	          var badge = document.createElement('span');
+ 578	          badge.className = 'repo-ref-cand-fanin';
+ 579	          badge.textContent = '被 ' + fi + ' 处调用';
+ 580	          li.appendChild(badge);
+ 581	        }
+ 582	        ul.appendChild(li);
+ 583	      });
+ 584	      box.appendChild(ul);
+ 585	      ref.appendChild(box);
+ 586	    }
+ 587	
+
+===== 代码结束 =====
+
+请逐条列出真实缺陷（文件:行号 + 问题 + 触发场景 + 修法）；无则答“未发现缺陷”。

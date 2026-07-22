@@ -1,0 +1,167 @@
+禁止使用任何工具、禁止读文件，只依据下方内嵌代码直接作答。
+你是资深 Python/JS 代码审查员，审查 RepoGraph v0.3 Phase C 新增/改动代码。
+只按四个维度找**真实缺陷**，逐条给：文件:行号 + 一句问题 + 触发场景/输入 + 修法。
+没有缺陷就明说“未发现缺陷”。不要复述代码、不要风格建议、不要臆测未给出的代码。
+四维度：
+ 1) 正确性：边界条件、异常吞掉后状态、并发（若涉及锁）、off-by-one、类型误判；
+ 2) 契约一致：是否与下方【契约摘录】逐字段吻合（字段名/取值域/优先级/阈值）；
+ 3) 假数据：任何写死的统计数字/标注/伪造的模型输出/占位真值（本项目铁律：无假数据）；
+ 4) 密钥处理：鉴权 token 是否只入请求头、绝不打印/写文件/入异常消息（提及应为 sk-****）。
+
+【被审文件】claude-ui/server.py  行段 749-896
+
+【契约 spec §4.5 焦点栈逐字段 + §5.1 事件】rg_focus=[{entity_id,label,turn}] 最多5条，turn=len(messages)快照，过期判定 当前turn−entry.turn>10 弹出(TTL=10)。强锚 method∈{exact_qualname,suffix_qualname} 才压栈。_rg_build_event：mode/linked/stats 恒在(v1)，其余纯增字段有值才附：route_label/route_source/confidence/resolved_query/needs_disambiguation/candidates/degraded/suggestions/premise_flags/focus_used。_rg_focus_peek 取最近未过期且类型相容；_rg_focus_push 去重+TTL剪枝+cap5 绝不抛。_rg_inject_prefix：meta/global/structural/overview/out_of_scope→概览前缀，topic/llm→主题前缀，其余→symbol前缀。_rg_normalize_mode：graph→symbol，未知→none。
+
+===== 内嵌代码（行号即源文件真实行号）=====
+ 749	def _rg_build_event(rg, mode, linked, stats, premise_flags, resolved_query,
+ 750	                    focus_used=None):
+ 751	    """构造 repo_context SSE 事件 (schema v2, spec §5.1)。
+ 752	
+ 753	    mode/linked/stats 恒在 (v1 契约); 其余纯增字段**有值才附** (v1 消费方兼容、fake RG /
+ 754	    旧 build_ctx 无这些字段则优雅省略, 前端缺字段优雅降级)。字段来源:
+ 755	    - route_label/route_source/confidence: build_repo_context 的 S1 路由回显;
+ 756	    - resolved_query: 解读回显 (含指代消解/消歧选择);
+ 757	    - needs_disambiguation/candidates: 消歧层 (C4);
+ 758	    - degraded/suggestions: S6 回退阶梯 / 界外;
+ 759	    - premise_flags: S7 前提校验; focus_used: 焦点栈消解种子 (C4, 有则附)。
+ 760	    """
+ 761	    ev = {"mode": mode, "linked": linked, "stats": stats}
+ 762	    for k in ("route_label", "route_source", "confidence"):
+ 763	        v = rg.get(k)
+ 764	        if v is not None:
+ 765	            ev[k] = v
+ 766	    resolved = resolved_query or rg.get("resolved_query")
+ 767	    if resolved:
+ 768	        ev["resolved_query"] = resolved
+ 769	    if rg.get("needs_disambiguation"):
+ 770	        ev["needs_disambiguation"] = True
+ 771	        ev["candidates"] = rg.get("candidates") or []
+ 772	    if rg.get("degraded"):
+ 773	        ev["degraded"] = True
+ 774	    if rg.get("suggestions"):
+ 775	        ev["suggestions"] = rg.get("suggestions")
+ 776	    if premise_flags:
+ 777	        ev["premise_flags"] = premise_flags
+ 778	    if focus_used:
+ 779	        ev["focus_used"] = focus_used
+ 780	    return ev
+ 781	
+ 782	
+ 783	# --------------------------------------------------------------------------- #
+ 784	# S5 会话焦点栈 rg_focus (spec §4.5 / 裁定 D-13)
+ 785	#
+ 786	# 持久化进 session JSON 的 rg_focus 键 (最多 5 条、TTL=10 turn)，读写各挂 read/write_session
+ 787	# (零新增 I/O)。turn = 锚定时的 assistant 消息序号快照 (len(messages))。
+ 788	#   · 读 (检索前): 问题含显式指代词且当前问题无自身锚 → 取最近类型相容焦点作种子, 注入检索;
+ 789	#   · 写 (锚定后): 强锚 (method∈{exact,suffix}) 压栈, 就近挂在追加 assistant 前的 write_session;
+ 790	#   · 非 llm 档: 焦点也未命中 → resolved_query 原样回显 + suggestions, 禁止静默错锚 (守 P5)。
+ 791	# --------------------------------------------------------------------------- #
+ 792	
+ 793	def _rg_has_pronoun(text):
+ 794	    return bool(_RG_PRONOUN_RE.search(text or ""))
+ 795	
+ 796	
+ 797	def _rg_focus_peek(sess, cur_turn, want_labels=None):
+ 798	    """取最近**未过期 (TTL)** 且类型相容的焦点条目; 无则 None。want_labels=None 表任意 label。"""
+ 799	    for e in reversed(sess.get("rg_focus") or []):
+ 800	        if not isinstance(e, dict):
+ 801	            continue
+ 802	        try:
+ 803	            age = cur_turn - int(e.get("turn", -(10 ** 9)))
+ 804	        except (TypeError, ValueError):
+ 805	            continue
+ 806	        if age > _RG_FOCUS_TTL:
+ 807	            continue
+ 808	        if want_labels and e.get("label") not in want_labels:
+ 809	            continue
+ 810	        if e.get("entity_id"):
+ 811	            return e
+ 812	    return None
+ 813	
+ 814	
+ 815	def _rg_focus_push(sess, entity_id, label, cur_turn):
+ 816	    """强锚实体压栈 rg_focus (就地改 sess): 去重 + TTL 剪枝 + cap 5。绝不抛。"""
+ 817	    if not entity_id:
+ 818	        return
+ 819	    kept = []
+ 820	    for e in (sess.get("rg_focus") or []):
+ 821	        if not isinstance(e, dict) or not e.get("entity_id"):
+ 822	            continue
+ 823	        try:
+ 824	            age = cur_turn - int(e.get("turn", -(10 ** 9)))
+ 825	        except (TypeError, ValueError):
+ 826	            continue
+ 827	        if age > _RG_FOCUS_TTL or e.get("entity_id") == entity_id:
+ 828	            continue
+ 829	        kept.append(e)
+ 830	    kept.append({"entity_id": entity_id, "label": label, "turn": cur_turn})
+ 831	    sess["rg_focus"] = kept[-_RG_FOCUS_MAX:]
+ 832	
+ 833	
+ 834	def _rg_strong_anchor(rg):
+ 835	    """从检索结果取**强锚**实体 (symbol 档 method∈{exact,suffix}); 消歧未定/无强锚 → None。"""
+ 836	    if not rg or rg.get("needs_disambiguation"):
+ 837	        return None
+ 838	    for c in (rg.get("linked") or []):
+ 839	        if isinstance(c, dict) and c.get("method") in ("exact_qualname", "suffix_qualname"):
+ 840	            eid = c.get("entity_id") or c.get("node_id")
+ 841	            if eid:
+ 842	                return {"entity_id": eid, "label": c.get("label")}
+ 843	    return None
+ 844	
+ 845	
+ 846	def _rg_focus_name(entity_id):
+ 847	    """焦点实体 id → 检索用展示名 (qualname/name); 取自已加载 store, 缺失返回 ''。"""
+ 848	    store = _RG.get("store")
+ 849	    if store is None or not entity_id:
+ 850	        return ""
+ 851	    try:
+ 852	        node = store.get_node(entity_id)
+ 853	    except Exception:  # noqa: BLE001
+ 854	        return ""
+ 855	    if node is None:
+ 856	        return ""
+ 857	    return node.get("qualname") or node.get("name") or ""
+ 858	
+ 859	
+ 860	def _rg_inject_prefix(mode):
+ 861	    """按 mode 选注入前缀 (均含"代码知识图谱"来源字样)。
+ 862	
+ 863	    meta/global/structural 均属概览类展示 (build_repo_context 侧恒返回 overview 展示 mode,
+ 864	    route_label 承载精确五分类) → 概览前缀; out_of_scope → 概览前缀 (界外声明已在 ctx 正文);
+ 865	    补 meta/global 分支后, 即便调用方改传 route_label 也不会 fall through 到 symbol 前缀语义错配
+ 866	    (spec §5.1/§5.2 明列)。
+ 867	    """
+ 868	    if mode in ("overview", "meta", "global", "structural", "out_of_scope"):
+ 869	        return _RG_INJECT_OVERVIEW
+ 870	    if mode in ("topic", "llm"):
+ 871	        return _RG_INJECT_TOPIC
+ 872	    return _RG_INJECT_HEADER          # symbol (及任何结构化符号上下文)
+ 873	
+ 874	
+ 875	def _rg_normalize_mode(mode):
+ 876	    """把 build_repo_context 返回的 mode 归一化到 server 透传集合。
+ 877	
+ 878	    旧契约 'graph' → 'symbol' (仅是重命名, 语义不变); 未知值一律 'none' (不注入)。
+ 879	    """
+ 880	    if mode in _RG_VALID_MODES:
+ 881	        return mode
+ 882	    if mode == "graph":
+ 883	        return "symbol"
+ 884	    return "none"
+ 885	
+ 886	
+ 887	def _rg_sample_symbols(store, limit=8):
+ 888	    """取前若干个真实 Function qualname 作为状态样例 (无硬编码业务数据)。"""
+ 889	    out = []
+ 890	    for node in store.nodes("Function"):
+ 891	        qn = node.get("qualname")
+ 892	        if qn:
+ 893	            out.append(qn)
+ 894	        if len(out) >= limit:
+ 895	            break
+ 896	    return out
+
+===== 代码结束 =====
+
+请逐条列出真实缺陷（文件:行号 + 问题 + 触发场景 + 修法）；无则答“未发现缺陷”。

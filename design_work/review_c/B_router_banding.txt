@@ -1,0 +1,218 @@
+禁止使用任何工具、禁止读文件，只依据下方内嵌代码直接作答。
+你是资深 Python/JS 代码审查员，审查 RepoGraph v0.3 Phase C 新增/改动代码。
+只按四个维度找**真实缺陷**，逐条给：文件:行号 + 一句问题 + 触发场景/输入 + 修法。
+没有缺陷就明说“未发现缺陷”。不要复述代码、不要风格建议、不要臆测未给出的代码。
+四维度：
+ 1) 正确性：边界条件、异常吞掉后状态、并发（若涉及锁）、off-by-one、类型误判；
+ 2) 契约一致：是否与下方【契约摘录】逐字段吻合（字段名/取值域/优先级/阈值）；
+ 3) 假数据：任何写死的统计数字/标注/伪造的模型输出/占位真值（本项目铁律：无假数据）；
+ 4) 密钥处理：鉴权 token 是否只入请求头、绝不打印/写文件/入异常消息（提及应为 sk-****）。
+
+【被审文件】代码库知识图谱/src/repograph/retrieve/router.py  行段 234-432
+
+【契约 spec §4.6 分带】方法档优先级 exact_qualname>suffix_qualname>short_name>concept_name>module_path>bm25_card(恒最低)。merge_link_candidates 按 entity_id 去重、方法档优先、同档 score 高者留、bm25_card 恒排方法档之后。过渡规则 D-N1：仅 exact/suffix(≥80) 可自动锚定给确定性工具；纯 bm25_card 永不自动锚定；matched_terms 提供时要求≥1内容词(非停用词)。disambiguate：强档领先(exact/suffix)→autopick；单一弱候选→autopick+degraded；弱档多候选整数分差≥δ_score(20)→autopick 否则 needs_disambiguation。card_hits_to_candidates 只收 Function/Class（Concept 走 topic 不在此重复）。
+
+===== 内嵌代码（行号即源文件真实行号）=====
+ 234	
+ 235	# ---------------------------------------------------------------------------
+ 236	# S3 链接候选合并 + 分带（落地设计 §4.6 / 裁定 D-N1、D-20；C2 上线）
+ 237	#
+ 238	# 三路候选合并（link_entities ∪ 缩写扩展命中 ∪ BM25-over-实体卡片），按 entity_id 去重、
+ 239	# **方法档优先**：exact_qualname > suffix_qualname > short_name > concept_name > module_path
+ 240	# > bm25_card（恒最低）。缩写扩展命中已在 link_entities 内经 _tokenize 折叠，故实参通常是
+ 241	# link_entities 结果 + bm25_card 两路；函数按任意路数合并，语义一致。
+ 242	# ---------------------------------------------------------------------------
+ 243	
+ 244	# 方法档优先级（越大越强）；bm25_card（纯 BM25 卡片召回）恒低于 link_entities 任一方法档。
+ 245	_METHOD_RANK = {
+ 246	    "exact_qualname": 5,
+ 247	    "suffix_qualname": 4,
+ 248	    "short_name": 3,
+ 249	    "concept_name": 2,
+ 250	    "module_path": 1,
+ 251	    "bm25_card": 0,
+ 252	}
+ 253	
+ 254	# 过渡规则（D-N1，V0 校准未产可行参数前生效）：仅 exact/suffix 方法档（_SCORE≥80）允许
+ 255	# **自动锚定给确定性工具**（impact_analysis 等硬 ID 消费方）。topic/BM25 侧永不自动锚定。
+ 256	_STRONG_METHODS = ("exact_qualname", "suffix_qualname")
+ 257	
+ 258	
+ 259	def _cand_key(c: dict) -> str:
+ 260	    return c.get("entity_id") or c.get("node_id") or ""
+ 261	
+ 262	
+ 263	def merge_link_candidates(*cand_lists: list) -> list[dict]:
+ 264	    """合并多路链接候选（link ∪ 缩写 ∪ bm25_card），按 entity_id 去重、方法档优先。
+ 265	
+ 266	    每个候选形如 ``{entity_id|node_id, label, score, method, ...}``。同一 entity_id 保留
+ 267	    **方法档更强**者（_METHOD_RANK 高）；同档保留 score 高者。返回按 (方法档, score, id) 降序
+ 268	    排列的合并候选列表（每项含原字段 + 规范化 ``entity_id``）。bm25_card 恒排在方法档候选之后。
+ 269	    """
+ 270	    best: dict[str, dict] = {}
+ 271	    for lst in cand_lists:
+ 272	        for c in lst or []:
+ 273	            eid = _cand_key(c)
+ 274	            if not eid:
+ 275	                continue
+ 276	            rank = _METHOD_RANK.get(c.get("method"), 0)
+ 277	            score = c.get("score") or 0
+ 278	            cur = best.get(eid)
+ 279	            if (cur is None or rank > cur["_rank"]
+ 280	                    or (rank == cur["_rank"] and score > (cur.get("score") or 0))):
+ 281	                merged = dict(c)
+ 282	                merged["entity_id"] = eid
+ 283	                merged["_rank"] = rank
+ 284	                best[eid] = merged
+ 285	    out = sorted(best.values(),
+ 286	                 key=lambda c: (-c["_rank"], -(c.get("score") or 0), c["entity_id"]))
+ 287	    for c in out:
+ 288	        c.pop("_rank", None)
+ 289	    return out
+ 290	
+ 291	
+ 292	def has_strong_method(cand: dict) -> bool:
+ 293	    """候选是否为强方法档（exact/suffix qualname，_SCORE≥80）——过渡规则自动锚定的必要条件。"""
+ 294	    return cand.get("method") in _STRONG_METHODS
+ 295	
+ 296	
+ 297	# ---------------------------------------------------------------------------
+ 298	# S4 消歧协议（落地设计 §4.5/§4.6 / 裁定 D-04）——纯函数，link_entities 候选 → 消歧决策
+ 299	#
+ 300	# 真歧义在本图极稀缺：函数短名碰撞仅 invoke×6 / __init__×N。分带（§4.6）：
+ 301	#   · **强档领先**：top 方法档 ∈ {exact,suffix}（≥80）→ 自选并披露（即便存在同名 Class/更弱候选，
+ 302	#     强精确匹配即锚，不进消歧——如 `Store._begin`(Function exact)+`Store`(Class exact) 属聚合非歧义）；
+ 303	#   · **单一弱候选**：只 1 个 short/concept/module 候选 → autopick + degraded 披露「弱匹配」；
+ 304	#   · **弱档近并列**：top 为弱档且与次者整数分差 < δ_score → needs_disambiguation 交上游（invoke 6×60）;
+ 305	#     弱档但明显领先（≥δ_score，如 `_dispatch` short 60 vs module 30）→ autopick。
+ 306	# δ_score=20（D-04）。澄清预算 1 次/查询（由上游 Claude Code 侧执行，本层只产结构化候选）。
+ 307	# ---------------------------------------------------------------------------
+ 308	
+ 309	# 消歧整数分差阈值（落地设计 §4.6 / D-04：δ_score=20）。
+ 310	_DELTA_SCORE = 20
+ 311	
+ 312	
+ 313	def _first_line_of(text) -> str:
+ 314	    for line in (text or "").splitlines():
+ 315	        s = line.strip()
+ 316	        if s:
+ 317	            return s
+ 318	    return ""
+ 319	
+ 320	
+ 321	def _pick_label(cand: dict) -> str:
+ 322	    """候选展示名：优先 qualname/name，兜底 entity_id 末段。"""
+ 323	    return (cand.get("name") or cand.get("qualname")
+ 324	            or _cand_key(cand).rsplit("::", 1)[-1])
+ 325	
+ 326	
+ 327	def disambiguate(candidates: list, delta_score: int = _DELTA_SCORE) -> dict:
+ 328	    """S4 消歧协议：对 link_entities 候选判「自选 / 交上游消歧」。
+ 329	
+ 330	    返回 ``{needs_disambiguation, pick, candidates, degraded, resolved_note}``：
+ 331	      · ``needs_disambiguation``  多合法弱候选近并列 → True（上游据 candidates 澄清）；
+ 332	      · ``pick``                  autopick 时选中的候选（强档领先 / 明显领先 / 单一），否则 None；
+ 333	      · ``degraded``              单一弱候选自选时 True（披露「弱匹配」）；
+ 334	      · ``resolved_note``         解读回显话术（P5，如「按 X 解读，另 N 个同名已忽略」）。
+ 335	    纯函数、零副作用；candidates 为 link_entities 结果（含 score/method）。
+ 336	    """
+ 337	    cands = sorted(candidates or [],
+ 338	                   key=lambda c: (-(c.get("score") or 0), _cand_key(c)))
+ 339	    if not cands:
+ 340	        return {"needs_disambiguation": False, "pick": None, "candidates": [],
+ 341	                "degraded": False, "resolved_note": None}
+ 342	    top = cands[0]
+ 343	    others = len(cands) - 1
+ 344	
+ 345	    # 强档领先：exact/suffix 即锚（同名 Class 等更弱/关联候选一并交符号档聚合，不算歧义）
+ 346	    if has_strong_method(top):
+ 347	        note = f"按 {_pick_label(top)} 解读" + (f"，另 {others} 个关联候选一并纳入" if others else "")
+ 348	        return {"needs_disambiguation": False, "pick": top, "candidates": cands,
+ 349	                "degraded": False, "resolved_note": note}
+ 350	
+ 351	    # 单一弱候选：autopick 但降级披露「弱匹配」（不进消歧，over-ask 面小）
+ 352	    if len(cands) == 1:
+ 353	        return {"needs_disambiguation": False, "pick": top, "candidates": cands,
+ 354	                "degraded": True,
+ 355	                "resolved_note": f"按 {_pick_label(top)} 解读（弱匹配）"}
+ 356	
+ 357	    # 弱档多候选：整数分差 ≥ δ_score → 明显领先自选；否则近并列 → 交上游消歧
+ 358	    margin = (top.get("score") or 0) - (cands[1].get("score") or 0)
+ 359	    if margin >= delta_score:
+ 360	        return {"needs_disambiguation": False, "pick": top, "candidates": cands,
+ 361	                "degraded": False,
+ 362	                "resolved_note": f"按 {_pick_label(top)} 解读，另 {others} 个较弱同名已忽略"}
+ 363	    return {"needs_disambiguation": True, "pick": None, "candidates": cands,
+ 364	            "degraded": False, "resolved_note": None}
+ 365	
+ 366	
+ 367	def enrich_candidates(store, candidates: list) -> list[dict]:
+ 368	    """给消歧候选附区分性元数据 ``path`` / ``doc_head`` / ``fan_in``（落地设计 §4.5，供上游选择）。
+ 369	
+ 370	    ``fan_in`` 读节点属性（metrics.py 预计算，缺则 0）。store 为 GraphStore（duck-typed，
+ 371	    router 不 import models，保持纯路由）。
+ 372	    """
+ 373	    out = []
+ 374	    for c in candidates or []:
+ 375	        node = store.get_node(_cand_key(c)) if hasattr(store, "get_node") else None
+ 376	        meta = dict(c)
+ 377	        meta["entity_id"] = _cand_key(c)
+ 378	        if node is not None:
+ 379	            meta["path"] = node.get("file") or node.get("path") or ""
+ 380	            meta["doc_head"] = _first_line_of(
+ 381	                node.get("docstring") or node.get("description") or "")
+ 382	            meta["fan_in"] = node.get("fan_in", 0)
+ 383	        out.append(meta)
+ 384	    return out
+ 385	
+ 386	
+ 387	def content_terms(matched_terms, min_len: int = 2) -> list[str]:
+ 388	    """从命中词里筛"内容词"：非中文停用/功能/疑问词、且长度≥min_len（D-N1 绝对下限操作化）。
+ 389	
+ 390	    V0 校准诊断：高 IDF 的 n-gram 多为非内容词碎片（的单/起来/台账），仅"高 IDF"挡不住噪声，
+ 391	    须叠加中文停用词黑名单过滤（见 lexicon）。本函数即"≥1 高 IDF 内容词"里"内容词"谓词的落地。
+ 392	    """
+ 393	    from .lexicon import is_zh_stopword
+ 394	    return [t for t in (matched_terms or [])
+ 395	            if len(t) >= min_len and not is_zh_stopword(t)]
+ 396	
+ 397	
+ 398	def can_auto_anchor(cand: dict, matched_terms=None) -> bool:
+ 399	    """能否把候选**自动锚定给确定性工具**（硬 ID 消费方）——D-N1 过渡规则 + 绝对证据下限。
+ 400	
+ 401	    合并规则（取更严，落地设计 §4.6 / calibration §3）：
+ 402	    1. **纯 bm25_card 永不自动锚定**（无方法档支撑，绝对下限，永不被分带放宽）；
+ 403	    2. **过渡规则**：仅方法档 ∈ {exact,suffix}（≥80）自动锚定（V0 未产可行参数，续用）；
+ 404	    3. **绝对下限**：若提供 ``matched_terms``，要求其中 ≥1 个内容词（非停用词）——纯停用词
+ 405	       碎片命中不足以自动锚定（对症 V0 高 IDF 碎片误触发）。
+ 406	
+ 407	    返回 True 仅当以上全满足。消歧 / 低置信呈现不走本闸（那是"呈现"非"喂确定性工具"）。
+ 408	    """
+ 409	    if cand.get("method") == "bm25_card":
+ 410	        return False
+ 411	    if not has_strong_method(cand):
+ 412	        return False
+ 413	    if matched_terms is not None and not content_terms(matched_terms):
+ 414	        return False
+ 415	    return True
+ 416	
+ 417	
+ 418	def card_hits_to_candidates(recall: list) -> list[dict]:
+ 419	    """把 topic_recall 的 Function/Class 命中项映射为 ``method='bm25_card'`` 链接候选（§4.6）。
+ 420	
+ 421	    ``{node_id,label,score,matched_terms}`` → ``{entity_id,label,score,method:'bm25_card',matched_terms}``。
+ 422	    只收 Function/Class（Concept 命中仍走 topic 档的 IMPLEMENTS 展开，不在此重复）。
+ 423	    这类候选只作锚定/消歧输入，优先级恒低于 exact/suffix（见 merge_link_candidates）。
+ 424	    """
+ 425	    out = []
+ 426	    for r in recall or []:
+ 427	        if r.get("label") in ("Function", "Class"):
+ 428	            out.append({"entity_id": r["node_id"], "label": r["label"],
+ 429	                        "score": r.get("score", 0.0), "method": "bm25_card",
+ 430	                        "matched_terms": r.get("matched_terms", [])})
+ 431	    return out
+ 432	
+
+===== 代码结束 =====
+
+请逐条列出真实缺陷（文件:行号 + 问题 + 触发场景 + 修法）；无则答“未发现缺陷”。

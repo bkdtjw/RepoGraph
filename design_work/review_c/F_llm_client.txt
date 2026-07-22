@@ -1,0 +1,181 @@
+禁止使用任何工具、禁止读文件，只依据下方内嵌代码直接作答。
+你是资深 Python/JS 代码审查员，审查 RepoGraph v0.3 Phase C 新增/改动代码。
+只按四个维度找**真实缺陷**，逐条给：文件:行号 + 一句问题 + 触发场景/输入 + 修法。
+没有缺陷就明说“未发现缺陷”。不要复述代码、不要风格建议、不要臆测未给出的代码。
+四维度：
+ 1) 正确性：边界条件、异常吞掉后状态、并发（若涉及锁）、off-by-one、类型误判；
+ 2) 契约一致：是否与下方【契约摘录】逐字段吻合（字段名/取值域/优先级/阈值）；
+ 3) 假数据：任何写死的统计数字/标注/伪造的模型输出/占位真值（本项目铁律：无假数据）；
+ 4) 密钥处理：鉴权 token 是否只入请求头、绝不打印/写文件/入异常消息（提及应为 sk-****）。
+
+【被审文件】代码库知识图谱/src/repograph/extract/llm_client.py  行段 1-162
+
+【契约 密钥安全铁律 + D-N4】token(anthropic_auth_token) 只读入内存放 Authorization 头，绝不打印/写文件/记日志/入异常消息(提及一律 sk-****)。配置读 claude-ui/config.json，缺文件/缺 base/缺 token→抛明确异常(不含 token)，绝不静默伪造。POST {base}/v1/messages 非流式，anthropic-version 头，限速 sleep 0.5s、重试 2 次，全失败抛 GatewayCallError(调用方降级不伪造)。
+
+===== 内嵌代码（行号即源文件真实行号）=====
+   1	"""索引期语义通道——阿里网关 HTTP 直连客户端（v0.3 · Phase C · 裁定 D-N4）。
+   2	
+   3	**通道变更背景**：2026-07-22 grok CLI 订阅到期断供（402 Payment Required，实测确认）。
+   4	本模块以标准库 ``urllib`` 直连与 Anthropic Messages 兼容的阿里网关（POST ``{base}/v1/messages``，
+   5	非流式），承接原 ``grok_client.ask_grok`` 的索引期结构化生成职责（repo_card summary 及
+   6	后续中文卡片/概念对齐等），与 ``claude-ui/server.py`` 的 ``_rg_llm_select_concepts`` **同款传输**。
+   7	
+   8	安全铁律（与运行时网关一致）：
+   9	- 鉴权令牌 ``anthropic_auth_token`` **只读入内存放请求头**，绝不打印 / 写文件 / 记日志；
+  10	  异常信息一律不含 token（提及一律 sk-****）。
+  11	- 配置读 ``claude-ui/config.json``（``anthropic_base_url`` + ``anthropic_auth_token`` +
+  12	  ``model_*``），找不到配置文件或缺关键字段时**抛明确异常**，绝不静默伪造输出（真实数据铁律）。
+  13	
+  14	原 grok ``--json-schema`` 的结构化强制改由 **prompt 内嵌 schema + 调用方程序校验**承担
+  15	（``semantic.py`` 既有候选白名单 + quote-substring 校验体系不变——本就不信任模型输出，换模型不降防线）。
+  16	
+  17	只依赖标准库（json / os / time / urllib）。``grok_client.py`` 保留为可选后端（已断供），不删。
+  18	"""
+  19	from __future__ import annotations
+  20	
+  21	import json
+  22	import os
+  23	import time
+  24	import urllib.error
+  25	import urllib.request
+  26	
+  27	ANTHROPIC_VERSION = "2023-06-01"
+  28	
+  29	# 索引期默认模型（落地设计 §4.7 / D-N4）：卡片 / summary 用 qwen3.8-max-preview。
+  30	INDEX_MODEL = "qwen3.8-max-preview"
+  31	
+  32	
+  33	class GatewayConfigError(RuntimeError):
+  34	    """网关配置不可用（找不到 config.json 或缺 base_url / auth_token）。"""
+  35	
+  36	
+  37	class GatewayCallError(RuntimeError):
+  38	    """网关调用失败（HTTP 错误 / 超时 / 响应无文本）。消息不含 token。"""
+  39	
+  40	
+  41	# ---------------------------------------------------------------------------
+  42	# 配置定位与读取（claude-ui/config.json；绝不回显 token）
+  43	# ---------------------------------------------------------------------------
+  44	
+  45	def _candidate_config_paths(explicit: str | None) -> list[str]:
+  46	    """按优先级枚举 config.json 候选路径（显式 > 环境变量 > 同级 claude-ui > 绝对默认）。"""
+  47	    cands: list[str] = []
+  48	    if explicit:
+  49	        cands.append(explicit)
+  50	    env = os.environ.get("REPOGRAPH_GATEWAY_CONFIG")
+  51	    if env:
+  52	        cands.append(env)
+  53	    # 仓库根 = .../代码库知识图谱；其父目录（Desktop）下的同级 claude-ui/config.json
+  54	    here = os.path.dirname(os.path.abspath(__file__))            # src/repograph/extract
+  55	    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(here)))
+  56	    parent = os.path.dirname(repo_root)
+  57	    cands.append(os.path.join(parent, "claude-ui", "config.json"))
+  58	    # 绝对默认（本机 as-built 位置）
+  59	    cands.append(r"C:\Users\nirvana\Desktop\claude-ui\config.json")
+  60	    # 去重保序
+  61	    seen: set[str] = set()
+  62	    out: list[str] = []
+  63	    for c in cands:
+  64	        cn = os.path.normpath(c)
+  65	        if cn not in seen:
+  66	            seen.add(cn)
+  67	            out.append(cn)
+  68	    return out
+  69	
+  70	
+  71	def load_gateway_config(config_path: str | None = None) -> dict:
+  72	    """读取网关配置 dict。找不到文件抛 ``GatewayConfigError``（含所有已查路径，不含 token）。"""
+  73	    tried: list[str] = []
+  74	    for p in _candidate_config_paths(config_path):
+  75	        tried.append(p)
+  76	        if os.path.exists(p):
+  77	            with open(p, "r", encoding="utf-8") as f:
+  78	                return json.load(f)
+  79	    raise GatewayConfigError(
+  80	        "找不到网关配置 config.json；已尝试：" + " | ".join(tried)
+  81	    )
+  82	
+  83	
+  84	def _resolve_endpoint(cfg: dict) -> tuple[str, str]:
+  85	    """从配置取 (base, token)；缺失则抛 ``GatewayConfigError``。token 绝不出现在异常消息里。"""
+  86	    base = (cfg.get("anthropic_base_url") or "").rstrip("/")
+  87	    token = cfg.get("anthropic_auth_token") or ""
+  88	    if not base:
+  89	        raise GatewayConfigError("config.json 缺 anthropic_base_url")
+  90	    if not token:
+  91	        raise GatewayConfigError("config.json 缺 anthropic_auth_token（sk-****）")
+  92	    return base, token
+  93	
+  94	
+  95	def _extract_text(raw: bytes) -> str:
+  96	    """从非流式 messages 响应体提取拼接文本块（与 server._extract_text 同义）。"""
+  97	    try:
+  98	        obj = json.loads(raw.decode("utf-8", "replace"))
+  99	    except Exception:  # noqa: BLE001
+ 100	        return ""
+ 101	    if isinstance(obj, dict):
+ 102	        content = obj.get("content")
+ 103	        if isinstance(content, list):
+ 104	            parts = [(b.get("text") or "") for b in content
+ 105	                     if isinstance(b, dict) and b.get("type") == "text"]
+ 106	            if parts:
+ 107	                return "".join(parts)
+ 108	    return ""
+ 109	
+ 110	
+ 111	# ---------------------------------------------------------------------------
+ 112	# ask_gateway —— 单轮非流式生成
+ 113	# ---------------------------------------------------------------------------
+ 114	
+ 115	def ask_gateway(system: str, user: str, model: str | None = None,
+ 116	                max_tokens: int = 512, timeout: int = 30,
+ 117	                config_path: str | None = None,
+ 118	                retries: int = 2, sleep_s: float = 0.5) -> str:
+ 119	    """向网关发一次**非流式** messages 请求，返回首个文本块（拼接）。
+ 120	
+ 121	    - ``model`` 缺省用 ``INDEX_MODEL``（qwen3.8-max-preview）；
+ 122	    - 鉴权令牌只入 ``Authorization`` 头，**绝不回显**；异常消息不含 token；
+ 123	    - 限速（``sleep_s``）+ 重试（``retries`` 次）应对瞬时失败；
+ 124	    - 全部重试失败 → 抛 ``GatewayCallError``（调用方按需降级，**不伪造输出**）。
+ 125	
+ 126	    配置缺失（无文件 / 无 base / 无 token）→ 抛 ``GatewayConfigError``。
+ 127	    """
+ 128	    cfg = load_gateway_config(config_path)
+ 129	    base, token = _resolve_endpoint(cfg)
+ 130	    mdl = model or INDEX_MODEL
+ 131	    url = base + "/v1/messages"
+ 132	    payload = {
+ 133	        "model": mdl,
+ 134	        "max_tokens": max_tokens,
+ 135	        "system": system,
+ 136	        "messages": [{"role": "user", "content": user}],
+ 137	    }
+ 138	    data = json.dumps(payload).encode("utf-8")
+ 139	    headers = {
+ 140	        "Authorization": "Bearer " + token,        # 仅入请求头，绝不打印/记录
+ 141	        "anthropic-version": ANTHROPIC_VERSION,
+ 142	        "content-type": "application/json",
+ 143	    }
+ 144	
+ 145	    last_err = "unknown"
+ 146	    attempts = max(1, retries + 1)
+ 147	    for i in range(attempts):
+ 148	        req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+ 149	        try:
+ 150	            with urllib.request.urlopen(req, timeout=timeout) as resp:
+ 151	                raw = resp.read()
+ 152	            text = _extract_text(raw)
+ 153	            if text.strip():
+ 154	                return text
+ 155	            last_err = "响应无文本块"
+ 156	        except urllib.error.HTTPError as e:      # 不读 e 的鉴权相关字段，不外泄
+ 157	            last_err = f"HTTP {e.code}"
+ 158	        except Exception as e:                   # noqa: BLE001  超时 / 网络 / 解析
+ 159	            last_err = type(e).__name__
+ 160	        if i < attempts - 1:
+ 161	            time.sleep(sleep_s)
+ 162	    raise GatewayCallError(f"网关调用失败（{mdl}）：{last_err}")
+
+===== 代码结束 =====
+
+请逐条列出真实缺陷（文件:行号 + 问题 + 触发场景 + 修法）；无则答“未发现缺陷”。

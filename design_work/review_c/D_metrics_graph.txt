@@ -1,0 +1,234 @@
+禁止使用任何工具、禁止读文件，只依据下方内嵌代码直接作答。
+你是资深 Python/JS 代码审查员，审查 RepoGraph v0.3 Phase C 新增/改动代码。
+只按四个维度找**真实缺陷**，逐条给：文件:行号 + 一句问题 + 触发场景/输入 + 修法。
+没有缺陷就明说“未发现缺陷”。不要复述代码、不要风格建议、不要臆测未给出的代码。
+四维度：
+ 1) 正确性：边界条件、异常吞掉后状态、并发（若涉及锁）、off-by-one、类型误判；
+ 2) 契约一致：是否与下方【契约摘录】逐字段吻合（字段名/取值域/优先级/阈值）；
+ 3) 假数据：任何写死的统计数字/标注/伪造的模型输出/占位真值（本项目铁律：无假数据）；
+ 4) 密钥处理：鉴权 token 是否只入请求头、绝不打印/写文件/入异常消息（提及应为 sk-****）。
+
+【被审文件】代码库知识图谱/src/repograph/metrics.py  行段 1-215
+
+【契约 spec §4.3 指标】fan_in=CALLS 入度(不同直接调用方)；heat=commits_all+2*commits_90d；90d 窗口基准=仓库最新提交日(确定性,非wall-clock)；churn_90d=窗口内 MODIFIES 边 lines_added+lines_deleted；blast_radius=反向 CALLS≤3跳闭包大小(不含自身)；fix_involvement=FIXES∩MODIFIES(本图无 FIXES 边→如实 0，禁填充)；pagerank=Function 级 CALLS 图幂迭代 d=0.85 阈1e-6 含悬挂质量项。只加/覆盖属性、图结构不动。
+
+===== 内嵌代码（行号即源文件真实行号）=====
+   1	"""模糊谓词指标预计算（§4.3 / 裁定 D-02/D-03/D-12）——索引期写节点属性，纯标准库。
+   2	
+   3	把「核心 / 热点 / 危险 / 复杂 / 被谁用」这些**模糊谓词**操作化为可预计算、可回溯的确定性
+   4	代理，落 `output/graph.json` 的节点属性（幂等回填，**只加/覆盖属性、图结构不动**）：
+   5	
+   6	- ``fan_in``          Function 的 CALLS 入度（多少不同调用方直接调用它）。
+   7	- ``heat``            ``commits_all + 2×commits_90d``；90d 窗口基准 = **仓库最新提交日**
+   8	                      （确定性、非 wall-clock，落地设计 §4.3）。
+   9	- ``commits_all`` / ``commits_90d``  MODIFIES 该函数的（去重）提交数 / 其中落在 90d 窗口内者。
+  10	- ``churn_90d``       90d 窗口内 MODIFIES 边的 ``lines_added + lines_deleted`` 之和（真实行变更）。
+  11	- ``blast_radius``    反向 CALLS ≤3 跳闭包大小（不含自身，改动该函数会波及的上游函数数）；
+  12	                      ``blast_endpoints`` = 该闭包内 ``is_endpoint`` 函数数（本图端点为 0，如实产 0）。
+  13	- ``fix_involvement`` FIXES 提交 ∩ MODIFIES 该函数的提交数；本图**无 Issue / 无 FIXES 边**，
+  14	                      故如实产 **0**（真实数据铁律：无数据不伪造，非填充）。
+  15	- ``pagerank``        Function 级 CALLS 图的幂迭代 PageRank（d=0.85、阈 1e-6、含悬挂质量项，D-12）。
+  16	- ``module_pagerank`` （可选）Module 级 IMPORTS 图 PageRank（异构不并图，独立指标，D-12）。
+  17	- ``cyclomatic``      圈复杂度：**读源文件 span 重析 AST**（``extract_module`` → ``FunctionFacts.cyclomatic``，
+  18	                      §4.3/D-03），按 ``symbol_id`` 回填；不重建图谱（图数据不动，仅补此属性）。
+  19	
+  20	复用 ``retrieve.impact`` 的 ``_reverse_adjacency`` / ``_bfs_levels``（同一反向 BFS 语义，不另造）。
+  21	
+  22	CLI（幂等）：
+  23	    python -m repograph.metrics [--graph output/graph.json] [--repo-root <源码根>]
+  24	``--repo-root`` 缺省时跳过 cyclomatic（图数据无源码不臆造），其余图导出指标照常写。
+  25	"""
+  26	from __future__ import annotations
+  27	
+  28	import argparse
+  29	import os
+  30	import sys
+  31	from datetime import datetime, timedelta
+  32	
+  33	from .models import GraphStore, symbol_id
+  34	from .retrieve.impact import _reverse_adjacency, _bfs_levels
+  35	
+  36	# 90d 窗口（落地设计 §4.3：基准为仓库最新提交日，确定性）。
+  37	_WINDOW_DAYS = 90
+  38	# blast_radius 反向闭包深度（落地设计任务 §4.3：≤3 跳）。
+  39	_BLAST_DEPTH = 3
+  40	# PageRank 幂迭代参数（D-12）。
+  41	_PR_DAMPING = 0.85
+  42	_PR_TOL = 1e-6
+  43	_PR_MAX_ITER = 200
+  44	
+  45	
+  46	# ---------------------------------------------------------------------------
+  47	# 时间窗口
+  48	# ---------------------------------------------------------------------------
+  49	
+  50	def _parse_dt(s: str):
+  51	    """解析 commit authored_at（ISO 8601 带时区，如 2026-07-06T22:45:09-07:00）。失败返回 None。"""
+  52	    if not s:
+  53	        return None
+  54	    try:
+  55	        return datetime.fromisoformat(s)
+  56	    except (ValueError, TypeError):
+  57	        return None
+  58	
+  59	
+  60	def _window_start(store: GraphStore):
+  61	    """90d 窗口起点 = 仓库最新提交日 − 90 天（确定性）。无提交返回 None。"""
+  62	    latest = None
+  63	    for c in store.nodes("Commit"):
+  64	        dt = _parse_dt(c.get("authored_at"))
+  65	        if dt is not None and (latest is None or dt > latest):
+  66	            latest = dt
+  67	    if latest is None:
+  68	        return None
+  69	    return latest - timedelta(days=_WINDOW_DAYS)
+  70	
+  71	
+  72	# ---------------------------------------------------------------------------
+  73	# fan_in（CALLS 入度）
+  74	# ---------------------------------------------------------------------------
+  75	
+  76	def compute_fan_in(store: GraphStore) -> dict:
+  77	    """每个 Function 的 CALLS 入度（不同直接调用方数）。复用反向邻接。"""
+  78	    rev = _reverse_adjacency(store, "CALLS")          # dst → {src}
+  79	    out = {}
+  80	    for n in store.nodes("Function"):
+  81	        out[n["id"]] = len(rev.get(n["id"], ()))
+  82	    return out
+  83	
+  84	
+  85	# ---------------------------------------------------------------------------
+  86	# heat / commits_all / commits_90d / churn_90d（MODIFIES + 90d 窗口）
+  87	# ---------------------------------------------------------------------------
+  88	
+  89	def compute_heat_churn(store: GraphStore) -> dict:
+  90	    """返回 fid → {heat, commits_all, commits_90d, churn_90d}。
+  91	
+  92	    commits_all = 去重的 MODIFIES 提交数；commits_90d = 其中落 90d 窗口者；
+  93	    churn_90d = 90d 窗口内 MODIFIES 边 (lines_added+lines_deleted) 之和；
+  94	    heat = commits_all + 2×commits_90d。窗口基准 = 仓库最新提交日（确定性）。
+  95	    """
+  96	    win = _window_start(store)
+  97	    commit_dt = {c["id"]: _parse_dt(c.get("authored_at")) for c in store.nodes("Commit")}
+  98	
+  99	    all_commits: dict[str, set] = {}
+ 100	    win_commits: dict[str, set] = {}
+ 101	    churn: dict[str, int] = {}
+ 102	    for src, _t, dst, props in store.edges("MODIFIES"):
+ 103	        all_commits.setdefault(dst, set()).add(src)
+ 104	        dt = commit_dt.get(src)
+ 105	        in_win = (win is not None and dt is not None and dt >= win)
+ 106	        if in_win:
+ 107	            win_commits.setdefault(dst, set()).add(src)
+ 108	            churn[dst] = churn.get(dst, 0) + int(props.get("lines_added", 0) or 0) \
+ 109	                + int(props.get("lines_deleted", 0) or 0)
+ 110	
+ 111	    out = {}
+ 112	    for n in store.nodes("Function"):
+ 113	        fid = n["id"]
+ 114	        ca = len(all_commits.get(fid, ()))
+ 115	        c90 = len(win_commits.get(fid, ()))
+ 116	        out[fid] = {"commits_all": ca, "commits_90d": c90,
+ 117	                    "churn_90d": churn.get(fid, 0), "heat": ca + 2 * c90}
+ 118	    return out
+ 119	
+ 120	
+ 121	# ---------------------------------------------------------------------------
+ 122	# blast_radius（反向 CALLS ≤3 跳闭包 + 可达端点）
+ 123	# ---------------------------------------------------------------------------
+ 124	
+ 125	def compute_blast_radius(store: GraphStore) -> dict:
+ 126	    """返回 fid → {blast_radius, blast_endpoints}。
+ 127	
+ 128	    blast_radius = 反向 CALLS ≤_BLAST_DEPTH 跳闭包大小**不含自身**（改动该函数波及的上游函数数）;
+ 129	    blast_endpoints = 闭包内 is_endpoint 为真的函数数（本图为 0 则如实 0）。复用 _bfs_levels。
+ 130	    """
+ 131	    rev = _reverse_adjacency(store, "CALLS")
+ 132	    is_ep = {n["id"]: bool(n.get("is_endpoint")) for n in store.nodes("Function")}
+ 133	    out = {}
+ 134	    for n in store.nodes("Function"):
+ 135	        fid = n["id"]
+ 136	        levels, _tr = _bfs_levels([fid], rev, _BLAST_DEPTH)
+ 137	        callers = [nid for nid in levels if nid != fid]      # 闭包不含自身
+ 138	        eps = sum(1 for nid in callers if is_ep.get(nid))
+ 139	        out[fid] = {"blast_radius": len(callers), "blast_endpoints": eps}
+ 140	    return out
+ 141	
+ 142	
+ 143	# ---------------------------------------------------------------------------
+ 144	# fix_involvement（FIXES 提交 ∩ MODIFIES 该函数）
+ 145	# ---------------------------------------------------------------------------
+ 146	
+ 147	def compute_fix_involvement(store: GraphStore) -> dict:
+ 148	    """FIXES 提交 ∩ MODIFIES 该函数的提交数。
+ 149	
+ 150	    本图无 Issue、无 FIXES 边（FIXES 是 Commit→Issue），故全体如实为 0（真实数据铁律：
+ 151	    无数据不伪造）。逻辑完备：一旦引入 Issue/FIXES 数据即自动生效。
+ 152	    """
+ 153	    fix_commits = {src for src, _t, _dst, _p in store.edges("FIXES")}
+ 154	    fid_fix: dict[str, int] = {}
+ 155	    if fix_commits:
+ 156	        for src, _t, dst, _p in store.edges("MODIFIES"):
+ 157	            if src in fix_commits:
+ 158	                fid_fix[dst] = fid_fix.get(dst, 0) + 1
+ 159	    return {n["id"]: fid_fix.get(n["id"], 0) for n in store.nodes("Function")}
+ 160	
+ 161	
+ 162	# ---------------------------------------------------------------------------
+ 163	# PageRank（纯 Python 幂迭代，D-12：d=0.85、阈 1e-6、含悬挂质量项）
+ 164	# ---------------------------------------------------------------------------
+ 165	
+ 166	def _forward_adjacency(store: GraphStore, etype: str, node_label: str) -> tuple:
+ 167	    """(nodes, out_adj)：out_adj[src] = {dst}，只收 node_label 两端的边。"""
+ 168	    nodes = [n["id"] for n in store.nodes(node_label)]
+ 169	    nset = set(nodes)
+ 170	    out_adj: dict[str, set] = {}
+ 171	    for src, _t, dst, _p in store.edges(etype):
+ 172	        if src in nset and dst in nset:
+ 173	            out_adj.setdefault(src, set()).add(dst)
+ 174	    return nodes, out_adj
+ 175	
+ 176	
+ 177	def _power_iteration(nodes: list, out_adj: dict,
+ 178	                     d: float = _PR_DAMPING, tol: float = _PR_TOL,
+ 179	                     max_iter: int = _PR_MAX_ITER) -> dict:
+ 180	    """标准 PageRank 幂迭代（含悬挂节点质量均摊）。rank 沿边方向流动（src→dst）。"""
+ 181	    n = len(nodes)
+ 182	    if n == 0:
+ 183	        return {}
+ 184	    pr = {x: 1.0 / n for x in nodes}
+ 185	    outdeg = {x: len(out_adj.get(x, ())) for x in nodes}
+ 186	    dangling = [x for x in nodes if outdeg[x] == 0]
+ 187	    base = (1.0 - d) / n
+ 188	    for _ in range(max_iter):
+ 189	        dmass = d * sum(pr[x] for x in dangling) / n         # 悬挂质量均摊到全体
+ 190	        nxt = {x: base + dmass for x in nodes}
+ 191	        for x in nodes:
+ 192	            deg = outdeg[x]
+ 193	            if not deg:
+ 194	                continue
+ 195	            share = d * pr[x] / deg
+ 196	            for m in out_adj[x]:
+ 197	                nxt[m] += share
+ 198	        err = sum(abs(nxt[x] - pr[x]) for x in nodes)
+ 199	        pr = nxt
+ 200	        if err < tol:
+ 201	            break
+ 202	    return pr
+ 203	
+ 204	
+ 205	def compute_pagerank(store: GraphStore) -> dict:
+ 206	    """Function 级 CALLS 图 PageRank（rank 沿 CALLS 方向：被重要函数调用者得分高）。"""
+ 207	    nodes, out_adj = _forward_adjacency(store, "CALLS", "Function")
+ 208	    return _power_iteration(nodes, out_adj)
+ 209	
+ 210	
+ 211	def compute_module_pagerank(store: GraphStore) -> dict:
+ 212	    """Module 级 IMPORTS 图 PageRank（可选独立指标，D-12：异构不并图）。"""
+ 213	    nodes, out_adj = _forward_adjacency(store, "IMPORTS", "Module")
+ 214	    return _power_iteration(nodes, out_adj)
+ 215	
+
+===== 代码结束 =====
+
+请逐条列出真实缺陷（文件:行号 + 问题 + 触发场景 + 修法）；无则答“未发现缺陷”。

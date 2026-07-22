@@ -9,7 +9,8 @@
   （按 IMPLEMENTS 落点）、``entrypoints``（聚合 ``Function.is_endpoint``，本图为 0 则如实空）。
 - **summary**（唯一一次索引期真实网关调用，qwen3.8-max-preview，≤300 字）：由
   ``generate_card_summary`` 产出并经**专名白名单校验**（summary 中英文标识符必须出现在输入中，
-  违规重试 1 次后降级弃 summary，反幻觉，风险 F2）。失败**如实降级为纯确定性卡片**，不伪造。
+  违规则重试，至多 ``whitelist_retries`` 次（默认 4）仍违规才降级弃 summary，反幻觉，风险 F2）。
+  失败**如实降级为纯确定性卡片**，不伪造。
 
 产出 ``output/repo_card.json`` 缓存。查询期 meta 路由 ``build_meta_context`` **读取优先缓存**、
 缺失/损坏则现场 ``build_repo_card``（纯确定性）+ ``degraded=True``，**绝不因缺文件裸拒**（P4）。

@@ -1,0 +1,191 @@
+禁止使用任何工具、禁止读文件，只依据下方内嵌代码直接作答。
+你是资深 Python/JS 代码审查员，审查 RepoGraph v0.3 Phase C 新增/改动代码。
+只按四个维度找**真实缺陷**，逐条给：文件:行号 + 一句问题 + 触发场景/输入 + 修法。
+没有缺陷就明说“未发现缺陷”。不要复述代码、不要风格建议、不要臆测未给出的代码。
+四维度：
+ 1) 正确性：边界条件、异常吞掉后状态、并发（若涉及锁）、off-by-one、类型误判；
+ 2) 契约一致：是否与下方【契约摘录】逐字段吻合（字段名/取值域/优先级/阈值）；
+ 3) 假数据：任何写死的统计数字/标注/伪造的模型输出/占位真值（本项目铁律：无假数据）；
+ 4) 密钥处理：鉴权 token 是否只入请求头、绝不打印/写文件/入异常消息（提及应为 sk-****）。
+
+【被审文件】代码库知识图谱/src/repograph/enrich.py  行段 1-172
+
+【契约 D-11/D-16 C2 双语回填】只加属性 zh_desc/zh_aliases，绝不动概念集/边集(节点/边大小不变，assert 守)。zh_desc/zh_aliases 是 C2 全权字段每次整体覆盖→幂等。blocked/缺失/结构不符→明确报错退出，绝不静默假数据。desc 仅 desc_accepted 才写。序列化 ensure_ascii=False indent=1 减 diff 噪声。
+
+===== 内嵌代码（行号即源文件真实行号）=====
+   1	"""C2 双语属性回填（v0.3 · Phase C2 · 裁定 D-11/D-16）——幂等增量写 graph.json。
+   2	
+   3	把 ``design_work/c2_cards.json``（索引期网关生成的富化双语卡片）**增量**回填到
+   4	``output/graph.json`` 的节点属性：
+   5	
+   6	- Function / Class → ``zh_desc``（≤40 字中文功能描述）+ ``zh_aliases``（口语近义说法）
+   7	- Concept          → ``zh_aliases``（口语近义说法；grok 原生 ``aliases`` 不动，并存）
+   8	
+   9	**只加属性，绝不动概念集/边集**（D-P2 的 blocking 变更本轮不做，防 gold 漂移；见 §7 C2 纪律）。
+  10	``zh_desc``/``zh_aliases`` 是 C2 **全权拥有**字段——每次运行整体覆盖（非追加），故**幂等**：
+  11	重跑同一 c2_cards.json 得同一 graph.json；换一版卡片重跑则干净替换、不残留旧别名。
+  12	
+  13	节点/边的 JSON 结构（键序、其它属性）逐一保留，仅在命中节点上增/改这两个键，``git diff``
+  14	可清晰审计。找不到卡片 / 卡片 blocked → 明确报错退出，绝不静默（真实数据铁律）。
+  15	
+  16	CLI：``python -m repograph.enrich``（可选 ``--cards``/``--graph``/``--dry-run``）。
+  17	只依赖标准库。
+  18	"""
+  19	from __future__ import annotations
+  20	
+  21	import argparse
+  22	import json
+  23	import os
+  24	import sys
+  25	
+  26	_HERE = os.path.dirname(os.path.abspath(__file__))                 # src/repograph
+  27	_REPO_ROOT = os.path.dirname(os.path.dirname(_HERE))               # 仓库根
+  28	DEFAULT_CARDS = os.path.join(_REPO_ROOT, "design_work", "c2_cards.json")
+  29	DEFAULT_GRAPH = os.path.join(_REPO_ROOT, "output", "graph.json")
+  30	
+  31	# C2 全权拥有的双语属性键（每次运行整体覆盖 → 幂等）
+  32	_C2_KEYS = ("zh_desc", "zh_aliases")
+  33	
+  34	
+  35	def load_cards(path: str) -> list[dict]:
+  36	    """读 c2_cards.json，返回 cards 列表。blocked / 缺失 / 结构不符 → 抛异常（不静默）。"""
+  37	    if not os.path.exists(path):
+  38	        raise FileNotFoundError(f"找不到卡片文件：{path}（先跑 design_work/c2_gen_cards.py）")
+  39	    with open(path, "r", encoding="utf-8") as f:
+  40	        data = json.load(f)
+  41	    if not isinstance(data, dict):
+  42	        raise ValueError(f"卡片文件结构异常（非 dict）：{path}")
+  43	    if data.get("blocked"):
+  44	        raise RuntimeError(f"卡片生成被 blocked（网关不可用），拒绝回填假数据：{path}")
+  45	    cards = data.get("cards")
+  46	    if not isinstance(cards, list) or not cards:
+  47	        raise ValueError(f"卡片文件无 cards 或为空：{path}")
+  48	    return cards
+  49	
+  50	
+  51	def _dedup(seq) -> list:
+  52	    """保序去重（保留首次出现），过滤空串。"""
+  53	    out, seen = [], set()
+  54	    for x in seq or []:
+  55	        if isinstance(x, str):
+  56	            s = x.strip()
+  57	            if s and s not in seen:
+  58	                seen.add(s)
+  59	                out.append(s)
+  60	    return out
+  61	
+  62	
+  63	def build_attr_map(cards: list[dict]) -> dict:
+  64	    """卡片 → {node_id: {zh_desc?, zh_aliases}}（每 id 一份 C2 属性，覆盖式）。
+  65	
+  66	    - Function/Class：desc 被 desc_accepted 采纳才写 zh_desc；zh_aliases 恒写（可为空列表）。
+  67	    - Concept：只写 zh_aliases（desc 冗余于原生 description，不写）。
+  68	    同一 id 多卡（不应发生）取最后一张，记入返回的冲突集。
+  69	    """
+  70	    attr: dict[str, dict] = {}
+  71	    dup_ids: list[str] = []
+  72	    for c in cards:
+  73	        nid = c.get("id")
+  74	        if not nid:
+  75	            continue
+  76	        if nid in attr:
+  77	            dup_ids.append(nid)
+  78	        label = c.get("label")
+  79	        aliases = _dedup(c.get("zh_aliases"))
+  80	        entry: dict = {"zh_aliases": aliases}
+  81	        if label in ("Function", "Class") and c.get("desc_accepted") and c.get("desc"):
+  82	            entry["zh_desc"] = c["desc"]
+  83	        attr[nid] = entry
+  84	    attr["__dup_ids__"] = dup_ids  # type: ignore[assignment]
+  85	    return attr
+  86	
+  87	
+  88	def apply_to_graph(graph: dict, attr: dict) -> dict:
+  89	    """把 C2 属性覆盖式写入 graph 节点（只改命中节点的 _C2_KEYS，其余原样）。返回统计。"""
+  90	    dup_ids = attr.pop("__dup_ids__", [])
+  91	    by_id = {n["id"]: n for n in graph["nodes"]}
+  92	    stats = {"cards": len(attr), "matched": 0, "missing": [],
+  93	             "zh_desc_set": 0, "zh_aliases_set": 0, "aliases_total": 0,
+  94	             "dup_card_ids": dup_ids, "by_label": {}}
+  95	    for nid, entry in attr.items():
+  96	        node = by_id.get(nid)
+  97	        if node is None:
+  98	            stats["missing"].append(nid)
+  99	            continue
+ 100	        stats["matched"] += 1
+ 101	        lbl = node.get("label", "?")
+ 102	        stats["by_label"][lbl] = stats["by_label"].get(lbl, 0) + 1
+ 103	        # 覆盖式写 C2 键（幂等）：先清旧 C2 键，再按本次卡片写入
+ 104	        for k in _C2_KEYS:
+ 105	            node.pop(k, None)
+ 106	        aliases = entry.get("zh_aliases") or []
+ 107	        if aliases:
+ 108	            node["zh_aliases"] = aliases
+ 109	            stats["zh_aliases_set"] += 1
+ 110	            stats["aliases_total"] += len(aliases)
+ 111	        if "zh_desc" in entry:
+ 112	            node["zh_desc"] = entry["zh_desc"]
+ 113	            stats["zh_desc_set"] += 1
+ 114	    return stats
+ 115	
+ 116	
+ 117	def enrich(cards_path: str = DEFAULT_CARDS, graph_path: str = DEFAULT_GRAPH,
+ 118	           dry_run: bool = False) -> dict:
+ 119	    """主流程：读卡片 → 读图 → 覆盖式回填 C2 属性 → （非 dry-run）写回。返回统计 dict。"""
+ 120	    cards = load_cards(cards_path)
+ 121	    with open(graph_path, "r", encoding="utf-8") as f:
+ 122	        graph = json.load(f)
+ 123	    n_nodes_before, n_edges_before = len(graph["nodes"]), len(graph["edges"])
+ 124	
+ 125	    attr = build_attr_map(cards)
+ 126	    stats = apply_to_graph(graph, attr)
+ 127	
+ 128	    # 不变量：节点/边集大小不变（只加属性，D-P2 blocking 本轮不做）
+ 129	    assert len(graph["nodes"]) == n_nodes_before, "节点集被改动（禁止）"
+ 130	    assert len(graph["edges"]) == n_edges_before, "边集被改动（禁止）"
+ 131	    stats["nodes"] = n_nodes_before
+ 132	    stats["edges"] = n_edges_before
+ 133	
+ 134	    if not dry_run:
+ 135	        # 与 GraphStore.save 同款序列化参数（ensure_ascii=False, indent=1），减小 diff 噪声
+ 136	        with open(graph_path, "w", encoding="utf-8") as f:
+ 137	            json.dump(graph, f, ensure_ascii=False, indent=1)
+ 138	    return stats
+ 139	
+ 140	
+ 141	def main(argv=None) -> int:
+ 142	    ap = argparse.ArgumentParser(description="C2 双语属性幂等回填 graph.json")
+ 143	    ap.add_argument("--cards", default=DEFAULT_CARDS)
+ 144	    ap.add_argument("--graph", default=DEFAULT_GRAPH)
+ 145	    ap.add_argument("--dry-run", action="store_true", help="只统计不写回")
+ 146	    args = ap.parse_args(argv)
+ 147	
+ 148	    try:
+ 149	        stats = enrich(args.cards, args.graph, dry_run=args.dry_run)
+ 150	    except (FileNotFoundError, ValueError, RuntimeError) as e:
+ 151	        print(f"[FATAL] {e}", file=sys.stderr)
+ 152	        return 2
+ 153	
+ 154	    print("=" * 60)
+ 155	    print("C2 双语属性回填" + ("（DRY-RUN 未写回）" if args.dry_run else ""))
+ 156	    print(f"  卡片数: {stats['cards']}  命中节点: {stats['matched']}"
+ 157	          f"  未命中: {len(stats['missing'])}")
+ 158	    print(f"  zh_desc 写入: {stats['zh_desc_set']}"
+ 159	          f"  zh_aliases 写入: {stats['zh_aliases_set']}"
+ 160	          f"  别名总数: {stats['aliases_total']}")
+ 161	    print(f"  分布: {stats['by_label']}")
+ 162	    print(f"  图规模不变: 节点 {stats['nodes']} · 边 {stats['edges']}")
+ 163	    if stats["missing"]:
+ 164	        print(f"  [WARN] 未命中卡片 id（前5）: {stats['missing'][:5]}")
+ 165	    if stats["dup_card_ids"]:
+ 166	        print(f"  [WARN] 重复卡片 id: {stats['dup_card_ids'][:5]}")
+ 167	    print("=" * 60)
+ 168	    return 0
+ 169	
+ 170	
+ 171	if __name__ == "__main__":
+ 172	    sys.exit(main())
+
+===== 代码结束 =====
+
+请逐条列出真实缺陷（文件:行号 + 问题 + 触发场景 + 修法）；无则答“未发现缺陷”。

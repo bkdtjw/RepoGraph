@@ -350,6 +350,11 @@ def test_premises_from_claims(store):
     assert "kafka" in [t.lower() for t in by_claim["使用 Kafka 消息队列"]["terms"]]
     assert "五级" in by_claim["看门狗有五级升级机制"]["terms"]
     assert "100轮" in by_claim["跑满 100 轮才算过"]["terms"]
+    # 审查修订 [C-verify]：中文数字「零」须纳入数字类，否则「一百零五轮」被截断、「零次」整条漏抽。
+    z = premises_from_claims(["重试一百零五轮仍失败", "零次校验就放行"])
+    zt = {p["claim"]: p["terms"] for p in z}
+    assert "一百零五轮" in zt["重试一百零五轮仍失败"], "含「零」的数量短语须完整抽取"
+    assert any("零次" in t for t in zt.get("零次校验就放行", [])), "「零次」须被抽为可校验 term"
     # 纯中文泛述无可校验 term → 不产 premise（保守，防误报 F1）
     assert premises_from_claims(["这个系统很复杂"]) == []
     # 校验：Kafka 缺席 → flag；五级 缺席（图谱是三级）→ flag

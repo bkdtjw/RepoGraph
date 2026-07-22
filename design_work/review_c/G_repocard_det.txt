@@ -1,0 +1,224 @@
+禁止使用任何工具、禁止读文件，只依据下方内嵌代码直接作答。
+你是资深 Python/JS 代码审查员，审查 RepoGraph v0.3 Phase C 新增/改动代码。
+只按四个维度找**真实缺陷**，逐条给：文件:行号 + 一句问题 + 触发场景/输入 + 修法。
+没有缺陷就明说“未发现缺陷”。不要复述代码、不要风格建议、不要臆测未给出的代码。
+四维度：
+ 1) 正确性：边界条件、异常吞掉后状态、并发（若涉及锁）、off-by-one、类型误判；
+ 2) 契约一致：是否与下方【契约摘录】逐字段吻合（字段名/取值域/优先级/阈值）；
+ 3) 假数据：任何写死的统计数字/标注/伪造的模型输出/占位真值（本项目铁律：无假数据）；
+ 4) 密钥处理：鉴权 token 是否只入请求头、绝不打印/写文件/入异常消息（提及应为 sk-****）。
+
+【被审文件】代码库知识图谱/src/repograph/retrieve/repo_card.py  行段 1-205
+
+【契约 spec §4.1 level-0 卡片】确定性字段纯图谱统计零网络：stats(模块/类/函数/提交/概念)、top_modules(按loc)、hot_functions(按MODIFIES)、core_concepts(按IMPLEMENTS)、entrypoints(聚合 is_endpoint,本图0则如实空)。render_card_text 恒含规模事实行(L0事实≥3)。禁写死统计数字，一切来自真实 store。
+
+===== 内嵌代码（行号即源文件真实行号）=====
+   1	"""level-0 仓库卡片（v0.3 · Phase C1 · 裁定 D-01）——meta 路由的答案素材。
+   2	
+   3	落地设计 §4.1 / P1「答案来源前置」：「你了解这个项目吗」类元问题的答案素材必须在
+   4	**索引期显式制造**，不指望检索碰巧覆盖。本模块把 v0.1 惰性拼装的 ``build_overview``
+   5	升格为**结构化卡片**：
+   6	
+   7	- **确定性字段**（纯图谱统计，零网络）：``stats``（22/15/259/75/139 五类规模）、
+   8	  ``top_modules``（按 loc）、``hot_functions``（按 MODIFIES 计数）、``core_concepts``
+   9	  （按 IMPLEMENTS 落点）、``entrypoints``（聚合 ``Function.is_endpoint``，本图为 0 则如实空）。
+  10	- **summary**（唯一一次索引期真实网关调用，qwen3.8-max-preview，≤300 字）：由
+  11	  ``generate_card_summary`` 产出并经**专名白名单校验**（summary 中英文标识符必须出现在输入中，
+  12	  违规重试 1 次后降级弃 summary，反幻觉，风险 F2）。失败**如实降级为纯确定性卡片**，不伪造。
+  13	
+  14	产出 ``output/repo_card.json`` 缓存。查询期 meta 路由 ``build_meta_context`` **读取优先缓存**、
+  15	缺失/损坏则现场 ``build_repo_card``（纯确定性）+ ``degraded=True``，**绝不因缺文件裸拒**（P4）。
+  16	
+  17	只依赖 ``..models.GraphStore``（确定性部分）与 ``..extract.llm_client``（summary 生成，
+  18	仅索引期）。**不 import ``context``**（避免与 meta 路由回接的循环依赖）。
+  19	"""
+  20	from __future__ import annotations
+  21	
+  22	import json
+  23	import os
+  24	import re
+  25	from typing import Optional
+  26	
+  27	from ..models import GraphStore, dotted_from_relpath
+  28	
+  29	# 卡片确定性字段的展示上限（与 build_overview 对齐，保证 L0 事实齐备）
+  30	_TOP_MODULES = 8
+  31	_TOP_HOT = 5
+  32	_TOP_CONCEPTS = 8
+  33	
+  34	_SUMMARY_MAX_CHARS = 300
+  35	
+  36	
+  37	# ---------------------------------------------------------------------------
+  38	# 路径与小工具（本地实现，不 import context 以免循环）
+  39	# ---------------------------------------------------------------------------
+  40	
+  41	def default_cache_path() -> str:
+  42	    """``output/repo_card.json`` 绝对路径（相对仓库根）。"""
+  43	    here = os.path.dirname(os.path.abspath(__file__))            # src/repograph/retrieve
+  44	    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(here)))
+  45	    return os.path.join(repo_root, "output", "repo_card.json")
+  46	
+  47	
+  48	def _first_line(text: Optional[str]) -> str:
+  49	    if not text:
+  50	        return ""
+  51	    for line in text.splitlines():
+  52	        s = line.strip()
+  53	        if s:
+  54	            return s
+  55	    return ""
+  56	
+  57	
+  58	def _qn(store: GraphStore, node_id: str) -> str:
+  59	    node = store.get_node(node_id)
+  60	    if node is None:
+  61	        return node_id.rsplit("::", 1)[-1]
+  62	    return node.get("qualname") or node.get("name") or node_id.rsplit("::", 1)[-1]
+  63	
+  64	
+  65	def _repo_name(store: GraphStore) -> str:
+  66	    for node in store.nodes():
+  67	        nid = node.get("id", "")
+  68	        if "::" in nid and not nid.startswith("concept::"):
+  69	            return nid.split("::", 1)[0]
+  70	    return "(unknown)"
+  71	
+  72	
+  73	# ---------------------------------------------------------------------------
+  74	# 确定性卡片装配（纯图谱统计，零网络）
+  75	# ---------------------------------------------------------------------------
+  76	
+  77	def build_repo_card(store: GraphStore, summary: Optional[str] = None) -> dict:
+  78	    """装配 level-0 卡片的**确定性**字段（+ 可选 summary）。纯函数、零网络。
+  79	
+  80	    与 ``context.build_overview`` 口径一致：顶层模块按 ``loc`` 降序、热点函数按 MODIFIES
+  81	    入度、核心概念按 IMPLEMENTS 落点数；``entrypoints`` 聚合 ``is_endpoint`` 为真的函数
+  82	    （本图为 0，则如实产空）。返回可 JSON 序列化的卡片 dict。
+  83	    """
+  84	    counts = store.counts().get("nodes", {})
+  85	    stats = {
+  86	        "modules": counts.get("Module", 0),
+  87	        "classes": counts.get("Class", 0),
+  88	        "functions": counts.get("Function", 0),
+  89	        "commits": counts.get("Commit", 0),
+  90	        "concepts": counts.get("Concept", 0),
+  91	    }
+  92	
+  93	    # 顶层模块：按 loc 降序 top N
+  94	    mods = sorted(store.nodes("Module"),
+  95	                  key=lambda m: (-(m.get("loc") or 0), m.get("path", "")))
+  96	    top_modules = [
+  97	        {"path": m.get("path", "?"), "loc": m.get("loc", 0),
+  98	         "doc": _first_line(m.get("docstring"))}
+  99	        for m in mods[:_TOP_MODULES]
+ 100	    ]
+ 101	
+ 102	    # 热点函数：被 MODIFIES 指向最多的 top N
+ 103	    mod_ct: dict[str, int] = {}
+ 104	    for _s, _t, dst, _p in store.edges("MODIFIES"):
+ 105	        mod_ct[dst] = mod_ct.get(dst, 0) + 1
+ 106	    hot = sorted(mod_ct.items(), key=lambda kv: (-kv[1], kv[0]))
+ 107	    hot_functions = [
+ 108	        {"qualname": _qn(store, fid), "modifies": c}
+ 109	        for fid, c in hot if store.get_node(fid) is not None
+ 110	    ][:_TOP_HOT]
+ 111	
+ 112	    # 核心概念：IMPLEMENTS 落点最多的 top N
+ 113	    impl_ct: dict[str, int] = {}
+ 114	    for _s, _t, dst, _p in store.edges("IMPLEMENTS"):
+ 115	        impl_ct[dst] = impl_ct.get(dst, 0) + 1
+ 116	    core = sorted(impl_ct.items(), key=lambda kv: (-kv[1], kv[0]))
+ 117	    core_concepts = []
+ 118	    for cid, c in core:
+ 119	        node = store.get_node(cid)
+ 120	        if node is None:
+ 121	            continue
+ 122	        core_concepts.append({"name": node.get("name", ""), "impl": c,
+ 123	                              "desc": _first_line(node.get("description"))})
+ 124	        if len(core_concepts) >= _TOP_CONCEPTS:
+ 125	            break
+ 126	
+ 127	    # 入口点：聚合 is_endpoint 为真的 Function（本图为 0 → 如实空）
+ 128	    entrypoints = []
+ 129	    for fn in store.nodes("Function"):
+ 130	        if fn.get("is_endpoint"):
+ 131	            entrypoints.append({
+ 132	                "qualname": fn.get("qualname", ""),
+ 133	                "http_method": fn.get("http_method"),
+ 134	                "route_path": fn.get("route_path"),
+ 135	            })
+ 136	
+ 137	    return {
+ 138	        "repo": _repo_name(store),
+ 139	        "stats": stats,
+ 140	        "top_modules": top_modules,
+ 141	        "hot_functions": hot_functions,
+ 142	        "core_concepts": core_concepts,
+ 143	        "entrypoints": entrypoints,
+ 144	        "summary": summary or None,
+ 145	    }
+ 146	
+ 147	
+ 148	def render_card_text(card: dict) -> str:
+ 149	    """把卡片渲染为中文注入文本（含全部确定性事实 + 可选 summary）。
+ 150	
+ 151	    **恒含规模事实行**（模块/类/函数/提交/概念计数），使 meta 路由无论是否有 summary
+ 152	    都满足 L0 事实达标（≥3），与 ``build_overview`` 的事实口径一致。
+ 153	    """
+ 154	    s = card.get("stats", {})
+ 155	    lines: list[str] = []
+ 156	    lines.append("【仓库卡片】（来源: 图谱统计 · level-0 repo_card）")
+ 157	    lines.append(f"仓库: {card.get('repo', '(unknown)')}")
+ 158	    lines.append(
+ 159	        f"规模: 模块 {s.get('modules', 0)} · 类 {s.get('classes', 0)} · "
+ 160	        f"函数 {s.get('functions', 0)} · 提交 {s.get('commits', 0)} · "
+ 161	        f"概念 {s.get('concepts', 0)}"
+ 162	    )
+ 163	
+ 164	    summary = card.get("summary")
+ 165	    if summary:
+ 166	        lines.append("")
+ 167	        lines.append("【概述】（来源: 索引期网关生成 · 已过专名白名单校验）")
+ 168	        lines.append(summary)
+ 169	
+ 170	    mods = card.get("top_modules") or []
+ 171	    if mods:
+ 172	        lines.append("")
+ 173	        lines.append("【顶层模块】（来源: Module 按 loc 降序）")
+ 174	        for m in mods:
+ 175	            lines.append(f"- {m.get('path', '?')} (loc={m.get('loc', '?')}): "
+ 176	                         f"{m.get('doc') or '（无 docstring）'}")
+ 177	
+ 178	    hot = card.get("hot_functions") or []
+ 179	    if hot:
+ 180	        lines.append("")
+ 181	        lines.append("【热点函数】（来源: MODIFIES 计数，改动最频繁）")
+ 182	        for h in hot:
+ 183	            lines.append(f"- {h.get('qualname', '')} (被 {h.get('modifies', 0)} 次提交修改)")
+ 184	
+ 185	    core = card.get("core_concepts") or []
+ 186	    if core:
+ 187	        lines.append("")
+ 188	        lines.append("【核心概念】（来源: IMPLEMENTS 落点最多）")
+ 189	        for c in core:
+ 190	            lines.append(f"- {c.get('name', '')} (落 {c.get('impl', 0)} 处实现): "
+ 191	                         f"{c.get('desc') or ''}")
+ 192	
+ 193	    eps = card.get("entrypoints") or []
+ 194	    lines.append("")
+ 195	    if eps:
+ 196	        lines.append("【入口点】（来源: Function.is_endpoint 聚合）")
+ 197	        for e in eps:
+ 198	            hm = e.get("http_method") or "?"
+ 199	            rp = e.get("route_path") or "?"
+ 200	            lines.append(f"- {e.get('qualname', '')} [{hm} {rp}]")
+ 201	    else:
+ 202	        lines.append("【入口点】（来源: Function.is_endpoint 聚合）: （本图无 HTTP 端点）")
+ 203	
+ 204	    return "\n".join(lines) + "\n"
+ 205	
+
+===== 代码结束 =====
+
+请逐条列出真实缺陷（文件:行号 + 问题 + 触发场景 + 修法）；无则答“未发现缺陷”。

@@ -1,0 +1,168 @@
+禁止使用任何工具、禁止读文件，只依据下方内嵌代码直接作答。
+你是资深 Python/JS 代码审查员，审查 RepoGraph v0.3 Phase C 新增/改动代码。
+只按四个维度找**真实缺陷**，逐条给：文件:行号 + 一句问题 + 触发场景/输入 + 修法。
+没有缺陷就明说“未发现缺陷”。不要复述代码、不要风格建议、不要臆测未给出的代码。
+四维度：
+ 1) 正确性：边界条件、异常吞掉后状态、并发（若涉及锁）、off-by-one、类型误判；
+ 2) 契约一致：是否与下方【契约摘录】逐字段吻合（字段名/取值域/优先级/阈值）；
+ 3) 假数据：任何写死的统计数字/标注/伪造的模型输出/占位真值（本项目铁律：无假数据）；
+ 4) 密钥处理：鉴权 token 是否只入请求头、绝不打印/写文件/入异常消息（提及应为 sk-****）。
+
+【被审文件】claude-ui/web/app.js  行段 588-736
+
+【契约 spec §5.3 前端展示】premise_flags 非空→前提待核实逐条 claim(缺 claim 跳过)；needs_disambiguation=true 且有 candidates→候选卡片(path/doc_head/fan_in)，无 candidates 不渲染(不臆造)；degraded=true→低置信标记；suggestions→建议问法(P4出路)；resolved_query→系统理解回显(P5)。真实字段驱动，缺失优雅省略。
+
+===== 内嵌代码（行号即源文件真实行号）=====
+ 588	    // premise_flags 非空: 高亮"前提待核实" + 逐条列 claim (真实字段, 缺 claim 的项跳过)。
+ 589	    function renderPremiseFlags() {
+ 590	      var flags = Array.isArray(data.premise_flags) ? data.premise_flags : [];
+ 591	      var claims = flags.filter(function (f) { return f && f.claim; });
+ 592	      if (!claims.length) return;
+ 593	      var box = document.createElement('div');
+ 594	      box.className = 'repo-ref-premise';
+ 595	      var head = document.createElement('div');
+ 596	      head.className = 'repo-ref-premise-head';
+ 597	      head.textContent = '⚠ 前提待核实';
+ 598	      box.appendChild(head);
+ 599	      var ul = document.createElement('ul');
+ 600	      claims.forEach(function (f) {
+ 601	        var li = document.createElement('li');
+ 602	        var claim = document.createElement('span');
+ 603	        claim.className = 'repo-ref-premise-claim';
+ 604	        claim.textContent = f.claim;
+ 605	        li.appendChild(claim);
+ 606	        if (f.status) {
+ 607	          var st = document.createElement('span');
+ 608	          st.className = 'repo-ref-premise-status';
+ 609	          st.textContent = f.status;
+ 610	          li.appendChild(st);
+ 611	        }
+ 612	        ul.appendChild(li);
+ 613	      });
+ 614	      box.appendChild(ul);
+ 615	      ref.appendChild(box);
+ 616	    }
+ 617	
+ 618	    // degraded=true: 低置信标记; suggestions 非空: 建议问法列表 (P4 出路)。
+ 619	    // 两者各由真实字段独立驱动, 常同时出现于 structural/out_of_scope。
+ 620	    function renderDegradedSuggests() {
+ 621	      var isDeg = (data.degraded === true);
+ 622	      var sugg = Array.isArray(data.suggestions)
+ 623	        ? data.suggestions.filter(function (s) { return typeof s === 'string' && s.trim(); })
+ 624	        : [];
+ 625	      if (!isDeg && !sugg.length) return;
+ 626	      var box = document.createElement('div');
+ 627	      box.className = 'repo-ref-fallback';
+ 628	      if (isDeg) {
+ 629	        var mark = document.createElement('div');
+ 630	        mark.className = 'repo-ref-lowconf';
+ 631	        mark.textContent = '低置信结果';
+ 632	        box.appendChild(mark);
+ 633	      }
+ 634	      if (sugg.length) {
+ 635	        var sh = document.createElement('div');
+ 636	        sh.className = 'repo-ref-suggest-head';
+ 637	        sh.textContent = '你可以这样问：';
+ 638	        box.appendChild(sh);
+ 639	        var ul = document.createElement('ul');
+ 640	        ul.className = 'repo-ref-suggest-list';
+ 641	        sugg.forEach(function (s) {
+ 642	          var li = document.createElement('li');
+ 643	          li.textContent = s;
+ 644	          ul.appendChild(li);
+ 645	        });
+ 646	        box.appendChild(ul);
+ 647	      }
+ 648	      ref.appendChild(box);
+ 649	    }
+ 650	
+ 651	    renderResolvedQuery();   // 置顶: 先回显解读 (P5), 再落 mode 主标注
+ 652	
+ 653	    if (mode === 'symbol' || mode === 'graph') {
+ 654	      // L0 符号直连 (现有): 命中真实符号 + 调用方 + 概念。graph 为旧档名, 同档渲染。
+ 655	      ref.classList.add('symbol');
+ 656	      var symbols = num(stats.symbols, 0);
+ 657	      var callers = num(stats.impact_callers, 0);
+ 658	      var concepts = num(stats.concepts, 0);
+ 659	      buildExpandable(
+ 660	        '📎 引用代码库：' + symbols + ' 个符号 · ' + callers + ' 个调用方 · ' + concepts + ' 个概念',
+ 661	        function (detail) { fillLinkedList(detail, 'method'); }
+ 662	      );
+ 663	    } else if (mode === 'topic') {
+ 664	      // L1 词面主题召回: 只把 linked 里 label==='Concept' 的项计入"相关概念"
+ 665	      // (事件 stats.topics=召回总数, 含提交/模块, 不等于概念数; 避免把非概念当概念虚标);
+ 666	      // 数量与展开所列概念严格一致。事件未提供"主题命中函数数"的真实字段
+ 667	      // (impact_callers 在 topic 档恒为 0, 且无 functions 键) → 不臆造该从句。
+ 668	      ref.classList.add('topic');
+ 669	      var topicConcepts = linked.filter(function (it) { return it && it.label === 'Concept'; });
+ 670	      var tConcepts = num(stats.concepts, topicConcepts.length);
+ 671	      buildExpandable('📎 主题召回：' + tConcepts + ' 个相关概念',
+ 672	        topicConcepts.length ? function (detail) { fillLinkedList(detail, 'terms', topicConcepts); } : null);
+ 673	    } else if (mode === 'llm') {
+ 674	      // L2 LLM 受限链接: 概念数优先 stats.concepts, 退 stats.topics, 再退 linked 长度。
+ 675	      ref.classList.add('llm');
+ 676	      var lConcepts = num(stats.concepts, num(stats.topics, linked.length));
+ 677	      buildExpandable(
+ 678	        '📎 智能链接（LLM 辅助）：' + lConcepts + ' 个相关概念',
+ 679	        function (detail) { fillLinkedList(detail, 'name'); }
+ 680	      );
+ 681	    } else if (mode === 'overview') {
+ 682	      // L3 概览兜底: 事件 stats 携带真实图谱规模 (overview 档恒含 functions/modules/concepts),
+ 683	      // 如实展示以佐证"确实了解该代码库"; 任一项缺失则该从句优雅省略, 绝不臆造数字。
+ 684	      ref.classList.add('overview');
+ 685	      var oParts = [];
+ 686	      var oFns = num(stats.functions, null);
+ 687	      var oMods = num(stats.modules, null);
+ 688	      var oCon = num(stats.concepts, null);
+ 689	      if (oFns != null) oParts.push(oFns + ' 函数');
+ 690	      if (oMods != null) oParts.push(oMods + ' 模块');
+ 691	      if (oCon != null) oParts.push(oCon + ' 概念');
+ 692	      var oLabel = '📎 代码库概览' + (oParts.length ? '：' + oParts.join(' · ') : '');
+ 693	      buildExpandable(oLabel, function (detail) {
+ 694	        var hint = document.createElement('div');
+ 695	        hint.className = 'repo-ref-hint';
+ 696	        hint.textContent = '本轮回答基于图谱整体统计';
+ 697	        detail.appendChild(hint);
+ 698	        fillLinkedList(detail, 'name'); // linked 恒空则不追加, 仅留提示
+ 699	      });
+ 700	    } else if (mode === 'meta') {
+ 701	      // 仓库卡片 (repo_card.json 注入): 复用 overview 视觉, 标签文案区分 (spec §5.3)
+ 702	      overviewLike('meta', '📎 仓库卡片', '本轮回答基于仓库卡片');
+ 703	    } else if (mode === 'global') {
+ 704	      // 全局概览 (build_overview + 包级摘要): 复用 overview 视觉, 标签文案区分
+ 705	      overviewLike('global', '📎 全局概览', '本轮回答基于全局概览与包级摘要');
+ 706	    } else if (mode === 'structural') {
+ 707	      // 结构化检索: 模板/text2cypher 层未建, 常降级; 可得计数如实列出,
+ 708	      // "出路"由随附的 degraded/suggestions 块承载 (F8 已知折中并披露)。
+ 709	      ref.classList.add('structural');
+ 710	      var sParts = statsParts([['functions', '函数'], ['modules', '模块'],
+ 711	        ['classes', '类'], ['concepts', '概念'], ['topics', '主题命中']]);
+ 712	      var sLabel = '📎 结构化检索' + (sParts.length ? '：' + sParts.join(' · ') : '');
+ 713	      buildExpandable(sLabel, linked.length ? function (detail) { fillLinkedList(detail, 'name'); } : null);
+ 714	    } else if (mode === 'out_of_scope') {
+ 715	      // 界外声明: 建议问法由随附的 degraded/suggestions 块承载, 守 P4 不裸拒
+ 716	      ref.classList.add('oos');
+ 717	      var oosSpan = document.createElement('span');
+ 718	      oosSpan.className = 'repo-ref-oos';
+ 719	      oosSpan.textContent = '超出代码库范围';
+ 720	      ref.appendChild(oosSpan);
+ 721	    } else {
+ 722	      // mode==='none' (或未知/缺省): 明示本轮未命中图谱, 为普通回答
+ 723	      ref.classList.add('none');
+ 724	      var none = document.createElement('span');
+ 725	      none.className = 'repo-ref-none';
+ 726	      none.textContent = '未在图谱中找到相关内容，本轮为普通回答';
+ 727	      ref.appendChild(none);
+ 728	    }
+ 729	
+ 730	    renderDisambiguation();   // 候选消歧卡片 (needs_disambiguation + candidates)
+ 731	    renderPremiseFlags();     // 前提待核实 (premise_flags)
+ 732	    renderDegradedSuggests(); // 低置信标记 + 建议问法 (degraded / suggestions)
+ 733	
+ 734	    msgEl.parentNode.insertBefore(ref, msgEl); // 置于助手消息之上
+ 735	    scrollBottom();
+ 736	  }
+
+===== 代码结束 =====
+
+请逐条列出真实缺陷（文件:行号 + 问题 + 触发场景 + 修法）；无则答“未发现缺陷”。

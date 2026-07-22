@@ -1,0 +1,207 @@
+禁止使用任何工具、禁止读文件，只依据下方内嵌代码直接作答。
+你是资深 Python/JS 代码审查员，审查 RepoGraph v0.3 Phase C 新增/改动代码。
+只按四个维度找**真实缺陷**，逐条给：文件:行号 + 一句问题 + 触发场景/输入 + 修法。
+没有缺陷就明说“未发现缺陷”。不要复述代码、不要风格建议、不要臆测未给出的代码。
+四维度：
+ 1) 正确性：边界条件、异常吞掉后状态、并发（若涉及锁）、off-by-one、类型误判；
+ 2) 契约一致：是否与下方【契约摘录】逐字段吻合（字段名/取值域/优先级/阈值）；
+ 3) 假数据：任何写死的统计数字/标注/伪造的模型输出/占位真值（本项目铁律：无假数据）；
+ 4) 密钥处理：鉴权 token 是否只入请求头、绝不打印/写文件/入异常消息（提及应为 sk-****）。
+
+【被审文件】claude-ui/server.py  行段 560-747
+
+【契约 spec §4.4 改写 + §5.2 前提闸门】_rg_llm_rewrite 一次 flash 出 {queries(截2-4,中英各≥1),symbol_guesses(截5),premises(允许空)} 按问题 LRU 缓存(cap256)。_rg_try_rewrite_link：仅二次召回落到 symbol/topic/llm 才采信(overview/none=仍无锚交L2)；build_ctx 不支持 extra_queries→None 静默不启用。_rg_collect_premise_flags：lexical(build_repo_context已产)+llm(verify_premises 真实图谱校验)合并去重；网关缺失/异常静默降级仅 lexical。premise_flags 非空→_rg_premise_gate_text 注入固定 ⚠ 前缀要求先纠正后答。token 绝不回显；失败不抛不伪造。
+
+===== 内嵌代码（行号即源文件真实行号）=====
+ 560	# --------------------------------------------------------------------------- #
+ 561	
+ 562	_RG_REWRITE_CACHE = {}
+ 563	_RG_REWRITE_CACHE_MAX = 256
+ 564	
+ 565	_RG_REWRITE_SYSTEM = (
+ 566	    "你是代码库检索查询改写器，不是回答者。用户给一个自然语言问题（可能很口语、很模糊），"
+ 567	    "你要把它改写成更利于在代码库里做词面/BM25 检索的查询，并抽取问题所断言的事实前提。"
+ 568	    "只输出一个 JSON 对象："
+ 569	    "{\"queries\":[…],\"symbol_guesses\":[…],\"premises\":[…]}。"
+ 570	    "字段规则："
+ 571	    "queries：2 到 4 条改写查询，**中文、英文各至少 1 条**；把口语/比喻词换成技术域同义词"
+ 572	    "（例如「挂了/崩了」→「崩溃/异常/恢复」，「盯着/看着」→「监控/看门狗/超时检测」，"
+ 573	    "「使坏/搞破坏」→「故障注入/异常模拟」）。"
+ 574	    "symbol_guesses：至多 5 个可能的函数/类/概念名猜测（英文或中文），链不上无害。"
+ 575	    "premises：抽取问题**断言为真**的事实（例如「为啥用 Kafka 做队列」→「使用 Kafka 消息队列」）；"
+ 576	    "没有明显预设就返回空数组。"
+ 577	    "三条硬规则：(1) 绝不回答问题本身，只做改写与抽取；(2) 口语/比喻词必须给出技术域同义扩展；"
+ 578	    "(3) 专名尽量贴近代码库常见词汇，不确定也可给猜测（下游会校验，发明专名无害）。"
+ 579	    "只输出这一个 JSON 对象，不要解释、不要代码块。"
+ 580	    "\n示例1 问题：这系统怎么防止两个人同时改同一份数据 → "
+ 581	    "{\"queries\":[\"并发控制 加锁 互斥\",\"concurrency lock mutual exclusion\",\"数据竞争 防护\"],"
+ 582	    "\"symbol_guesses\":[\"lock\",\"mutex\",\"acquire\"],\"premises\":[]}"
+ 583	    "\n示例2 问题：为啥你们用 Kafka 做消息队列 → "
+ 584	    "{\"queries\":[\"消息队列 实现\",\"message queue dispatch\",\"事件分发 机制\"],"
+ 585	    "\"symbol_guesses\":[\"queue\",\"publish\",\"dispatch\"],\"premises\":[\"使用 Kafka 消息队列\"]}"
+ 586	)
+ 587	
+ 588	
+ 589	def _rg_cache_put(cache, key, val, cap=_RG_REWRITE_CACHE_MAX):
+ 590	    """LRU-ish 写缓存 (dict 保序, 满则逐出最早)。"""
+ 591	    if key in cache:
+ 592	        cache.pop(key)
+ 593	    elif len(cache) >= cap:
+ 594	        cache.pop(next(iter(cache)))
+ 595	    cache[key] = val
+ 596	
+ 597	
+ 598	def _parse_rewrite(text):
+ 599	    """从模型返回文本解析 {queries, symbol_guesses, premises} (容错; 失败返回空结构)。"""
+ 600	    empty = {"queries": [], "symbol_guesses": [], "premises": []}
+ 601	    if not text:
+ 602	        return empty
+ 603	    obj = _loose_json_object(text)
+ 604	    if not isinstance(obj, dict):
+ 605	        return empty
+ 606	
+ 607	    def _strlist(v, n):
+ 608	        out = []
+ 609	        if isinstance(v, list):
+ 610	            for x in v:
+ 611	                if isinstance(x, str) and x.strip():
+ 612	                    out.append(x.strip())
+ 613	        return out[:n]
+ 614	
+ 615	    return {"queries": _strlist(obj.get("queries"), 4),
+ 616	            "symbol_guesses": _strlist(obj.get("symbol_guesses"), 5),
+ 617	            "premises": _strlist(obj.get("premises"), 6)}
+ 618	
+ 619	
+ 620	def _rg_llm_rewrite(cfg, question, recent_turns=None):
+ 621	    """S2: 一次 flash 调用出 {queries, symbol_guesses, premises} (附录 B; 走 _rg_llm_json 底座)。
+ 622	
+ 623	    - 按问题做 LRU 缓存 (规范化前的原问题作键即可, 同问免重复往返);
+ 624	    - ``recent_turns`` 取最近数轮做指代消解上下文 (可选);
+ 625	    - 网关缺配置 / 失败 / 解析失败 → 空结构 (静默降级, 绝不抛、绝不回显 token)。
+ 626	    """
+ 627	    q = (question or "").strip()
+ 628	    if not q:
+ 629	        return {"queries": [], "symbol_guesses": [], "premises": []}
+ 630	    cached = _RG_REWRITE_CACHE.get(q)
+ 631	    if cached is not None:
+ 632	        return cached
+ 633	    ctx_hint = ""
+ 634	    if recent_turns:
+ 635	        joined = " / ".join(str(t)[:120] for t in list(recent_turns)[-3:] if t)
+ 636	        if joined:
+ 637	            ctx_hint = "\n【最近对话（供指代消解）】" + joined
+ 638	    user = "问题：" + q + ctx_hint + "\n\n只输出 JSON："
+ 639	    text = _rg_llm_json(cfg, _RG_REWRITE_SYSTEM, user, timeout=20, max_tokens=400)
+ 640	    result = _parse_rewrite(text)
+ 641	    _rg_cache_put(_RG_REWRITE_CACHE, q, result)
+ 642	    return result
+ 643	
+ 644	
+ 645	def _rg_try_rewrite_link(cfg, question, recent_turns=None):
+ 646	    """S2 改写 → 二次链接/主题召回 (extra_queries 传入 build_repo_context)。
+ 647	
+ 648	    entity_local 无主锚 (mode∈overview/none) 时的主召回补偿 (D-N2)。返回
+ 649	    {mode,linked,stats,context_text,resolved_query,symbol_guesses,premises} 或 None (未改善)。
+ 650	    绝不抛异常; build_ctx 不支持 extra_queries (旧签名) → None (静默不启用)。
+ 651	    """
+ 652	    store = _RG.get("store")
+ 653	    build_ctx = _RG.get("build_ctx")
+ 654	    if store is None or build_ctx is None:
+ 655	        return None
+ 656	    if "extra_queries" not in _fn_param_names(build_ctx):
+ 657	        return None
+ 658	    try:
+ 659	        rw = _rg_llm_rewrite(cfg, question, recent_turns=recent_turns)
+ 660	        queries = rw.get("queries") or []
+ 661	        # symbol_guesses 也并入 extra_queries (只作检索辅助, 永不进答案事实)
+ 662	        extra = list(queries) + list(rw.get("symbol_guesses") or [])
+ 663	        if not extra:
+ 664	            return None
+ 665	        corpus_index = _RG.get("corpus")
+ 666	        res = _rg_call_build_ctx(build_ctx, store, question, corpus_index, True,
+ 667	                                 extra_queries=extra)
+ 668	        if not isinstance(res, dict):
+ 669	            return None
+ 670	        mode = _rg_normalize_mode(res.get("mode"))
+ 671	        ctx = res.get("context_text") or ""
+ 672	        # 仅在二次召回确实落到 symbol/topic/llm 上下文时采信 (overview/none = 仍无锚, 交 L2)
+ 673	        if mode not in ("symbol", "topic", "llm") or not ctx:
+ 674	            return None
+ 675	        return {"mode": mode, "linked": res.get("linked") or [],
+ 676	                "stats": res.get("stats") or {}, "context_text": ctx,
+ 677	                "resolved_query": " / ".join(queries[:2]) if queries else "",
+ 678	                "symbol_guesses": rw.get("symbol_guesses") or [],
+ 679	                "premises": rw.get("premises") or []}
+ 680	    except Exception:  # noqa: BLE001 —— S2 失败一律静默降级, 交 L2 / overview 兜底
+ 681	        return None
+ 682	
+ 683	
+ 684	# --------------------------------------------------------------------------- #
+ 685	# S7 前提校验闸门 (裁定 D-19; 落地设计 §5.2 程序化闸门)
+ 686	#
+ 687	# 「错误预设」题 (PP 子集) 隐含一条断言为真的前提 (如「使用 Redis」)。两路来源合并:
+ 688	#   · lexical (build_repo_context 已产 premise_flags): 题面技术专名比对图谱, 覆盖 PP 技术缺席
+ 689	#     六题, **全档位、零网关往返**; off/lexical 档只此一路。
+ 690	#   · llm 档补充: overview/none 档 (rewrite 已搭车调用并缓存) 取 _rg_llm_rewrite 的 premises,
+ 691	#     经真实 verify_premises 图谱校验后合并 (仅当 build_ctx 支持 extra_queries, 对 fake RG/
+ 692	#     无改写档零新增往返, 回归保绿)。
+ 693	# premise_flags 非空 → 注入固定 ⚠ 前缀, 要求生成层「先纠正后答」, 不放行顺预设自由生成。
+ 694	# --------------------------------------------------------------------------- #
+ 695	
+ 696	def _rg_collect_premise_flags(cfg, content, rg, semantic_mode, recent_turns):
+ 697	    """合并 S7 前提 flag: lexical (build_repo_context) + (overview/none·llm) 校验后的 LLM premises。
+ 698	
+ 699	    真实校验: LLM premises 经 router.verify_premises 对真实 store 做图边存在性校验, 绝不臆造;
+ 700	    网关缺失/异常静默降级为仅 lexical。返回去重后的 flag 列表 [{claim,status,...}]。
+ 701	    """
+ 702	    flags = []
+ 703	    seen = set()
+ 704	    for f in (rg.get("premise_flags") or []):          # lexical (离线规则, 已校验)
+ 705	        if isinstance(f, dict):
+ 706	            claim = f.get("claim")
+ 707	            fl = f
+ 708	        else:
+ 709	            claim, fl = str(f), {"claim": str(f), "status": "unverified"}
+ 710	        if claim and claim not in seen:
+ 711	            seen.add(claim)
+ 712	            flags.append(fl)
+ 713	    # llm 档补充 (仅 overview/none 且 build_ctx 支持 extra_queries —— rewrite 已搭车缓存)
+ 714	    build_ctx = _RG.get("build_ctx")
+ 715	    store = _RG.get("store")
+ 716	    if (semantic_mode == "llm" and gateway_base(cfg) and store is not None
+ 717	            and build_ctx is not None
+ 718	            and "extra_queries" in _fn_param_names(build_ctx)):
+ 719	        try:
+ 720	            from repograph.retrieve.router import verify_premises, premises_from_claims
+ 721	            rw = _rg_llm_rewrite(cfg, content, recent_turns=recent_turns)   # 缓存命中
+ 722	            claims = rw.get("premises") or []
+ 723	            for f in verify_premises(store, premises_from_claims(claims)):
+ 724	                claim = f.get("claim")
+ 725	                if claim and claim not in seen:
+ 726	                    seen.add(claim)
+ 727	                    flags.append(f)
+ 728	        except Exception:  # noqa: BLE001 —— 前提校验失败静默降级为仅 lexical, 绝不打断聊天
+ 729	            pass
+ 730	    return flags
+ 731	
+ 732	
+ 733	def _rg_premise_gate_text(flags):
+ 734	    """构造前提闸门注入前缀 (spec §5.2)。非空 flag 时要求生成层先纠正后答, 不顺预设作答。"""
+ 735	    if not flags:
+ 736	        return ""
+ 737	    lines = [
+ 738	        "【前提校验闸门】(来源: RepoGraph 图边存在性校验, S7)",
+ 739	        "以下前提未获代码知识图谱证据, 回答前必须先明确纠正、不得顺着这些预设作答:",
+ 740	    ]
+ 741	    for f in flags:
+ 742	        claim = (f.get("claim") if isinstance(f, dict) else str(f)) or ""
+ 743	        lines.append(
+ 744	            f"⚠ 前提未获图谱证据: {claim}; 据图谱实际: 本仓库图谱中查无「{claim}」的相关实体或边, "
+ 745	            f"该技术/结构很可能并未在本项目中使用, 请先纠正此前提再回答。")
+ 746	    return "\n".join(lines) + "\n\n"
+ 747	
+
+===== 代码结束 =====
+
+请逐条列出真实缺陷（文件:行号 + 问题 + 触发场景 + 修法）；无则答“未发现缺陷”。

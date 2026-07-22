@@ -1,0 +1,161 @@
+禁止使用任何工具、禁止读文件，只依据下方内嵌代码直接作答。
+你是资深 Python/JS 代码审查员，审查 RepoGraph v0.3 Phase C 新增/改动代码。
+只按四个维度找**真实缺陷**，逐条给：文件:行号 + 一句问题 + 触发场景/输入 + 修法。
+没有缺陷就明说“未发现缺陷”。不要复述代码、不要风格建议、不要臆测未给出的代码。
+四维度：
+ 1) 正确性：边界条件、异常吞掉后状态、并发（若涉及锁）、off-by-one、类型误判；
+ 2) 契约一致：是否与下方【契约摘录】逐字段吻合（字段名/取值域/优先级/阈值）；
+ 3) 假数据：任何写死的统计数字/标注/伪造的模型输出/占位真值（本项目铁律：无假数据）；
+ 4) 密钥处理：鉴权 token 是否只入请求头、绝不打印/写文件/入异常消息（提及应为 sk-****）。
+
+【被审文件】代码库知识图谱/src/repograph/retrieve/repo_card.py  行段 207-349
+
+【契约 spec §4.1 summary 反幻觉 F2 + P4】summary 唯一一次索引期真实网关调用(≤300字)，经专名白名单校验(summary 英文标识符必须出现在输入中)，违规重试后降级弃 summary(返回None)，绝不伪造。查询期 meta 路由 load_or_build_repo_card：缓存优先，缺失/损坏→现场 build+degraded=True，绝不因缺文件裸拒。build_meta_context 返回 mode='overview' 展示态(route_label='meta' 承载精确五分类)。
+
+===== 内嵌代码（行号即源文件真实行号）=====
+ 207	# ---------------------------------------------------------------------------
+ 208	# summary 生成（唯一一次索引期真实网关调用 + 专名白名单校验）
+ 209	# ---------------------------------------------------------------------------
+ 210	
+ 211	_IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_./]*")
+ 212	
+ 213	
+ 214	def _summary_input(card: dict, readme_head: str = "") -> tuple[str, set[str]]:
+ 215	    """构造 summary 生成的输入文本 + 允许出现的专名白名单集合（英文标识符/路径）。"""
+ 216	    parts: list[str] = [render_card_text({**card, "summary": None})]
+ 217	    if readme_head:
+ 218	        parts.append("README 首段：" + readme_head)
+ 219	    input_text = "\n".join(parts)
+ 220	    allowed = {m.group(0) for m in _IDENT_RE.finditer(input_text)}
+ 221	    return input_text, allowed
+ 222	
+ 223	
+ 224	def _summary_violates_whitelist(summary: str, input_text: str) -> list[str]:
+ 225	    """返回 summary 里**不在输入中**的英文标识符（专名白名单违规项，反幻觉 F2）。
+ 226	
+ 227	    只校验英文标识符类专名（发明 Redis/FastAPI 之类的主要幻觉风险面）；短词（≤1 字符）
+ 228	    与在输入文本中出现（子串）者放行。中文由生成侧 prompt 约束 + 人工抽检兜底。
+ 229	    """
+ 230	    low_input = input_text.lower()
+ 231	    bad: list[str] = []
+ 232	    for m in _IDENT_RE.finditer(summary):
+ 233	        tok = m.group(0)
+ 234	        if len(tok) <= 1:
+ 235	            continue
+ 236	        if tok.lower() not in low_input:
+ 237	            bad.append(tok)
+ 238	    return bad
+ 239	
+ 240	
+ 241	def generate_card_summary(store: GraphStore, card: Optional[dict] = None,
+ 242	                          readme_head: str = "", model: Optional[str] = None,
+ 243	                          config_path: Optional[str] = None,
+ 244	                          whitelist_retries: int = 4) -> Optional[str]:
+ 245	    """唯一一次索引期真实网关调用生成 ≤300 字 summary；白名单违规重试后降级弃之。
+ 246	
+ 247	    真实数据铁律：网络/网关**真实发生**；任何失败（配置缺失 / HTTP 错误 / 白名单违规
+ 248	    达 ``whitelist_retries`` 次）→ 返回 ``None``（弃 summary），**绝不伪造**。绝不回显 token
+ 249	    （由 llm_client 保证）。白名单违规靠重试而非放宽校验消化（模型输出非确定性，反幻觉防线不降）。
+ 250	    """
+ 251	    from ..extract.llm_client import ask_gateway, INDEX_MODEL, GatewayConfigError, GatewayCallError
+ 252	
+ 253	    if card is None:
+ 254	        card = build_repo_card(store)
+ 255	    input_text, _allowed = _summary_input(card, readme_head)
+ 256	    system = (
+ 257	        "你是代码库概述撰写器。根据下面提供的【确定性事实】（规模统计、顶层模块、热点函数、"
+ 258	        "核心概念）为该代码库写一段 ≤300 字的中文概述，供他人快速了解这个项目是做什么的、"
+ 259	        "整体结构与重点。严格约束：(1) 只能使用事实中原样出现过的专名（模块路径、函数名、概念名、"
+ 260	        "数字），严禁发明事实里没有的技术栈名词、库名或英文缩写；(2) 尽量用中文表述，不自造英文词；"
+ 261	        "(3) 不做评价性夸张；(4) 只输出概述正文，不要标题、不要 JSON、不要解释。"
+ 262	    )
+ 263	    user = "【确定性事实】\n" + input_text + "\n\n请据此写 ≤300 字中文概述："
+ 264	
+ 265	    for _attempt in range(max(1, whitelist_retries)):
+ 266	        try:
+ 267	            # qwen3.8-max-preview 为大模型、时延波动大，给足 timeout（90s）；ask_gateway
+ 268	            # 内部再重试 1 次消化瞬时超时，外层 whitelist_retries 消化非确定性白名单违规。
+ 269	            text = ask_gateway(system, user, model=model or INDEX_MODEL,
+ 270	                               max_tokens=600, config_path=config_path,
+ 271	                               timeout=90, retries=1)
+ 272	        except (GatewayConfigError, GatewayCallError):
+ 273	            return None                      # 如实降级，不伪造
+ 274	        summary = " ".join(text.split()).strip()
+ 275	        if len(summary) > _SUMMARY_MAX_CHARS:
+ 276	            summary = summary[:_SUMMARY_MAX_CHARS]
+ 277	        bad = _summary_violates_whitelist(summary, input_text)
+ 278	        if not bad:
+ 279	            return summary
+ 280	        # 白名单违规（模型输出非确定性）：重试；耗尽仍违规则弃 summary（降级）
+ 281	    return None
+ 282	
+ 283	
+ 284	def generate_and_save(store: GraphStore, cache_path: Optional[str] = None,
+ 285	                      readme_head: str = "", model: Optional[str] = None,
+ 286	                      config_path: Optional[str] = None) -> dict:
+ 287	    """索引期一次性：确定性卡片 + 真实 summary → 写 ``output/repo_card.json``。
+ 288	
+ 289	    summary 生成失败时只落确定性字段（``summary=null``），meta 路由仍可作答（与
+ 290	    ``cli.py`` 既有「语义层未就绪降级为告警」一致）。返回落盘的卡片 dict。
+ 291	    """
+ 292	    path = cache_path or default_cache_path()
+ 293	    card = build_repo_card(store)
+ 294	    summary = generate_card_summary(store, card, readme_head=readme_head,
+ 295	                                    model=model, config_path=config_path)
+ 296	    card["summary"] = summary
+ 297	    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+ 298	    with open(path, "w", encoding="utf-8") as f:
+ 299	        json.dump(card, f, ensure_ascii=False, indent=1)
+ 300	    return card
+ 301	
+ 302	
+ 303	# ---------------------------------------------------------------------------
+ 304	# 查询期 meta 路由入口（读取优先缓存，缺失/损坏降级现场确定性卡片）
+ 305	# ---------------------------------------------------------------------------
+ 306	
+ 307	def load_or_build_repo_card(store: GraphStore,
+ 308	                            cache_path: Optional[str] = None) -> tuple[dict, bool]:
+ 309	    """读取 ``output/repo_card.json`` 缓存；缺失/损坏 → 现场 ``build_repo_card`` + ``degraded=True``。
+ 310	
+ 311	    返回 ``(card, degraded)``。缓存损坏/结构不符时不抛错（P4 绝不因缺文件裸拒），只降级。
+ 312	    """
+ 313	    path = cache_path or default_cache_path()
+ 314	    if os.path.exists(path):
+ 315	        try:
+ 316	            with open(path, "r", encoding="utf-8") as f:
+ 317	                card = json.load(f)
+ 318	            if isinstance(card, dict) and isinstance(card.get("stats"), dict):
+ 319	                return card, False
+ 320	        except Exception:  # noqa: BLE001  损坏缓存 → 现场重建
+ 321	            pass
+ 322	    return build_repo_card(store), True
+ 323	
+ 324	
+ 325	def build_meta_context(store: GraphStore, cache_path: Optional[str] = None) -> dict:
+ 326	    """meta 路由：注入 repo_card（缓存优先），返回 ``mode='meta'`` 的上下文 dict。
+ 327	
+ 328	    返回统一 ``{mode, linked, context_text, stats, degraded}``；``degraded`` 标识本次是否
+ 329	    走了现场降级（缓存缺失/损坏）。绝不裸拒（context_text 恒含规模事实）。
+ 330	    """
+ 331	    card, degraded = load_or_build_repo_card(store, cache_path)
+ 332	    s = card.get("stats", {})
+ 333	    stats = {
+ 334	        "symbols": 0, "topics": 0, "impact_callers": 0, "commits": 0,
+ 335	        "concepts": s.get("concepts", 0),
+ 336	        "modules": s.get("modules", 0), "functions": s.get("functions", 0),
+ 337	        "classes": s.get("classes", 0),
+ 338	    }
+ 339	    # mode 取 overview 展示态（spec §5.1：build_repo_context 侧恒返回 overview 类展示 mode，
+ 340	    # meta/global 的事件 mode 改写在网关侧据 route_label 完成；此处以 route_label='meta' 承载
+ 341	    # 精确五分类，mode='overview' 保证 server._RG_VALID_MODES 兼容、零 server 改动）。
+ 342	    return {
+ 343	        "mode": "overview",
+ 344	        "linked": [],
+ 345	        "context_text": render_card_text(card),
+ 346	        "stats": stats,
+ 347	        "degraded": degraded,
+ 348	    }
+
+===== 代码结束 =====
+
+请逐条列出真实缺陷（文件:行号 + 问题 + 触发场景 + 修法）；无则答“未发现缺陷”。

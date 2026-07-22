@@ -1,0 +1,135 @@
+禁止使用任何工具、禁止读文件，只依据下方内嵌代码直接作答。
+你是资深 Python/JS 代码审查员，审查 RepoGraph v0.3 Phase C 新增/改动代码。
+只按四个维度找**真实缺陷**，逐条给：文件:行号 + 一句问题 + 触发场景/输入 + 修法。
+没有缺陷就明说“未发现缺陷”。不要复述代码、不要风格建议、不要臆测未给出的代码。
+四维度：
+ 1) 正确性：边界条件、异常吞掉后状态、并发（若涉及锁）、off-by-one、类型误判；
+ 2) 契约一致：是否与下方【契约摘录】逐字段吻合（字段名/取值域/优先级/阈值）；
+ 3) 假数据：任何写死的统计数字/标注/伪造的模型输出/占位真值（本项目铁律：无假数据）；
+ 4) 密钥处理：鉴权 token 是否只入请求头、绝不打印/写文件/入异常消息（提及应为 sk-****）。
+
+【被审文件】代码库知识图谱/src/repograph/retrieve/router.py  行段 434-549
+
+【契约 spec §5.7/§3.2 S7 前提校验】premise 实体图谱不可词面定位→unknown_entity(保守当未证实)；可定位但断言支撑边缺失→本轮词面校验保守视为已获证据、不产 flag（missing_edge 半支留待边级校验，避免误伤真前提）。verify_premises(store,premises) 返回仅未证实项 [{claim,status:'unverified',reason,source,terms}]。两路来源：lexical(题面技术专名比对，gate 离线走这条) + llm(rewrite premises 抽 terms)。只据真实 store 扫描，绝不臆造。
+
+===== 内嵌代码（行号即源文件真实行号）=====
+ 434	# ---------------------------------------------------------------------------
+ 435	# S7 前提校验（落地设计 §5.7 / §3.2 / 裁定 D-19；PP 错误预设子集 · B-3）
+ 436	#
+ 437	# 「错误预设」题（PP 子集）如「为什么用 Redis 做分布式锁」隐含一条**断言为真的前提**
+ 438	# （使用 Redis）。校验只保留「实体可词面定位但图中无支撑边」半支（向量高分支撑块已随
+ 439	# D-22 砍除）：premise 实体经词面在图谱**不可定位** → `unknown_entity`（保守当作未证实，
+ 440	# §3.2 S7 保守偏差）；**可定位但断言的支撑关系缺失** → `unverified`。两者都落 flag、
+ 441	# 都触发生成层「先纠正后答」的程序化闸门（spec §5.2）。
+ 442	#
+ 443	# 前提来源两路（同一 verify_premises 消费）：
+ 444	#   · **lexical/off 档**：`extract_lexical_premises`——题面技术专名词表比对（gate 离线走这条，
+ 445	#     确保 B-3 离线可翻绿；纯确定性、无网关）。
+ 446	#   · **llm 档**：`_rg_llm_rewrite` 的 `premises` 经 `premises_from_claims` 抽 terms 后校验。
+ 447	# ---------------------------------------------------------------------------
+ 448	
+ 449	# 前提实体图谱可定位性扫描的节点文本字段（qualname/路径/docstring/概念名/描述/提交信息/签名）。
+ 450	_PREMISE_SCAN_KEYS = (
+ 451	    "qualname", "name", "path", "docstring", "description", "message", "signature",
+ 452	)
+ 453	
+ 454	# LLM 前提断言里可校验 term 的抽取样式：英文标识符 + 数字/中文数字 + 量词（五级 / 100 轮）。
+ 455	# 数字与量词间允许空白（"100 轮"），抽出后归一去空白（→ "100轮"）再做图谱存在性比对。
+ 456	_EN_IDENT_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]{1,}")
+ 457	_NUM_UNIT_RE = re.compile(r"[0-9一二三四五六七八九十百千两]+\s*(?:级|轮|层|阶段|个|次|步|档|重)")
+ 458	
+ 459	
+ 460	def extract_lexical_premises(question: str) -> list[dict]:
+ 461	    """轻量规则前提抽取（lexical/off 档；gate 离线判定走这条）。
+ 462	
+ 463	    题面出现的技术专名（``lexicon.find_tech_terms`` 的 infra/框架词表命中）= 断言
+ 464	    「本项目用 X」的前提，交 ``verify_premises`` 对图谱做存在性校验。返回 premise dict
+ 465	    列表 ``[{claim, terms, source}]``；无技术专名则空（非 PP 题不产前提、零误报）。
+ 466	    """
+ 467	    from .lexicon import find_tech_terms
+ 468	    prem: list[dict] = []
+ 469	    for term, disp in find_tech_terms(question or ""):
+ 470	        prem.append({"claim": f"使用 {disp}", "terms": [term],
+ 471	                     "source": "lexical:tech_term"})
+ 472	    return prem
+ 473	
+ 474	
+ 475	def premises_from_claims(claims: list) -> list[dict]:
+ 476	    """把 LLM 抽取的前提断言（自然语言字符串）转成可校验 premise dict。
+ 477	
+ 478	    从每条断言抽取**技术专名 + 英文标识符 + 数字量词短语**作为 terms（供图谱存在性校验）。
+ 479	    抽不出可校验 term 的纯中文泛述断言**不产 premise**（保守：宁可漏判也不误报，守 F1）。
+ 480	    """
+ 481	    from .lexicon import find_tech_terms
+ 482	    out: list[dict] = []
+ 483	    for c in claims or []:
+ 484	        s = str(c or "").strip()
+ 485	        if not s:
+ 486	            continue
+ 487	        terms: list[str] = [t for t, _d in find_tech_terms(s)]
+ 488	        terms += _EN_IDENT_RE.findall(s)
+ 489	        terms += [re.sub(r"\s+", "", m) for m in _NUM_UNIT_RE.findall(s)]
+ 490	        # 去重保序 + 去掉过短碎片
+ 491	        terms = list(dict.fromkeys(t for t in terms if t and len(t) >= 2))
+ 492	        if not terms:
+ 493	            continue
+ 494	        out.append({"claim": s, "terms": terms, "source": "llm:premise"})
+ 495	    return out
+ 496	
+ 497	
+ 498	def _term_in_graph(store, term: str) -> bool:
+ 499	    """term（忽略大小写）是否作为词面出现在图谱任一节点的可检索文本中。
+ 500	
+ 501	    扫 ``_PREMISE_SCAN_KEYS`` + aliases/zh_aliases + evidence 引文。命中即认为该前提实体
+ 502	    在图谱「可定位」（等价 link_entities 的词面可链接性，但覆盖概念描述/提交信息等自由文本）。
+ 503	    """
+ 504	    t = (term or "").lower()
+ 505	    if not t:
+ 506	        return False
+ 507	    for node in store.nodes():
+ 508	        for k in _PREMISE_SCAN_KEYS:
+ 509	            v = node.get(k)
+ 510	            if v and t in str(v).lower():
+ 511	                return True
+ 512	        for a in list(node.get("aliases") or []) + list(node.get("zh_aliases") or []):
+ 513	            if a and t in str(a).lower():
+ 514	                return True
+ 515	        for ev in node.get("evidence") or []:
+ 516	            q = (ev or {}).get("quote") if isinstance(ev, dict) else None
+ 517	            if q and t in str(q).lower():
+ 518	                return True
+ 519	    return False
+ 520	
+ 521	
+ 522	def verify_premises(store, premises: list) -> list[dict]:
+ 523	    """S7 前提校验：逐前提对真实图谱做词面存在性校验，返回**未证实**的 flag 列表。
+ 524	
+ 525	    每个 premise 形如 ``{claim, terms:[...], source}``。判定（落地设计 §5.7 / D-19）：
+ 526	      · terms **全部**不可词面定位于图谱 → ``status='unverified'`` + ``reason='unknown_entity'``
+ 527	        （实体不可链接，§3.2 S7 保守当作未证实）；
+ 528	      · terms 有可定位者 → 本轮词面校验保守视为「已获证据」，**不产 flag**（可定位但断言
+ 529	        支撑边缺失的 `missing_edge` 半支需边级校验，留待具体关系断言，避免误伤真前提）。
+ 530	
+ 531	    返回 ``[{claim, status:'unverified', reason, source, terms}]``（仅未证实项；已证实前提不产 flag）。
+ 532	    真实数据铁律：只据真实 ``store`` 扫描判定，绝不臆造。
+ 533	    """
+ 534	    flags: list[dict] = []
+ 535	    for prem in premises or []:
+ 536	        terms = [t for t in (prem.get("terms") or []) if t]
+ 537	        if not terms:
+ 538	            continue
+ 539	        present = any(_term_in_graph(store, t) for t in terms)
+ 540	        if present:
+ 541	            continue                        # 可定位 → 保守不产 flag（不误伤真前提）
+ 542	        flags.append({
+ 543	            "claim": prem.get("claim", ""),
+ 544	            "status": "unverified",
+ 545	            "reason": "unknown_entity",
+ 546	            "source": prem.get("source"),
+ 547	            "terms": terms,
+ 548	        })
+ 549	    return flags
+
+===== 代码结束 =====
+
+请逐条列出真实缺陷（文件:行号 + 问题 + 触发场景 + 修法）；无则答“未发现缺陷”。

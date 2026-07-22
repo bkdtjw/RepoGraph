@@ -1,0 +1,150 @@
+禁止使用任何工具、禁止读文件，只依据下方内嵌代码直接作答。
+你是资深 Python/JS 代码审查员，审查 RepoGraph v0.3 Phase C 新增/改动代码。
+只按四个维度找**真实缺陷**，逐条给：文件:行号 + 一句问题 + 触发场景/输入 + 修法。
+没有缺陷就明说“未发现缺陷”。不要复述代码、不要风格建议、不要臆测未给出的代码。
+四维度：
+ 1) 正确性：边界条件、异常吞掉后状态、并发（若涉及锁）、off-by-one、类型误判；
+ 2) 契约一致：是否与下方【契约摘录】逐字段吻合（字段名/取值域/优先级/阈值）；
+ 3) 假数据：任何写死的统计数字/标注/伪造的模型输出/占位真值（本项目铁律：无假数据）；
+ 4) 密钥处理：鉴权 token 是否只入请求头、绝不打印/写文件/入异常消息（提及应为 sk-****）。
+
+【被审文件】claude-ui/server.py  行段 1319-1420,1499-1526
+
+【契约 spec §4.5 消歧/焦点数据流 + 并发】读(检索前)：问题含指代词且无自身强锚→_rg_focus_peek 取最近类型相容焦点作种子并入检索重跑，命中回显解读。写(锚定后)：强锚压栈，就近挂在追加 assistant 的 write_session 之前(零额外落盘)，turn=cur_turn。非llm档焦点未命中→resolved_query 原样回显+suggestions 提示点名，禁止静默错锚(守P5)。并发：重检索/网关在 _RG_LOCK 之外；收尾 latest=read_session(sid) 重读避免并发覆盖，focus_push 改 latest。图谱注入绝不打断聊天(整块 try/except 降级)。
+
+===== 内嵌代码（行号即源文件真实行号）=====
+1319	        rg_event = None
+1320	        focus_anchor = None      # 本轮强锚, 收尾 write_session 前压入 rg_focus (S5 写)
+1321	        focus_used = None        # 本轮焦点消解用到的种子条目 (S5 读, 供事件回显)
+1322	        cur_turn = len(sess.get("messages") or [])   # 焦点栈 turn = 追加 assistant 前的消息数
+1323	        use_rg = bool(body.get("use_repograph")) or _rg_enabled(cfg)
+1324	        semantic_mode = _rg_semantic_mode(cfg)          # off | lexical | llm
+1325	        if use_rg:
+1326	            # 整块兜底: 各层已各自保证"异常也返回 None/降级", 这里再包一层 try/except 是双保险 ——
+1327	            # 用户消息此刻已落盘, 图谱注入 (含 L2 网关往返) 无论如何都不得打断本轮聊天。
+1328	            try:
+1329	                allow_overview = (semantic_mode != "off")
+1330	                rg = repo_context_for_question(cfg, content, allow_overview=allow_overview)
+1331	
+1332	                # S5 焦点栈读 (spec §4.5): 问题含显式指代词且本轮无自身锚 → 取最近类型相容焦点
+1333	                # 作种子, 把焦点实体名并入检索重跑一次 (令 link_entities 命中); 命中则回显解读。
+1334	                if (rg is not None and _rg_has_pronoun(content)
+1335	                        and not _rg_strong_anchor(rg)):
+1336	                    seed = _rg_focus_peek(sess, cur_turn)
+1337	                    seed_name = _rg_focus_name(seed["entity_id"]) if seed else ""
+1338	                    if seed_name:
+1339	                        rg2 = repo_context_for_question(
+1340	                            cfg, content + " " + seed_name, allow_overview=allow_overview)
+1341	                        if rg2 is not None and _rg_strong_anchor(rg2):
+1342	                            rg = rg2
+1343	                            focus_used = seed
+1344	                            rg["resolved_query"] = (
+1345	                                f"（指代解读为 {seed_name}）"
+1346	                                + (rg.get("resolved_query") or content))
+1347	                    if focus_used is None and semantic_mode != "llm":
+1348	                        # 非 llm 档焦点也未命中 → 不静默错锚: 原样回显 + 建议点名 (守 P5)。
+1349	                        rg["resolved_query"] = rg.get("resolved_query") or content
+1350	                        sug = list(rg.get("suggestions") or [])
+1351	                        sug.append("请点名具体实体/符号（如 类名.方法名），我再据图谱作答")
+1352	                        rg["suggestions"] = sug
+1353	
+1354	                if rg is not None:
+1355	                    mode = _rg_normalize_mode(rg.get("mode"))
+1356	                    linked = rg.get("linked") or []
+1357	                    stats = rg.get("stats") or {}
+1358	                    ctx = rg.get("context_text") or ""
+1359	
+1360	                    # off 档只认 L0 符号: 确定性主题/概览一律不采信 (mode→none, 不注入),
+1361	                    # 从而无论 build_repo_context 内部是否照样跑了 L1, 对外都严格"只走符号"。
+1362	                    if semantic_mode == "off" and mode != "symbol":
+1363	                        mode, linked, stats, ctx = "none", [], {}, ""
+1364	
+1365	                    # 最近数轮用户消息 (供 S2 改写指代消解 + 前提抽取上下文)
+1366	                    recent_turns = [m.get("content") for m in msgs[:-1]
+1367	                                    if isinstance(m, dict) and m.get("role") == "user"]
+1368	
+1369	                    # L2 触发点 (仅 llm 档、确定性层未落到上下文、网关可用时): 先 S2 改写二次召回
+1370	                    # (D-N2 主召回补偿——把口语/比喻同义改述后重跑 link/topic), 仍无锚再退回 L2
+1371	                    # 从概念清单选概念。symbol_guesses 只作检索辅助 (进 extra_queries)、永不进事实。
+1372	                    rg_resolved = rg.get("resolved_query")
+1373	                    if (mode in ("overview", "none")
+1374	                            and semantic_mode == "llm"
+1375	                            and gateway_base(cfg)):
+1376	                        rw_ctx = _rg_try_rewrite_link(cfg, content, recent_turns=recent_turns)
+1377	                        if rw_ctx is not None:                      # S2 二次召回落到上下文
+1378	                            mode = rw_ctx["mode"]
+1379	                            linked = rw_ctx.get("linked") or []
+1380	                            stats = rw_ctx.get("stats") or {}
+1381	                            ctx = rw_ctx.get("context_text") or ""
+1382	                            rg_resolved = rw_ctx.get("resolved_query") or rg_resolved
+1383	                        else:                                      # 退回 L2 受限概念选择
+1384	                            llm_ctx = _rg_try_llm_link(cfg, content)
+1385	                            if llm_ctx is not None:
+1386	                                mode = "llm"
+1387	                                linked = llm_ctx.get("linked") or []
+1388	                                stats = llm_ctx.get("stats") or {}
+1389	                                ctx = llm_ctx.get("context_text") or ""
+1390	
+1391	                    # S7 前提校验闸门 (裁定 D-19): lexical (build_repo_context 已产) + (overview/none·
+1392	                    # llm) 校验后的 LLM premises 合并; 非空则注入固定 ⚠ 前缀要求先纠正后答 (spec §5.2)。
+1393	                    premise_flags = _rg_collect_premise_flags(
+1394	                        cfg, content, rg, semantic_mode, recent_turns)
+1395	                    gate_prefix = _rg_premise_gate_text(premise_flags)
+1396	
+1397	                    # 注入: 前提闸门在最前 (先纠正后答), 其后才是图谱上下文; none 且无前提则不注入。
+1398	                    injected = (_rg_inject_prefix(mode) + ctx) if (mode != "none" and ctx) else ""
+1399	                    combined = gate_prefix + injected
+1400	                    if combined:
+1401	                        payload["system"] = (
+1402	                            (system_prompt + "\n\n" + combined) if system_prompt else combined
+1403	                        )
+1404	                    # S5 焦点栈写 (spec §4.5): 本轮若有强锚 (exact/suffix), 记下待收尾压栈。
+1405	                    focus_anchor = _rg_strong_anchor(rg)
+1406	
+1407	                    # schema v2 事件 (纯增字段, v1 消费方兼容): route/消歧/前提/降级/焦点全字段回显 (spec §5.1)。
+1408	                    rg_event = _rg_build_event(rg, mode, linked, stats,
+1409	                                               premise_flags, rg_resolved,
+1410	                                               focus_used=focus_used)
+1411	            except Exception as e:  # noqa: BLE001 — 图谱注入绝不打断聊天, 一律降级为普通回答
+1412	                _RG["error"] = "inject: " + type(e).__name__ + ": " + str(e)
+1413	                rg_event = None
+1414	                # 还原 system 到注入前状态 (可能已被上面部分改写), 保证普通聊天路径干净。
+1415	                if system_prompt:
+1416	                    payload["system"] = system_prompt
+1417	                else:
+1418	                    payload.pop("system", None)
+1419	
+1420	        url = gateway_base(cfg) + "/v1/messages"
+
+1499	        # 未收到 message_stop / 客户端断开 / 上游中途失败 → 均视为未完整 (interrupted)
+1500	        interrupted = client_gone or (stream_error is not None) or (not acc["done"])
+1501	
+1502	        # 6) 落盘助手消息 (含 model 与 usage; 未完整则标 interrupted)
+1503	        assistant_msg = {
+1504	            "role": "assistant",
+1505	            "content": acc["text"],
+1506	            "model": acc["model"],
+1507	            "usage": acc["usage"],
+1508	            "ts": now_iso(),
+1509	        }
+1510	        if interrupted:
+1511	            assistant_msg["interrupted"] = True
+1512	        # 重新读取以避免并发覆盖, 追加助手消息
+1513	        latest = read_session(sid) or sess
+1514	        latest.setdefault("messages", []).append(assistant_msg)
+1515	        latest["model"] = acc["model"]
+1516	        latest["updated_at"] = now_iso()
+1517	        # S5 焦点栈写 (spec §4.5): 本轮强锚压栈 rg_focus, 就近挂在追加 assistant 的 write_session
+1518	        # 之前 (零额外落盘)。turn = 本轮锚定时的消息序号快照 (cur_turn)。绝不因焦点栈打断落盘。
+1519	        if focus_anchor:
+1520	            try:
+1521	                _rg_focus_push(latest, focus_anchor.get("entity_id"),
+1522	                               focus_anchor.get("label"), cur_turn)
+1523	            except Exception:  # noqa: BLE001
+1524	                pass
+1525	        write_session(latest)
+1526	
+
+===== 代码结束 =====
+
+请逐条列出真实缺陷（文件:行号 + 问题 + 触发场景 + 修法）；无则答“未发现缺陷”。
