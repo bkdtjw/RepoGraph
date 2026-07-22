@@ -1,4 +1,4 @@
-"""检索侧共享词表（v0.3 · Phase C2）——中文停用/疑问/功能词 + 代码缩写扩展。
+"""检索侧共享词表（v0.3 · Phase C2/C3）——中文停用/疑问/功能词 + 代码缩写扩展 + 技术专名词表。
 
 落地设计 §4.4 + `eval/calibration.md` §3.3 对 D-N1 的修订：V0 校准诊断显示 FZ-dev 每题
 Top-1 恒为**非 gold 的高 IDF 非内容词碎片**（n-gram：`的单/起来/台账/放行`；jieba：`把/在/挂/拦`）。
@@ -16,6 +16,8 @@ Top-1 恒为**非 gold 的高 IDF 非内容词碎片**（n-gram：`的单/起来
 只依赖标准库；不 import 任何其它 repograph 模块（纯词表，可被 topic/context/router 复用）。
 """
 from __future__ import annotations
+
+import re
 
 # ---------------------------------------------------------------------------
 # 中文停用/疑问/功能/填充词黑名单（作用于查询侧 n-gram term）
@@ -140,3 +142,65 @@ def expand_abbreviations(token: str) -> set:
     if not token:
         return set()
     return set(ABBREVIATIONS.get(token.lower(), ()))
+
+
+# ---------------------------------------------------------------------------
+# 技术专名词表（v0.3 · Phase C3 · 前提校验 S7 / 裁定 D-19）
+#
+# 常见基础设施 / 框架 / 组件专名——问题里出现这类专名即等价于**断言「本项目用 X」**。
+# ``router.verify_premises`` 拿这些命中词逐一对真实图谱做存在性校验：图谱里查无此词 →
+# 该前提「未获图谱证据」（PP 错误预设子集：Redis/FastAPI/Docker… 等缺席技术栈）。
+#
+# **通用、非数据集耦合**：词表是领域通用的技术命名词典（任何仓库问到未用到的 X 都会被标）；
+# 是否成 flag 由**图谱存在性**决定，不硬编码任何题目。全小写键 → 展示名（用于 claim 文案）。
+# ---------------------------------------------------------------------------
+
+_TECH_TERMS: dict = {
+    # 缓存 / KV / 消息 / 队列
+    "redis": "Redis", "memcached": "Memcached", "kafka": "Kafka",
+    "rabbitmq": "RabbitMQ", "celery": "Celery", "zeromq": "ZeroMQ",
+    "nats": "NATS", "pulsar": "Pulsar",
+    # 关系 / 文档数据库
+    "postgresql": "PostgreSQL", "postgres": "PostgreSQL", "mysql": "MySQL",
+    "mariadb": "MariaDB", "mongodb": "MongoDB", "cassandra": "Cassandra",
+    "elasticsearch": "Elasticsearch", "clickhouse": "ClickHouse",
+    "sqlite": "SQLite",            # 本仓库实际在用 → 图谱命中 → 不成 flag（存在性把关）
+    # Web / RPC 框架
+    "fastapi": "FastAPI", "flask": "Flask", "django": "Django",
+    "tornado": "Tornado", "sanic": "Sanic", "aiohttp": "aiohttp",
+    "graphql": "GraphQL", "grpc": "gRPC", "thrift": "Thrift",
+    # 前端框架
+    "react": "React", "vue": "Vue", "angular": "Angular", "svelte": "Svelte",
+    "jquery": "jQuery", "webpack": "Webpack", "vite": "Vite",
+    # 容器 / 编排 / 部署
+    "docker": "Docker", "kubernetes": "Kubernetes", "k8s": "Kubernetes",
+    "nginx": "Nginx", "apache": "Apache", "terraform": "Terraform",
+    "ansible": "Ansible", "helm": "Helm",
+    # 计算 / 数据 / ML
+    "spark": "Spark", "hadoop": "Hadoop", "flink": "Flink", "airflow": "Airflow",
+    "tensorflow": "TensorFlow", "pytorch": "PyTorch", "numpy": "NumPy",
+    # 云 / 其它
+    "kubectl": "kubectl", "prometheus": "Prometheus", "grafana": "Grafana",
+    "consul": "Consul", "etcd": "etcd", "zookeeper": "ZooKeeper",
+}
+
+
+def find_tech_terms(text: str) -> list:
+    """从文本里找出提到的技术专名，返回 ``[(小写词, 展示名)]``（去重、保序）。
+
+    latin 词按**词边界**匹配（``(?<![a-z0-9])term(?![a-z0-9])``），避免 ``react`` 命中
+    ``reaction``、``spark`` 命中 ``sparkle``；含数字的专名（``k8s``）同规则。纯字符串、
+    忽略大小写、无语义。命中即候选前提，是否成 flag 由图谱存在性最终裁决（见 router）。
+    """
+    if not text:
+        return []
+    low = text.lower()
+    out: list = []
+    seen: set = set()
+    for term, disp in _TECH_TERMS.items():
+        if term in seen:
+            continue
+        if re.search(r"(?<![a-z0-9])" + re.escape(term) + r"(?![a-z0-9])", low):
+            seen.add(term)
+            out.append((term, disp))
+    return out

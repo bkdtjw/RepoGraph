@@ -26,6 +26,7 @@ from .topic import topic_recall
 from .router import (
     normalize, is_code_token, route, default_suggestions,
     merge_link_candidates, card_hits_to_candidates, has_strong_method,
+    extract_lexical_premises, verify_premises,
 )
 from .repo_card import build_meta_context
 from .lexicon import expand_abbreviations
@@ -304,23 +305,42 @@ def build_repo_context(
     src = f"rule:{rule_id}" if rule_id else "fallback:default"
 
     if label == "meta":
-        return _finalize(build_meta_context(store), "meta", src)
-    if label == "global":
+        ctx = _finalize(build_meta_context(store), "meta", src)
+    elif label == "global":
         # 展示 mode 保持 overview（spec §5.1：build_overview 恒返回 overview，global 的事件
         # mode 改写在网关侧据 route_label 完成）；route_label='global' 承载精确五分类。
-        return _finalize(build_overview(store), "global", src)
-    if label == "structural":
+        ctx = _finalize(build_overview(store), "global", src)
+    elif label == "structural":
         # 能确定性计数者走 build_overview 字段（模块/函数/概念总数等）；route_label 独立
         # 回显不被 overview 吞没（保 P2 可评测），degraded 标注模板层未建（落地设计 §4.2/F8）。
-        return _finalize(build_overview(store), "structural", src,
-                         degraded=True, suggestions=default_suggestions())
-    if label == "out_of_scope":
-        return _build_oos_context(store, src)
+        ctx = _finalize(build_overview(store), "structural", src,
+                        degraded=True, suggestions=default_suggestions())
+    elif label == "out_of_scope":
+        ctx = _build_oos_context(store, src)
+    else:
+        # entity_local（entity-1 规则或兜底）——现四档瀑布 + 消歧协议（C4），行为向后兼容
+        ctx = _entity_local_waterfall(
+            store, norm_q, linked, topic_hits, budget_chars, impact_depth,
+            allow_overview, src)
 
-    # entity_local（entity-1 规则或兜底）——现四档瀑布，行为不变
-    return _entity_local_waterfall(
-        store, norm_q, linked, topic_hits, budget_chars, impact_depth,
-        allow_overview, src)
+    # 单出口挂 schema v2 纯增字段（v1 消费方兼容）：S7 前提校验 + 消歧/解读回显默认。
+    return _attach_schema_v2(ctx, store, norm_q)
+
+
+def _attach_schema_v2(ctx: dict, store: GraphStore, norm_q: str) -> dict:
+    """给上下文挂 schema v2 纯增字段（落地设计 §5.1）——只加不覆盖已设者。
+
+    - ``premise_flags``：S7 前提校验（``extract_lexical_premises`` → ``verify_premises``，
+      lexical 规则，纯确定性；gate 离线判定读此字段，B-3 由此翻绿）；
+    - ``needs_disambiguation`` / ``candidates`` / ``resolved_query``：消歧层（C4）未设时给默认，
+      消歧层已设者（``entity_local`` 消歧）保留不覆盖。
+    """
+    if "premise_flags" not in ctx:
+        ctx["premise_flags"] = verify_premises(store, extract_lexical_premises(norm_q))
+    ctx.setdefault("needs_disambiguation", False)
+    ctx.setdefault("candidates", [])
+    ctx.setdefault("resolved_query", norm_q)
+    return ctx
 
 
 _MAX_EXTRA_QUERIES = 4

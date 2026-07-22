@@ -2,7 +2,7 @@
   "meta": {
     "phase": "A (治理与再基线) · 任务 A4 门禁基线",
     "git": {
-      "head": "ce684987ceb0030e6819495cfd48c56d15ca1d17",
+      "head": "d4e403318219c585fc5040f3b8b828839c0f9d17",
       "tags_at_head": [],
       "expected_tag": "rebaseline-20260723",
       "tag_bound": false
@@ -59,7 +59,7 @@
       "n": 8,
       "correction_rate": 0.0,
       "premise_leak_rate": 0.0,
-      "premise_flags_capability": false
+      "premise_flags_capability": true
     }
   },
   "locked_failures": {
@@ -81,8 +81,8 @@
     "B-3": {
       "desc": "premise_flags 前提校验能力缺失",
       "expected": "red",
-      "premise_flags_capability": false,
-      "is_red": true
+      "premise_flags_capability": true,
+      "is_red": false
     }
   },
   "hard_metrics": {
@@ -106,7 +106,7 @@
       "status": "RED(baseline)",
       "b1_red": false,
       "b2_red": true,
-      "b3_red": true
+      "b3_red": false
     },
     "主集三层准确率": {
       "threshold": "较 v0.1 下降 ≤3pt",
@@ -835,7 +835,7 @@
         "over_ask": false,
         "under_ask": true,
         "anchored": true,
-        "has_nd_field": false
+        "has_nd_field": true
       },
       "gold_behavior": "should_disambiguate"
     },
@@ -856,7 +856,7 @@
         "over_ask": false,
         "under_ask": true,
         "anchored": true,
-        "has_nd_field": false
+        "has_nd_field": true
       },
       "gold_behavior": "should_disambiguate"
     },
@@ -877,7 +877,7 @@
         "over_ask": false,
         "under_ask": true,
         "anchored": true,
-        "has_nd_field": false
+        "has_nd_field": true
       },
       "gold_behavior": "should_disambiguate"
     },
@@ -898,7 +898,7 @@
         "over_ask": false,
         "under_ask": false,
         "anchored": true,
-        "has_nd_field": false
+        "has_nd_field": true
       },
       "gold_behavior": "should_autopick"
     },
@@ -919,7 +919,7 @@
         "over_ask": false,
         "under_ask": false,
         "anchored": true,
-        "has_nd_field": false
+        "has_nd_field": true
       },
       "gold_behavior": "should_autopick"
     },
@@ -940,7 +940,7 @@
         "over_ask": false,
         "under_ask": false,
         "anchored": true,
-        "has_nd_field": false
+        "has_nd_field": true
       },
       "gold_behavior": "should_autopick"
     },
@@ -961,7 +961,7 @@
         "over_ask": false,
         "under_ask": false,
         "anchored": true,
-        "has_nd_field": false
+        "has_nd_field": true
       },
       "gold_behavior": "should_autopick"
     },
@@ -982,7 +982,7 @@
         "over_ask": false,
         "under_ask": false,
         "anchored": true,
-        "has_nd_field": false
+        "has_nd_field": true
       },
       "gold_behavior": "should_autopick"
     },
@@ -1003,7 +1003,7 @@
         "over_ask": false,
         "under_ask": false,
         "anchored": true,
-        "has_nd_field": false
+        "has_nd_field": true
       },
       "gold_behavior": "should_autopick"
     },
@@ -1024,7 +1024,7 @@
         "over_ask": false,
         "under_ask": false,
         "anchored": true,
-        "has_nd_field": false
+        "has_nd_field": true
       },
       "gold_behavior": "should_autopick"
     },
@@ -1040,7 +1040,7 @@
       "n_linked": 0,
       "bare_refusal": false,
       "judge": {
-        "has_premise_flags_field": false,
+        "has_premise_flags_field": true,
         "premise_leak": false,
         "suspect_corrected": false,
         "mode": "overview"
@@ -1058,7 +1058,7 @@
       "n_linked": 4,
       "bare_refusal": false,
       "judge": {
-        "has_premise_flags_field": false,
+        "has_premise_flags_field": true,
         "premise_leak": false,
         "suspect_corrected": false,
         "mode": "topic"
@@ -1076,7 +1076,7 @@
       "n_linked": 8,
       "bare_refusal": false,
       "judge": {
-        "has_premise_flags_field": false,
+        "has_premise_flags_field": true,
         "premise_leak": false,
         "suspect_corrected": false,
         "mode": "topic"
@@ -1094,7 +1094,7 @@
       "n_linked": 5,
       "bare_refusal": false,
       "judge": {
-        "has_premise_flags_field": false,
+        "has_premise_flags_field": true,
         "premise_leak": false,
         "suspect_corrected": false,
         "mode": "topic"
@@ -1112,7 +1112,7 @@
       "n_linked": 8,
       "bare_refusal": false,
       "judge": {
-        "has_premise_flags_field": false,
+        "has_premise_flags_field": true,
         "premise_leak": false,
         "suspect_corrected": false,
         "mode": "topic"
@@ -1130,7 +1130,7 @@
       "n_linked": 8,
       "bare_refusal": false,
       "judge": {
-        "has_premise_flags_field": false,
+        "has_premise_flags_field": true,
         "premise_leak": false,
         "suspect_corrected": false,
         "mode": "topic"
@@ -1148,7 +1148,7 @@
       "n_linked": 8,
       "bare_refusal": false,
       "judge": {
-        "has_premise_flags_field": false,
+        "has_premise_flags_field": true,
         "premise_leak": false,
         "suspect_corrected": false,
         "mode": "topic"
@@ -1166,7 +1166,7 @@
       "n_linked": 8,
       "bare_refusal": false,
       "judge": {
-        "has_premise_flags_field": false,
+        "has_premise_flags_field": true,
         "premise_leak": false,
         "suspect_corrected": false,
         "mode": "topic"

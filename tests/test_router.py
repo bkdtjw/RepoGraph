@@ -27,8 +27,10 @@ from repograph.retrieve.router import (
     normalize, is_code_token, route, ROUTER_RULES, default_suggestions,
     merge_link_candidates, has_strong_method, can_auto_anchor,
     content_terms, card_hits_to_candidates,
+    extract_lexical_premises, verify_premises, premises_from_claims,
 )
 from repograph.retrieve.context import build_repo_context
+from repograph.retrieve.lexicon import find_tech_terms
 
 _GRAPH = os.path.join(os.path.dirname(__file__), "..", "output", "graph.json")
 _DATASET = os.path.join(os.path.dirname(__file__), "..", "eval", "dataset.jsonl")
@@ -271,6 +273,92 @@ def test_content_terms_and_card_mapping():
     print("test_content_terms_and_card_mapping OK")
 
 
+# ---------------------------------------------------------------------------
+# I) S7 前提校验（落地设计 §5.7 / D-19；PP 错误预设子集 · B-3 硬门禁支撑）
+# ---------------------------------------------------------------------------
+
+def test_find_tech_terms():
+    # 词边界匹配：命中独立技术专名，不误命中包含它的更长词
+    assert dict(find_tech_terms("为什么用 Redis 做分布式锁")) == {"redis": "Redis"}
+    assert dict(find_tech_terms("用 Docker/K8s 编排部署")) == {"docker": "Docker",
+                                                              "k8s": "Kubernetes"}
+    # react 不得命中 reaction；spark 不得命中 sparkle（词边界护栏）
+    assert find_tech_terms("a chemical reaction and a sparkle") == []
+    # 无技术专名 → 空
+    assert find_tech_terms("那个把活儿叫停之后收尾的一摊在哪") == []
+    print("test_find_tech_terms OK")
+
+
+def test_verify_premises_absent_vs_present(store):
+    # 缺席技术栈（Redis/FastAPI/PostgreSQL/Docker/Celery/React）→ 全部标 unverified
+    absent = ["redis", "fastapi", "postgresql", "docker", "celery", "react", "kubernetes"]
+    for t in absent:
+        flags = verify_premises(store, [{"claim": f"使用 {t}", "terms": [t],
+                                         "source": "test"}])
+        assert len(flags) == 1 and flags[0]["status"] == "unverified", (
+            f"缺席技术 {t} 应标 unverified，实得 {flags}")
+        assert flags[0]["reason"] == "unknown_entity"
+    # 真实在用技术（sqlite / asyncio 在图谱 docstring/概念中出现）→ 不产 flag（存在性把关）
+    for t in ["sqlite", "asyncio"]:
+        flags = verify_premises(store, [{"claim": f"使用 {t}", "terms": [t],
+                                         "source": "test"}])
+        assert flags == [], f"在用技术 {t} 不应误标未证实，实得 {flags}"
+    # 空 terms / 空 premises → 无 flag（不崩）
+    assert verify_premises(store, []) == []
+    assert verify_premises(store, [{"claim": "x", "terms": [], "source": "t"}]) == []
+    print("test_verify_premises_absent_vs_present OK")
+
+
+def test_pp_dataset_lexical_premises(store):
+    """PP 八题：六道技术缺席类经 lexical 规则 → build_repo_context 产非空 premise_flags；
+    每道 absent_keywords 里的技术词均被 verify_premises 标记（B-3 离线翻绿的真实支撑）。"""
+    rows = [json.loads(l) for l in open(_DATASET, encoding="utf-8") if l.strip()]
+    pp = [r for r in rows if r["subset"] == "PP"]
+    assert len(pp) == 8
+    tech_absent_hit = 0
+    for r in pp:
+        ctx = build_repo_context(store, r["question"])
+        # schema v2：premise_flags 字段恒在（B-3 能力判定基准）
+        assert "premise_flags" in ctx, f"{r['id']} 缺 premise_flags 字段"
+        flags = ctx["premise_flags"]
+        # 直接对题面跑 lexical 抽取 + 校验，断言技术缺席类被抓到
+        prem = extract_lexical_premises(r["question"])
+        vf = verify_premises(store, prem)
+        # 该题的 absent_keywords 里凡属技术专名者，应被某条 flag 的 term 覆盖（前缀容错：
+        # 题面 PostgreSQL→term postgresql，dataset absent_keyword postgres，同技术不同拼写）。
+        abk = [k.lower() for k in r.get("absent_keywords", [])]
+
+        def _covers(term):
+            tl = term.lower()
+            return any(tl.startswith(k) or k.startswith(tl) for k in abk)
+        covered = any(any(_covers(t) for t in f.get("terms", [])) for f in vf)
+        if vf:                                  # 六道技术缺席类
+            assert covered, f"{r['id']} 技术缺席未被标记：flags={vf}, absent={abk}"
+            assert flags, f"{r['id']} build_repo_context 应回显非空 premise_flags"
+            tech_absent_hit += 1
+    # 六道技术缺席类（PP-01..06）必须全部命中；结构矛盾类（PP-07/08）lexical 不强求
+    assert tech_absent_hit >= 6, f"技术缺席类应≥6 道被标记，实得 {tech_absent_hit}"
+    print(f"test_pp_dataset_lexical_premises OK ({tech_absent_hit}/8 lexical 标记)")
+
+
+def test_premises_from_claims(store):
+    # LLM 断言字符串 → 抽 terms（技术专名 + 英文标识符 + 数字量词）
+    prem = premises_from_claims(["使用 Kafka 消息队列", "看门狗有五级升级机制",
+                                 "跑满 100 轮才算过"])
+    by_claim = {p["claim"]: p for p in prem}
+    assert "kafka" in [t.lower() for t in by_claim["使用 Kafka 消息队列"]["terms"]]
+    assert "五级" in by_claim["看门狗有五级升级机制"]["terms"]
+    assert "100轮" in by_claim["跑满 100 轮才算过"]["terms"]
+    # 纯中文泛述无可校验 term → 不产 premise（保守，防误报 F1）
+    assert premises_from_claims(["这个系统很复杂"]) == []
+    # 校验：Kafka 缺席 → flag；五级 缺席（图谱是三级）→ flag
+    vf = verify_premises(store, prem)
+    claims_flagged = {f["claim"] for f in vf}
+    assert "使用 Kafka 消息队列" in claims_flagged, "缺席 Kafka 应被标"
+    assert "看门狗有五级升级机制" in claims_flagged, "五级（图谱三级）应被标"
+    print("test_premises_from_claims OK")
+
+
 if __name__ == "__main__":
     store = _load()
     test_normalize()
@@ -289,4 +377,8 @@ if __name__ == "__main__":
     test_has_strong_method_and_auto_anchor()
     test_content_terms_and_card_mapping()
     test_dagai_not_global_regression(store)
+    test_find_tech_terms()
+    test_verify_premises_absent_vs_present(store)
+    test_pp_dataset_lexical_premises(store)
+    test_premises_from_claims(store)
     print("\nALL TESTS PASSED")

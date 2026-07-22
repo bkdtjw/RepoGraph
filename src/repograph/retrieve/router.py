@@ -339,3 +339,121 @@ def card_hits_to_candidates(recall: list) -> list[dict]:
                         "score": r.get("score", 0.0), "method": "bm25_card",
                         "matched_terms": r.get("matched_terms", [])})
     return out
+
+
+# ---------------------------------------------------------------------------
+# S7 前提校验（落地设计 §5.7 / §3.2 / 裁定 D-19；PP 错误预设子集 · B-3）
+#
+# 「错误预设」题（PP 子集）如「为什么用 Redis 做分布式锁」隐含一条**断言为真的前提**
+# （使用 Redis）。校验只保留「实体可词面定位但图中无支撑边」半支（向量高分支撑块已随
+# D-22 砍除）：premise 实体经词面在图谱**不可定位** → `unknown_entity`（保守当作未证实，
+# §3.2 S7 保守偏差）；**可定位但断言的支撑关系缺失** → `unverified`。两者都落 flag、
+# 都触发生成层「先纠正后答」的程序化闸门（spec §5.2）。
+#
+# 前提来源两路（同一 verify_premises 消费）：
+#   · **lexical/off 档**：`extract_lexical_premises`——题面技术专名词表比对（gate 离线走这条，
+#     确保 B-3 离线可翻绿；纯确定性、无网关）。
+#   · **llm 档**：`_rg_llm_rewrite` 的 `premises` 经 `premises_from_claims` 抽 terms 后校验。
+# ---------------------------------------------------------------------------
+
+# 前提实体图谱可定位性扫描的节点文本字段（qualname/路径/docstring/概念名/描述/提交信息/签名）。
+_PREMISE_SCAN_KEYS = (
+    "qualname", "name", "path", "docstring", "description", "message", "signature",
+)
+
+# LLM 前提断言里可校验 term 的抽取样式：英文标识符 + 数字/中文数字 + 量词（五级 / 100 轮）。
+# 数字与量词间允许空白（"100 轮"），抽出后归一去空白（→ "100轮"）再做图谱存在性比对。
+_EN_IDENT_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]{1,}")
+_NUM_UNIT_RE = re.compile(r"[0-9一二三四五六七八九十百千两]+\s*(?:级|轮|层|阶段|个|次|步|档|重)")
+
+
+def extract_lexical_premises(question: str) -> list[dict]:
+    """轻量规则前提抽取（lexical/off 档；gate 离线判定走这条）。
+
+    题面出现的技术专名（``lexicon.find_tech_terms`` 的 infra/框架词表命中）= 断言
+    「本项目用 X」的前提，交 ``verify_premises`` 对图谱做存在性校验。返回 premise dict
+    列表 ``[{claim, terms, source}]``；无技术专名则空（非 PP 题不产前提、零误报）。
+    """
+    from .lexicon import find_tech_terms
+    prem: list[dict] = []
+    for term, disp in find_tech_terms(question or ""):
+        prem.append({"claim": f"使用 {disp}", "terms": [term],
+                     "source": "lexical:tech_term"})
+    return prem
+
+
+def premises_from_claims(claims: list) -> list[dict]:
+    """把 LLM 抽取的前提断言（自然语言字符串）转成可校验 premise dict。
+
+    从每条断言抽取**技术专名 + 英文标识符 + 数字量词短语**作为 terms（供图谱存在性校验）。
+    抽不出可校验 term 的纯中文泛述断言**不产 premise**（保守：宁可漏判也不误报，守 F1）。
+    """
+    from .lexicon import find_tech_terms
+    out: list[dict] = []
+    for c in claims or []:
+        s = str(c or "").strip()
+        if not s:
+            continue
+        terms: list[str] = [t for t, _d in find_tech_terms(s)]
+        terms += _EN_IDENT_RE.findall(s)
+        terms += [re.sub(r"\s+", "", m) for m in _NUM_UNIT_RE.findall(s)]
+        # 去重保序 + 去掉过短碎片
+        terms = list(dict.fromkeys(t for t in terms if t and len(t) >= 2))
+        if not terms:
+            continue
+        out.append({"claim": s, "terms": terms, "source": "llm:premise"})
+    return out
+
+
+def _term_in_graph(store, term: str) -> bool:
+    """term（忽略大小写）是否作为词面出现在图谱任一节点的可检索文本中。
+
+    扫 ``_PREMISE_SCAN_KEYS`` + aliases/zh_aliases + evidence 引文。命中即认为该前提实体
+    在图谱「可定位」（等价 link_entities 的词面可链接性，但覆盖概念描述/提交信息等自由文本）。
+    """
+    t = (term or "").lower()
+    if not t:
+        return False
+    for node in store.nodes():
+        for k in _PREMISE_SCAN_KEYS:
+            v = node.get(k)
+            if v and t in str(v).lower():
+                return True
+        for a in list(node.get("aliases") or []) + list(node.get("zh_aliases") or []):
+            if a and t in str(a).lower():
+                return True
+        for ev in node.get("evidence") or []:
+            q = (ev or {}).get("quote") if isinstance(ev, dict) else None
+            if q and t in str(q).lower():
+                return True
+    return False
+
+
+def verify_premises(store, premises: list) -> list[dict]:
+    """S7 前提校验：逐前提对真实图谱做词面存在性校验，返回**未证实**的 flag 列表。
+
+    每个 premise 形如 ``{claim, terms:[...], source}``。判定（落地设计 §5.7 / D-19）：
+      · terms **全部**不可词面定位于图谱 → ``status='unverified'`` + ``reason='unknown_entity'``
+        （实体不可链接，§3.2 S7 保守当作未证实）；
+      · terms 有可定位者 → 本轮词面校验保守视为「已获证据」，**不产 flag**（可定位但断言
+        支撑边缺失的 `missing_edge` 半支需边级校验，留待具体关系断言，避免误伤真前提）。
+
+    返回 ``[{claim, status:'unverified', reason, source, terms}]``（仅未证实项；已证实前提不产 flag）。
+    真实数据铁律：只据真实 ``store`` 扫描判定，绝不臆造。
+    """
+    flags: list[dict] = []
+    for prem in premises or []:
+        terms = [t for t in (prem.get("terms") or []) if t]
+        if not terms:
+            continue
+        present = any(_term_in_graph(store, t) for t in terms)
+        if present:
+            continue                        # 可定位 → 保守不产 flag（不误伤真前提）
+        flags.append({
+            "claim": prem.get("claim", ""),
+            "status": "unverified",
+            "reason": "unknown_entity",
+            "source": prem.get("source"),
+            "terms": terms,
+        })
+    return flags
