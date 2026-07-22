@@ -119,6 +119,14 @@
 > - **引用**：`design_work/c2_gen_cards.py`/`c2_cards.json`（284 卡可审计）、`src/repograph/enrich.py`、
 >   `src/repograph/retrieve/lexicon.py`、`eval/gate_report.json`（FZ-dev 0.7）；关联 D-P1、D-16、D-N1、D-N2。
 
+> **Phase C 集成验证回填（2026-07-22，Phase C 收口）——B-2 仍红，D-11 维持「生效」**：
+> Phase C 全量门禁（HEAD 6d7ce9a）复核 **B-2 未翻绿**——FZ-dev hit@3=**0.7**<0.8（差 1 题，
+> d09/d06/d10 归因见上 C2 块），FZ-test hit@3=0.8。「D-11 若 B-2 绿转生效」条件**未满足**，
+> D-11 保持 C2 已定「生效」（机制经富化卡片验证有效、未证伪），不因 Phase C 另转状态。双语召回
+> 机制经**实机端到端复证有效**：口语「终止那块怎么搞的」经中文卡片/别名把「终止」桥接到
+> `_handle_terminate`（topic 档 linked 命中）。**引用**：`eval/gate_report.json`（FZ-dev 0.7）、
+> `docs/v0.3-asbuilt.md` §8（Phase C 集成 as-built）；关联 D-P1、D-P4（F9 量化仍挂 Phase D V5）。
+
 ## D-12 | 2026-07-22 | 状态: 生效
 **裁定**：改造（改造采纳）——PageRank → 纯 Python 幂迭代（`metrics._power_iteration`，d=0.85、阈 1e-6、含悬挂质量项），本图 Function 259/CALLS 352 亚毫秒级。拆两独立指标：Function 级 `pagerank`（CALLS）与可选 Module 级 `module_pagerank`（IMPORTS），不做原稿的「CALLS∪IMPORTS 并图」（节点异构会混层）。
 **动因**：运行时 stdlib 约束——networkx 存在于 `viz/render.py` 但不用于此图计算；幂迭代无需第三方库。
