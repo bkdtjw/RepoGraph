@@ -1,0 +1,484 @@
+{
+  "meta": {
+    "subset": "FZ_dev",
+    "n": 10,
+    "source": "C2 富化后真实 topic_recall",
+    "dims": {
+      "rel_margin": [
+        0.1,
+        0.15,
+        0.2,
+        0.25
+      ],
+      "min_score": [
+        0.5,
+        1.0,
+        1.5,
+        2.0
+      ],
+      "single_weak_autopick": [
+        "on",
+        "off"
+      ]
+    },
+    "objective": "max hit@1",
+    "constraint": "over_ask_rate<=0.2"
+  },
+  "grid": [
+    {
+      "min_score": 0.5,
+      "rel_margin": 0.1,
+      "single_weak_autopick": true,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.4,
+      "feasible": false
+    },
+    {
+      "min_score": 0.5,
+      "rel_margin": 0.1,
+      "single_weak_autopick": false,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.4,
+      "feasible": false
+    },
+    {
+      "min_score": 0.5,
+      "rel_margin": 0.15,
+      "single_weak_autopick": true,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 0.5,
+      "rel_margin": 0.15,
+      "single_weak_autopick": false,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 0.5,
+      "rel_margin": 0.2,
+      "single_weak_autopick": true,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 0.5,
+      "rel_margin": 0.2,
+      "single_weak_autopick": false,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 0.5,
+      "rel_margin": 0.25,
+      "single_weak_autopick": true,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 0.5,
+      "rel_margin": 0.25,
+      "single_weak_autopick": false,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 1.0,
+      "rel_margin": 0.1,
+      "single_weak_autopick": true,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.4,
+      "feasible": false
+    },
+    {
+      "min_score": 1.0,
+      "rel_margin": 0.1,
+      "single_weak_autopick": false,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.4,
+      "feasible": false
+    },
+    {
+      "min_score": 1.0,
+      "rel_margin": 0.15,
+      "single_weak_autopick": true,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 1.0,
+      "rel_margin": 0.15,
+      "single_weak_autopick": false,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 1.0,
+      "rel_margin": 0.2,
+      "single_weak_autopick": true,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 1.0,
+      "rel_margin": 0.2,
+      "single_weak_autopick": false,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 1.0,
+      "rel_margin": 0.25,
+      "single_weak_autopick": true,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 1.0,
+      "rel_margin": 0.25,
+      "single_weak_autopick": false,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 1.5,
+      "rel_margin": 0.1,
+      "single_weak_autopick": true,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.4,
+      "feasible": false
+    },
+    {
+      "min_score": 1.5,
+      "rel_margin": 0.1,
+      "single_weak_autopick": false,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.4,
+      "feasible": false
+    },
+    {
+      "min_score": 1.5,
+      "rel_margin": 0.15,
+      "single_weak_autopick": true,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 1.5,
+      "rel_margin": 0.15,
+      "single_weak_autopick": false,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 1.5,
+      "rel_margin": 0.2,
+      "single_weak_autopick": true,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 1.5,
+      "rel_margin": 0.2,
+      "single_weak_autopick": false,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 1.5,
+      "rel_margin": 0.25,
+      "single_weak_autopick": true,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 1.5,
+      "rel_margin": 0.25,
+      "single_weak_autopick": false,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 2.0,
+      "rel_margin": 0.1,
+      "single_weak_autopick": true,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.4,
+      "feasible": false
+    },
+    {
+      "min_score": 2.0,
+      "rel_margin": 0.1,
+      "single_weak_autopick": false,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.4,
+      "feasible": false
+    },
+    {
+      "min_score": 2.0,
+      "rel_margin": 0.15,
+      "single_weak_autopick": true,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 2.0,
+      "rel_margin": 0.15,
+      "single_weak_autopick": false,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 2.0,
+      "rel_margin": 0.2,
+      "single_weak_autopick": true,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 2.0,
+      "rel_margin": 0.2,
+      "single_weak_autopick": false,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 2.0,
+      "rel_margin": 0.25,
+      "single_weak_autopick": true,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    },
+    {
+      "min_score": 2.0,
+      "rel_margin": 0.25,
+      "single_weak_autopick": false,
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "over_ask_rate": 0.6,
+      "feasible": false
+    }
+  ],
+  "n_feasible": 0,
+  "n_ratifiable": 0,
+  "ratified": false,
+  "selected": null,
+  "least_bad_cell": {
+    "min_score": 2.0,
+    "rel_margin": 0.25,
+    "single_weak_autopick": false,
+    "hit@1": 0.5,
+    "hit@3": 0.7,
+    "over_ask_rate": 0.6,
+    "feasible": false
+  },
+  "transition_rule_retired": false,
+  "ref_cell_per_q": [
+    {
+      "id": "FZ-d01",
+      "n_cand": 8,
+      "s1": 5.49,
+      "s2": 5.471,
+      "over_ask": true,
+      "hit@1": true,
+      "hit@3": true,
+      "top3": [
+        "终止完善",
+        "_handle_terminate",
+        "_db_path"
+      ]
+    },
+    {
+      "id": "FZ-d02",
+      "n_cand": 7,
+      "s1": 5.139,
+      "s2": 4.67,
+      "over_ask": true,
+      "hit@1": true,
+      "hit@3": true,
+      "top3": [
+        "看门狗三级",
+        "9-1-恢复",
+        "异步版核心环"
+      ]
+    },
+    {
+      "id": "FZ-d03",
+      "n_cand": 4,
+      "s1": 10.883,
+      "s2": 4.869,
+      "over_ask": false,
+      "hit@1": true,
+      "hit@3": true,
+      "top3": [
+        "recover",
+        "崩溃恢复算法",
+        "审计-g-解耦"
+      ]
+    },
+    {
+      "id": "FZ-d04",
+      "n_cand": 8,
+      "s1": 7.326,
+      "s2": 7.012,
+      "over_ask": true,
+      "hit@1": false,
+      "hit@3": true,
+      "top3": [
+        "8c38a0bd0d9053df0240cf",
+        "session_rows",
+        "append_system_event"
+      ]
+    },
+    {
+      "id": "FZ-d05",
+      "n_cand": 3,
+      "s1": 13.995,
+      "s2": 4.794,
+      "over_ask": false,
+      "hit@1": true,
+      "hit@3": true,
+      "top3": [
+        "estimate_tokens",
+        "_join_focus",
+        "_join_background"
+      ]
+    },
+    {
+      "id": "FZ-d06",
+      "n_cand": 5,
+      "s1": 5.388,
+      "s2": 4.67,
+      "over_ask": true,
+      "hit@1": false,
+      "hit@3": false,
+      "top3": [
+        "dispatching_rows",
+        "9-1-恢复",
+        "异步作业"
+      ]
+    },
+    {
+      "id": "FZ-d07",
+      "n_cand": 8,
+      "s1": 24.049,
+      "s2": 7.407,
+      "over_ask": false,
+      "hit@1": true,
+      "hit@3": true,
+      "top3": [
+        "autocommit",
+        "last-ok-commit-生产回路",
+        "ledger-落盘"
+      ]
+    },
+    {
+      "id": "FZ-d08",
+      "n_cand": 2,
+      "s1": 5.363,
+      "s2": 4.934,
+      "over_ask": true,
+      "hit@1": false,
+      "hit@3": true,
+      "top3": [
+        "发送者约束",
+        "audit_write_scope"
+      ]
+    },
+    {
+      "id": "FZ-d09",
+      "n_cand": 8,
+      "s1": 6.671,
+      "s2": 5.718,
+      "over_ask": true,
+      "hit@1": false,
+      "hit@3": false,
+      "top3": [
+        "append_system_event",
+        "系统执行器",
+        "_strip_to_author_field"
+      ]
+    },
+    {
+      "id": "FZ-d10",
+      "n_cand": 8,
+      "s1": 11.089,
+      "s2": 6.923,
+      "over_ask": false,
+      "hit@1": false,
+      "hit@3": false,
+      "top3": [
+        "热续接入调度层三门控",
+        "find-informal-gate-生成形",
+        "审计不再-fail-open-c-4"
+      ]
+    }
+  ],
+  "hit1_range": [
+    0.5,
+    0.5
+  ],
+  "hit3_range": [
+    0.7,
+    0.7
+  ],
+  "over_ask_range": [
+    0.4,
+    0.6
+  ]
+}

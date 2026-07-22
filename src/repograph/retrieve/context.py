@@ -23,8 +23,12 @@ from typing import Optional
 from ..models import GraphStore, dotted_from_relpath
 from .impact import impact_analysis
 from .topic import topic_recall
-from .router import normalize, is_code_token, route, default_suggestions
+from .router import (
+    normalize, is_code_token, route, default_suggestions,
+    merge_link_candidates, card_hits_to_candidates, has_strong_method,
+)
 from .repo_card import build_meta_context
+from .lexicon import expand_abbreviations
 
 # ---------------------------------------------------------------------------
 # 打分（对应契约优先级：精确 qualname > 后缀 > 短名 > 概念名 > 模块）
@@ -71,6 +75,13 @@ def _tokenize(question: str) -> set[str]:
         words.extend(segs)
         for i in range(1, len(segs)):          # 逐级后缀：跳过完整链本身（i 从 1 起）
             candidates.add(".".join(segs[i:]))
+
+    # 缩写双向扩展（落地设计 §4.4）：逐词把 ctx↔context / cfg↔config 等对侧形态补入候选，
+    # 使"改 ctx 会怎样"命中 qualname 含 context 的符号。纯字符串、无语义（见 lexicon）。
+    for w in list(words):
+        for alt in expand_abbreviations(w):
+            candidates.add(alt)
+            words.append(alt)
 
     n_words = len(words)
     for n in (1, 2, 3):
@@ -156,8 +167,45 @@ def link_entities(store: GraphStore, question: str, top_k: int = 5) -> list[dict
             if c.lower() in low:
                 offer(node["id"], "Concept", name, c, "concept_name")
 
+    # 中文别名包含匹配（v0.3 · C2 · D-16/§4.6）：C2 索引期回填的中文口语别名
+    # （Concept.aliases / Function·Class.zh_aliases）多为无空格中文短语，_tokenize 只抽英文
+    # 标识符、无法命中；此处对**规范化后的原问题**做**连续子串**匹配作补充。方法档 concept_name
+    # （40，低于 exact/suffix），受过渡规则「仅方法档≥80 自动锚定」约束、不会自动锚给确定性工具。
+    # 高精度护栏：别名长度≥3 且非停用词，避免短碎片误锚（FZ 口语问题不含连续正式别名，故不误伤 topic）。
+    q_low = (question or "").lower()
+    if q_low:
+        _offer_zh_alias_matches(store, q_low, offer)
+
     ranked = sorted(best.values(), key=lambda r: (-r["score"], r["entity_id"]))
     return ranked[:top_k]
+
+
+# 中文别名包含匹配的最短长度（防短碎片误锚；3 起可含"看门狗"这类三字机制名）
+_ZH_ALIAS_MIN_LEN = 3
+
+
+def _offer_zh_alias_matches(store: GraphStore, q_low: str, offer) -> None:
+    """对 Concept.aliases / Function·Class.zh_aliases 做中文别名连续子串匹配（method=concept_name）。
+
+    只收长度≥``_ZH_ALIAS_MIN_LEN`` 且非中文停用词的别名，作为原问题的连续子串命中即 offer。
+    别名只进检索/链接候选、永不进答案事实（与 symbol_guesses 隔离同原则，见 §4.4 铁律辩护）。
+    """
+    from .lexicon import is_zh_stopword
+
+    def _try(node_id: str, label: str, name: str, aliases) -> None:
+        for a in aliases or []:
+            al = (a or "").strip()
+            if len(al) < _ZH_ALIAS_MIN_LEN or is_zh_stopword(al):
+                continue
+            if al.lower() in q_low:
+                offer(node_id, label, name, al, "concept_name")
+
+    for node in store.nodes("Concept"):
+        merged = list(node.get("aliases") or []) + list(node.get("zh_aliases") or [])
+        _try(node["id"], "Concept", node.get("name", ""), merged)
+    for label in ("Function", "Class"):
+        for node in store.nodes(label):
+            _try(node["id"], label, node.get("qualname", ""), node.get("zh_aliases"))
 
 
 # ---------------------------------------------------------------------------
@@ -217,6 +265,7 @@ def build_repo_context(
     budget_chars: int = 6000,
     impact_depth: int = 2,
     allow_overview: bool = True,
+    extra_queries: Optional[list] = None,
 ) -> dict:
     """S1 五路路由器 + 四档瀑布装配上下文（契约 A 主入口，v0.3 Phase C1）。
 
@@ -244,6 +293,13 @@ def build_repo_context(
     # 且结果回灌 entity_local 的 topic 档避免二次计算。
     topic_hits = [] if linked else topic_recall(store, norm_q, top_k=8)
 
+    # S2 改写二次召回（落地设计 §4.3/§4.4 / D-N2）：``extra_queries`` 由**网关侧** S2 改写
+    # 产出并传入（entity_local 无主锚时的同义改述 query）；本函数纯确定性，只做二次 link/topic
+    # 合并。**gate 离线永不传 extra_queries**（离线四层瀑布行为不变，S2 不进 gate 指标）。
+    if extra_queries and not linked:
+        linked, topic_hits = _augment_with_extra_queries(
+            store, linked, topic_hits, extra_queries)
+
     label, rule_id = route(norm_q, linked, topic_hits, has_ct)
     src = f"rule:{rule_id}" if rule_id else "fallback:default"
 
@@ -267,6 +323,36 @@ def build_repo_context(
         allow_overview, src)
 
 
+_MAX_EXTRA_QUERIES = 4
+
+
+def _augment_with_extra_queries(
+    store: GraphStore, linked: list[dict], topic_hits: list, extra_queries: list,
+) -> tuple[list[dict], list]:
+    """用 S2 改写 query 补链接/主题召回（无主锚时）：对每条改写 query 各跑一次
+    ``link_entities`` / ``topic_recall``，按 entity_id / node_id 取并集去重、分数取高，
+    重排取 Top-N。纯确定性、无网关（改写 query 由 server 侧网关产出后传入）。"""
+    link_by_id = {c["entity_id"]: c for c in linked}
+    topic_by_id = {r["node_id"]: r for r in topic_hits}
+    for eq in (extra_queries or [])[:_MAX_EXTRA_QUERIES]:
+        if not eq or not str(eq).strip():
+            continue
+        neq = normalize(str(eq))
+        for c in link_entities(store, neq, top_k=5):
+            cur = link_by_id.get(c["entity_id"])
+            if cur is None or c["score"] > cur["score"]:
+                link_by_id[c["entity_id"]] = c
+        for r in topic_recall(store, neq, top_k=8):
+            cur = topic_by_id.get(r["node_id"])
+            if cur is None or r["score"] > cur["score"]:
+                topic_by_id[r["node_id"]] = r
+    merged_link = sorted(link_by_id.values(),
+                         key=lambda c: (-c["score"], c["entity_id"]))[:5]
+    merged_topic = sorted(topic_by_id.values(),
+                          key=lambda r: (-r["score"], r["node_id"]))[:8]
+    return merged_link, merged_topic
+
+
 def _entity_local_waterfall(
     store: GraphStore, question: str, linked: list[dict], topic_hits: list,
     budget_chars: int, impact_depth: int, allow_overview: bool, src: str,
@@ -276,14 +362,24 @@ def _entity_local_waterfall(
     S6 回退阶梯形式化（落地设计 §5.8 / D-05）：符号空且主题空 → ``build_overview``
     + ``degraded`` + 建议问法（低置信度）；``allow_overview=False`` 时回落 ``mode='none'``
     交后端 L2 决策（保持 v0.1 契约）。裸拒率 0 由 overview 恒兜底达成（P4）。
+
+    分带（§4.6 / D-N1，C2 上线）：``candidates`` = merge_link_candidates(link ∪ bm25_card)
+    作 schema v2 观测字段附上；**不改 symbol/topic 路由决策**（改路由会回归 AMB 短名档，
+    实测证），过渡规则「仅方法档≥80 自动锚定」由 router.can_auto_anchor 在消歧层（C4）消费。
     """
+    # 分带候选合并（观测用，不改路由）：link_entities ∪ bm25-over-卡片（Function/Class 召回）
+    card_cands = card_hits_to_candidates(topic_hits)
+    candidates = merge_link_candidates(linked, card_cands)
+
     # L0 符号
     if linked:
-        return _finalize(_build_symbol_context(store, linked, budget_chars, impact_depth),
-                         "entity_local", src)
+        ctx = _build_symbol_context(store, linked, budget_chars, impact_depth)
+        ctx["candidates"] = candidates
+        return _finalize(ctx, "entity_local", src)
     # L1 主题（复用已算的 topic_hits，避免二次召回）
     topic = _build_topic_context(store, question, budget_chars, recall=topic_hits)
     if topic is not None:
+        topic["candidates"] = candidates
         return _finalize(topic, "entity_local", src)
     # L3 概览兜底（永不失联）+ S6 建议问法；allow_overview=False 回落 none
     if allow_overview:
@@ -558,6 +654,7 @@ def _assemble_concept_context(
     recall_meta: Optional[dict] = None,
     extra_commit_hits: Optional[list[dict]] = None,
     extra_module_hits: Optional[list[dict]] = None,
+    extra_symbol_hits: Optional[list[dict]] = None,
 ) -> dict:
     """把一组真实 Concept 节点沿 IMPLEMENTS/DESCRIBES 反向展开成结构化上下文。
 
@@ -660,6 +757,19 @@ def _assemble_concept_context(
             lines.append("【主题直接命中的模块】（来源: 主题召回 · Module docstring）")
         lines.append(f"- {m.get('path', '?')}: {_first_line(m.get('docstring'))}")
 
+    # C2 新增：主题召回直接命中的函数/类（经 zh_desc/zh_aliases 双语卡片入 BM25 语料召回）
+    for r in extra_symbol_hits or []:
+        n = store.get_node(r["node_id"])
+        if n is None:
+            continue
+        if not any(ln.startswith("【主题直接命中的符号】") for ln in lines):
+            lines.append("")
+            lines.append("【主题直接命中的符号】（来源: 主题召回 · 双语卡片 zh_desc/zh_aliases）")
+        mt = "/".join(r.get("matched_terms", [])[:6])
+        zh = n.get("zh_desc") or _first_line(n.get("docstring")) or ""
+        lines.append(f"- [{n['label']}] {n.get('qualname', '')}"
+                     f"  （文件: {n.get('file', '?')}）  {zh}  (命中词: {mt})")
+
     context_text, _tr = _apply_budget(lines, budget_chars)
     stats = _stats(
         topics=len(linked),
@@ -691,6 +801,7 @@ def _build_topic_context(
     recall_meta: dict[str, dict] = {}
     commit_hits: list[dict] = []
     module_hits: list[dict] = []
+    symbol_hits: list[dict] = []
     for r in recall:
         if r["label"] == "Concept":
             node = store.get_node(r["node_id"])
@@ -702,11 +813,14 @@ def _build_topic_context(
             commit_hits.append(r)
         elif r["label"] == "Module":
             module_hits.append(r)
+        elif r["label"] in ("Function", "Class"):
+            symbol_hits.append(r)
 
     return _assemble_concept_context(
         store, concept_nodes, budget_chars, mode="topic",
         linked=recall, recall_meta=recall_meta,
         extra_commit_hits=commit_hits, extra_module_hits=module_hits,
+        extra_symbol_hits=symbol_hits,
     )
 
 

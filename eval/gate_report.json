@@ -2,7 +2,7 @@
   "meta": {
     "phase": "A (治理与再基线) · 任务 A4 门禁基线",
     "git": {
-      "head": "8e24afa704eb84194bcd624c9cd76dafc24a2c72",
+      "head": "ce684987ceb0030e6819495cfd48c56d15ca1d17",
       "tags_at_head": [],
       "expected_tag": "rebaseline-20260723",
       "tag_bound": false
@@ -27,17 +27,17 @@
     },
     "FZ_dev": {
       "n": 10,
-      "hit@1": 0.0,
-      "hit@3": 0.1,
-      "hit@1_n": 0,
-      "hit@3_n": 1
+      "hit@1": 0.5,
+      "hit@3": 0.7,
+      "hit@1_n": 5,
+      "hit@3_n": 7
     },
     "FZ_test": {
       "n": 10,
-      "hit@1": 0.0,
-      "hit@3": 0.1,
-      "hit@1_n": 0,
-      "hit@3_n": 1
+      "hit@1": 0.6,
+      "hit@3": 0.8,
+      "hit@1_n": 6,
+      "hit@3_n": 8
     },
     "AMB": {
       "n": 10,
@@ -74,7 +74,7 @@
     "B-2": {
       "desc": "FZ-dev hit@3 < 0.8",
       "expected": "red",
-      "fz_dev_hit@3": 0.1,
+      "fz_dev_hit@3": 0.7,
       "threshold": 0.8,
       "is_red": true
     },
@@ -117,40 +117,10 @@
     "路由准确率(48题标注)": {
       "threshold": "≥ 0.9",
       "effective": "Phase C1",
-      "measured": 0.75,
+      "measured": 0.8542,
       "status": "PENDING",
       "would_pass": false,
       "mismatches": [
-        {
-          "id": "FZ-d02",
-          "got": "overview",
-          "want": "topic",
-          "route_label": "entity_local"
-        },
-        {
-          "id": "FZ-d03",
-          "got": "overview",
-          "want": "topic",
-          "route_label": "entity_local"
-        },
-        {
-          "id": "FZ-d05",
-          "got": "overview",
-          "want": "topic",
-          "route_label": "global"
-        },
-        {
-          "id": "FZ-d06",
-          "got": "overview",
-          "want": "topic",
-          "route_label": "entity_local"
-        },
-        {
-          "id": "FZ-d08",
-          "got": "overview",
-          "want": "topic",
-          "route_label": "entity_local"
-        },
         {
           "id": "PP-02",
           "got": "topic",
@@ -398,15 +368,15 @@
       "route_label": "entity_local",
       "route_source": "fallback:default",
       "degraded": false,
-      "n_linked": 5,
+      "n_linked": 8,
       "bare_refusal": false,
       "judge": {
-        "hit@1": false,
-        "hit@3": false,
+        "hit@1": true,
+        "hit@3": true,
         "anchors_top3": [
-          "concept::视图组装",
-          "concept::协议层",
-          "concept::apply-gate-decision-仅认-gate-request-corr-的缺口"
+          "concept::终止完善",
+          "multi-agent-orch::src/orch/scheduler/core.py::_handle_terminate",
+          "multi-agent-orch::src/orch/scheduler/_dispatch.py::_db_path"
         ],
         "gold_equiv_size": 6
       },
@@ -416,17 +386,21 @@
       "id": "FZ-d02",
       "subset": "FZ_dev",
       "question": "谁在旁边盯着别人干活会不会卡住",
-      "mode": "overview",
-      "mode_class": "overview",
+      "mode": "topic",
+      "mode_class": "topic",
       "route_label": "entity_local",
       "route_source": "fallback:default",
-      "degraded": true,
-      "n_linked": 0,
+      "degraded": false,
+      "n_linked": 7,
       "bare_refusal": false,
       "judge": {
-        "hit@1": false,
-        "hit@3": false,
-        "anchors_top3": [],
+        "hit@1": true,
+        "hit@3": true,
+        "anchors_top3": [
+          "concept::看门狗三级",
+          "concept::9-1-恢复",
+          "concept::异步版核心环"
+        ],
         "gold_equiv_size": 8
       },
       "gold_entity": "concept::看门狗三级"
@@ -435,17 +409,21 @@
       "id": "FZ-d03",
       "subset": "FZ_dev",
       "question": "程序半路挂了之后怎么自己爬起来接着干",
-      "mode": "overview",
-      "mode_class": "overview",
+      "mode": "topic",
+      "mode_class": "topic",
       "route_label": "entity_local",
       "route_source": "fallback:default",
-      "degraded": true,
-      "n_linked": 0,
+      "degraded": false,
+      "n_linked": 4,
       "bare_refusal": false,
       "judge": {
-        "hit@1": false,
-        "hit@3": false,
-        "anchors_top3": [],
+        "hit@1": true,
+        "hit@3": true,
+        "anchors_top3": [
+          "multi-agent-orch::src/orch/scheduler/recover.py::recover",
+          "concept::崩溃恢复算法",
+          "concept::审计-g-解耦"
+        ],
         "gold_equiv_size": 4
       },
       "gold_entity": "concept::崩溃恢复算法"
@@ -459,15 +437,15 @@
       "route_label": "entity_local",
       "route_source": "fallback:default",
       "degraded": false,
-      "n_linked": 7,
+      "n_linked": 8,
       "bare_refusal": false,
       "judge": {
         "hit@1": false,
         "hit@3": true,
         "anchors_top3": [
           "multi-agent-orch::commit::8c38a0bd0d9053df0240cf2c12e297236a9b1594",
-          "concept::系统执行器",
-          "concept::异构多智能体编排系统"
+          "multi-agent-orch::src/orch/scheduler/_dispatch.py::session_rows",
+          "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event"
         ],
         "gold_equiv_size": 2
       },
@@ -477,17 +455,21 @@
       "id": "FZ-d05",
       "subset": "FZ_dev",
       "question": "怎么估摸一段话大概占多少篇幅",
-      "mode": "overview",
-      "mode_class": "overview",
-      "route_label": "global",
-      "route_source": "rule:global-1",
+      "mode": "topic",
+      "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
       "degraded": false,
-      "n_linked": 0,
+      "n_linked": 3,
       "bare_refusal": false,
       "judge": {
-        "hit@1": false,
-        "hit@3": false,
-        "anchors_top3": [],
+        "hit@1": true,
+        "hit@3": true,
+        "anchors_top3": [
+          "multi-agent-orch::src/orch/render/__init__.py::estimate_tokens",
+          "multi-agent-orch::src/orch/render/__init__.py::_join_focus",
+          "multi-agent-orch::src/orch/render/__init__.py::_join_background"
+        ],
         "gold_equiv_size": 2
       },
       "gold_entity": "multi-agent-orch::src/orch/render/__init__.py::estimate_tokens"
@@ -496,17 +478,21 @@
       "id": "FZ-d06",
       "subset": "FZ_dev",
       "question": "给每个干活的单独开个小隔间互不打扰",
-      "mode": "overview",
-      "mode_class": "overview",
+      "mode": "topic",
+      "mode_class": "topic",
       "route_label": "entity_local",
       "route_source": "fallback:default",
-      "degraded": true,
-      "n_linked": 0,
+      "degraded": false,
+      "n_linked": 5,
       "bare_refusal": false,
       "judge": {
         "hit@1": false,
         "hit@3": false,
-        "anchors_top3": [],
+        "anchors_top3": [
+          "multi-agent-orch::src/orch/scheduler/_dispatch.py::dispatching_rows",
+          "concept::9-1-恢复",
+          "concept::异步作业"
+        ],
         "gold_equiv_size": 3
       },
       "gold_entity": "concept::worktree-隔离"
@@ -523,12 +509,12 @@
       "n_linked": 8,
       "bare_refusal": false,
       "judge": {
-        "hit@1": false,
-        "hit@3": false,
+        "hit@1": true,
+        "hit@3": true,
         "anchors_top3": [
-          "concept::cliadapter自动注入allowedtools白名单",
-          "concept::门禁琥珀banner",
-          "multi-agent-orch::commit::9448898ef9637a7829a51540873fec6140f343c9"
+          "multi-agent-orch::src/orch/scheduler/permissions.py::autocommit",
+          "concept::last-ok-commit-生产回路",
+          "concept::ledger-落盘"
         ],
         "gold_equiv_size": 3
       },
@@ -538,17 +524,20 @@
       "id": "FZ-d08",
       "subset": "FZ_dev",
       "question": "管谁能碰哪块、越界了就拦下来那套",
-      "mode": "overview",
-      "mode_class": "overview",
+      "mode": "topic",
+      "mode_class": "topic",
       "route_label": "entity_local",
       "route_source": "fallback:default",
-      "degraded": true,
-      "n_linked": 0,
+      "degraded": false,
+      "n_linked": 2,
       "bare_refusal": false,
       "judge": {
         "hit@1": false,
-        "hit@3": false,
-        "anchors_top3": [],
+        "hit@3": true,
+        "anchors_top3": [
+          "concept::发送者约束",
+          "multi-agent-orch::src/orch/scheduler/permissions.py::audit_write_scope"
+        ],
         "gold_equiv_size": 8
       },
       "gold_entity": "concept::权限三件套"
@@ -562,15 +551,15 @@
       "route_label": "entity_local",
       "route_source": "fallback:default",
       "degraded": false,
-      "n_linked": 6,
+      "n_linked": 8,
       "bare_refusal": false,
       "judge": {
         "hit@1": false,
         "hit@3": false,
         "anchors_top3": [
+          "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event",
           "concept::系统执行器",
-          "concept::异构多智能体编排系统",
-          "multi-agent-orch::commit::eae8ec3f639f3bee3152d5991725a13a383c1ad4"
+          "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields"
         ],
         "gold_equiv_size": 7
       },
@@ -585,13 +574,15 @@
       "route_label": "entity_local",
       "route_source": "fallback:default",
       "degraded": false,
-      "n_linked": 1,
+      "n_linked": 8,
       "bare_refusal": false,
       "judge": {
         "hit@1": false,
         "hit@3": false,
         "anchors_top3": [
-          "multi-agent-orch::commit::f646cbe82bb420894a5ad9997b0d97986e86fcb4"
+          "concept::热续接入调度层三门控",
+          "concept::find-informal-gate-生成形-corr-反解",
+          "concept::审计不再-fail-open-c-4"
         ],
         "gold_equiv_size": 6
       },
@@ -606,15 +597,15 @@
       "route_label": "entity_local",
       "route_source": "fallback:default",
       "degraded": false,
-      "n_linked": 4,
+      "n_linked": 8,
       "bare_refusal": false,
       "judge": {
-        "hit@1": false,
-        "hit@3": false,
+        "hit@1": true,
+        "hit@3": true,
         "anchors_top3": [
+          "concept::视图组装",
           "concept::用户界面-cli",
-          "concept::用户界面-cli-子集",
-          "multi-agent-orch::src/orch/cli/__init__.py"
+          "concept::用户界面-cli-子集"
         ],
         "gold_equiv_size": 5
       },
@@ -629,14 +620,15 @@
       "route_label": "entity_local",
       "route_source": "fallback:default",
       "degraded": false,
-      "n_linked": 2,
+      "n_linked": 6,
       "bare_refusal": false,
       "judge": {
         "hit@1": false,
-        "hit@3": false,
+        "hit@3": true,
         "anchors_top3": [
-          "concept::迟到在途回复展示标记",
-          "multi-agent-orch::commit::1795d6682259c7de56e0a1baad00f3754fb0907c"
+          "concept::停机重启",
+          "multi-agent-orch::src/orch/store/__init__.py::_render_board",
+          "concept::迟到在途回复展示标记"
         ],
         "gold_equiv_size": 7
       },
@@ -651,15 +643,15 @@
       "route_label": "entity_local",
       "route_source": "fallback:default",
       "degraded": false,
-      "n_linked": 7,
+      "n_linked": 8,
       "bare_refusal": false,
       "judge": {
         "hit@1": false,
         "hit@3": false,
         "anchors_top3": [
-          "concept::系统执行器",
-          "concept::异构多智能体编排系统",
-          "multi-agent-orch::commit::eae8ec3f639f3bee3152d5991725a13a383c1ad4"
+          "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._send_json",
+          "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event",
+          "concept::mock-适配器"
         ],
         "gold_equiv_size": 4
       },
@@ -674,7 +666,7 @@
       "route_label": "entity_local",
       "route_source": "fallback:default",
       "degraded": false,
-      "n_linked": 4,
+      "n_linked": 6,
       "bare_refusal": false,
       "judge": {
         "hit@1": false,
@@ -704,8 +696,8 @@
         "hit@3": true,
         "anchors_top3": [
           "concept::适配层统一-invoke-接口",
-          "multi-agent-orch::src/orch/adapters/__init__.py",
-          "concept::核心环每轮主动调用看门狗"
+          "multi-agent-orch::src/orch/adapters/__init__.py::ApiAdapter.invoke",
+          "multi-agent-orch::src/orch/adapters/__init__.py"
         ],
         "gold_equiv_size": 12
       },
@@ -720,15 +712,15 @@
       "route_label": "entity_local",
       "route_source": "fallback:default",
       "degraded": false,
-      "n_linked": 7,
+      "n_linked": 8,
       "bare_refusal": false,
       "judge": {
-        "hit@1": false,
-        "hit@3": false,
+        "hit@1": true,
+        "hit@3": true,
         "anchors_top3": [
-          "concept::信封作者字段-json-schema",
-          "multi-agent-orch::src/orch/protocol/schema.py",
-          "concept::classify增trigger-ids焦点全文"
+          "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields",
+          "concept::events端点投影补全",
+          "multi-agent-orch::src/orch/scheduler/core.py::_finalize_envelope"
         ],
         "gold_equiv_size": 1
       },
@@ -743,15 +735,15 @@
       "route_label": "entity_local",
       "route_source": "fallback:default",
       "degraded": false,
-      "n_linked": 5,
+      "n_linked": 8,
       "bare_refusal": false,
       "judge": {
-        "hit@1": false,
-        "hit@3": false,
+        "hit@1": true,
+        "hit@3": true,
         "anchors_top3": [
-          "concept::approve-reject错误一行人话",
-          "multi-agent-orch::commit::612cc9023a4eaddea1129eb3d7fb2cfcd56bd2e9",
-          "multi-agent-orch::commit::712578a7c73d3cfaf3b60b737ec801d28c626298"
+          "multi-agent-orch::src/orch/render/__init__.py::_summarize",
+          "multi-agent-orch::src/orch/render/__init__.py::_join_focus",
+          "multi-agent-orch::src/orch/render/__init__.py::_join_background"
         ],
         "gold_equiv_size": 3
       },
@@ -769,12 +761,12 @@
       "n_linked": 8,
       "bare_refusal": false,
       "judge": {
-        "hit@1": false,
-        "hit@3": false,
+        "hit@1": true,
+        "hit@3": true,
         "anchors_top3": [
-          "concept::恢复路径同target-pending合并",
-          "multi-agent-orch::commit::610b412788ce79e3a60ad803b399b7d743df6676",
-          "concept::审计不再-fail-open-c-4"
+          "multi-agent-orch::src/orch/cli/main.py::_resolve_workspace",
+          "multi-agent-orch::src/orch/cli/main.py::_thread_dirs_for_metrics",
+          "multi-agent-orch::src/orch/scheduler/core.py::_role_worktree"
         ],
         "gold_equiv_size": 1
       },
@@ -789,15 +781,15 @@
       "route_label": "entity_local",
       "route_source": "fallback:default",
       "degraded": false,
-      "n_linked": 4,
+      "n_linked": 8,
       "bare_refusal": false,
       "judge": {
-        "hit@1": false,
-        "hit@3": false,
+        "hit@1": true,
+        "hit@3": true,
         "anchors_top3": [
-          "multi-agent-orch::commit::88ed2d74055b9e06f2eeec0f1e1fa4255724bded",
-          "concept::无adapters配置显式警告fake",
-          "multi-agent-orch::commit::f646cbe82bb420894a5ad9997b0d97986e86fcb4"
+          "concept::混沌-50-轮-100-硬门槛",
+          "multi-agent-orch::src/orch/render/__init__.py::_role_authored_ids",
+          "multi-agent-orch::commit::88ed2d74055b9e06f2eeec0f1e1fa4255724bded"
         ],
         "gold_equiv_size": 3
       },
@@ -815,11 +807,11 @@
       "n_linked": 8,
       "bare_refusal": false,
       "judge": {
-        "hit@1": false,
-        "hit@3": false,
+        "hit@1": true,
+        "hit@3": true,
         "anchors_top3": [
+          "multi-agent-orch::src/orch/store/__init__.py::Store.append_event",
           "concept::run过程日志",
-          "concept::ledger-落盘",
           "multi-agent-orch::commit::8c38a0bd0d9053df0240cf2c12e297236a9b1594"
         ],
         "gold_equiv_size": 10
@@ -1099,7 +1091,7 @@
       "route_label": "entity_local",
       "route_source": "rule:entity-1",
       "degraded": false,
-      "n_linked": 4,
+      "n_linked": 5,
       "bare_refusal": false,
       "judge": {
         "has_premise_flags_field": false,
@@ -1117,7 +1109,7 @@
       "route_label": "entity_local",
       "route_source": "fallback:default",
       "degraded": false,
-      "n_linked": 1,
+      "n_linked": 8,
       "bare_refusal": false,
       "judge": {
         "has_premise_flags_field": false,
@@ -1135,7 +1127,7 @@
       "route_label": "entity_local",
       "route_source": "fallback:default",
       "degraded": false,
-      "n_linked": 6,
+      "n_linked": 8,
       "bare_refusal": false,
       "judge": {
         "has_premise_flags_field": false,

@@ -1,0 +1,7 @@
+{
+  "blocked": true,
+  "meta": {
+    "probe_error": "HTTP_429",
+    "waited_tries": 12
+  }
+}

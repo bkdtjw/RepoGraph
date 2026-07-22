@@ -22,6 +22,7 @@ import re
 from typing import Iterator, Optional
 
 from ..models import GraphStore
+from .lexicon import filter_stopwords
 
 # ---------------------------------------------------------------------------
 # BM25 参数与召回阈值
@@ -34,8 +35,10 @@ _B = 0.75
 # 只匹配到近乎无区分度的高频 gram（idf→0）会落在此线以下被滤除，避免噪声污染召回。
 _MIN_SCORE = 1.0
 
-# 语料文档单元的收录标签
-_DOC_LABELS = ("Concept", "Commit", "Module")
+# 语料文档单元的收录标签（v0.3 · C2 · D-11：Function/Class 双语卡片入档，仅带 zh_desc 者）。
+# Function/Class 无 grok 语义描述，靠索引期网关生成的 zh_desc/zh_aliases 提供中文可召回文本；
+# 未富化的函数（无 zh_desc）不入档，避免用英文 qualname 稀释语料（English 由 link_entities 覆盖）。
+_DOC_LABELS = ("Concept", "Commit", "Module", "Function", "Class")
 
 # CJK 统一表意文字（含扩展 A）——中文 term 的字符类
 _CJK_RUN = re.compile(r"[一-鿿㐀-䶿]+")
@@ -87,9 +90,15 @@ def zh_terms(text: str) -> list[str]:
 # ---------------------------------------------------------------------------
 
 def _concept_text(node: dict) -> str:
-    """Concept 文档 = 名称 + 描述 + 别名 + 首条证据引文（全部真实字段拼接）。"""
+    """Concept 文档 = 名称 + 描述 + 别名 + zh_aliases + 首条证据引文（全部真实字段拼接）。
+
+    ``aliases`` 为 grok 语义层原生别名（近乎全空）；``zh_aliases`` 是 C2 索引期回填的口语
+    近义说法（``enrich`` 全权写入、可幂等替换），随语料入 BM25，是 FZ 口语指称召回的主要
+    桥接来源（D-11 重议方向）。两者并读，原生别名与 C2 回填互不覆盖。
+    """
     parts: list[str] = [node.get("name", ""), node.get("description", "")]
     parts.extend(node.get("aliases") or [])
+    parts.extend(node.get("zh_aliases") or [])
     for ev in node.get("evidence") or []:
         quote = (ev or {}).get("quote")
         if quote:
@@ -97,8 +106,24 @@ def _concept_text(node: dict) -> str:
     return " ".join(p for p in parts if p)
 
 
+def _symbol_card_text(node: dict) -> Optional[str]:
+    """Function/Class 文档 = zh_desc + zh_aliases（C2 索引期网关生成，``enrich`` 回填）。
+
+    **仅带 ``zh_desc`` 者入档**（未富化的函数返回 None，不进语料）：zh_desc 是 ≤40 字中文
+    功能描述、zh_aliases 是 3–5 条口语近义说法，二者共同承载跨语言（中文口语 → 英文符号）
+    的词面桥接。英文 qualname 不入语料（由 ``link_entities`` 覆盖），避免稀释中文召回。
+    """
+    desc = node.get("zh_desc")
+    if not (desc and desc.strip()):
+        return None
+    parts = [desc]
+    parts.extend(node.get("zh_aliases") or [])
+    return " ".join(p for p in parts if p)
+
+
 def _doc_text(node: dict) -> Optional[str]:
-    """节点 → 语料文本；不入选（Commit 无 message / Module docstring 为空）返回 None。"""
+    """节点 → 语料文本；不入选（Commit 无 message / Module docstring 为空 /
+    Function·Class 无 zh_desc）返回 None。"""
     label = node["label"]
     if label == "Concept":
         return _concept_text(node)
@@ -108,14 +133,18 @@ def _doc_text(node: dict) -> Optional[str]:
     if label == "Module":
         doc = node.get("docstring")
         return doc if (doc and doc.strip()) else None
+    if label in ("Function", "Class"):
+        return _symbol_card_text(node)
     return None
 
 
 def _doc_name(node: dict) -> str:
-    """节点展示名：Concept/Module 用 name，Commit 用短 sha。"""
+    """节点展示名：Function/Class 用 qualname，Concept/Module 用 name，Commit 用短 sha。"""
     label = node["label"]
     if label == "Commit":
         return (node.get("hash") or node["id"].rsplit("::", 1)[-1])[:8]
+    if label in ("Function", "Class"):
+        return node.get("qualname") or node.get("name") or node["id"].rsplit("::", 1)[-1]
     return node.get("name") or node["id"].rsplit("::", 1)[-1]
 
 
@@ -218,7 +247,10 @@ def topic_recall(
     if index.n_docs == 0:
         return []
 
-    q_terms = set(zh_terms(question))
+    # 查询侧停用词过滤（落地设计 §4.4 / calibration D-N1 修订）：滤除疑问/指代/功能词
+    # n-gram（怎么/哪个/起来…），使高 IDF 的非内容词碎片不再主导打分（V0 校准根因）。
+    # **仅作用于查询**——语料索引仍用原始 zh_terms（保 V1 自校验可复现）。
+    q_terms = set(filter_stopwords(zh_terms(question)))
     if not q_terms:
         return []
 

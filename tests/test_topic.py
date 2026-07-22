@@ -76,15 +76,17 @@ def test_zh_terms():
 
 def test_corpus_index(store):
     idx = build_corpus_index(store)
-    # 语料 = 139 概念 + 75 提交 + 22 模块（均有 docstring）= 236
-    assert idx.n_docs == 236, f"语料应为 236 篇，实为 {idx.n_docs}"
+    # 语料 = 139 概念 + 75 提交 + 22 模块 + 127 带 zh_desc 的 Function/Class 双语卡片 = 363。
+    # （C2/D-11 corpus 扩容：Function/Class 经 enrich 写入 zh_desc/zh_aliases 后入档；
+    #  未富化的函数无 zh_desc 不入档。pre-C2 基线为 236，此处随语料扩容更新为 363。）
+    assert idx.n_docs == 363, f"语料应为 363 篇（含 Function/Class 卡片），实为 {idx.n_docs}"
     assert idx.avgdl > 0
     # 高信息 term "终止"入倒排，DF 与真实语料自洽（≥ 5 个概念名含之）
     assert "终止" in idx.postings
     assert idx.df["终止"] == len(idx.postings["终止"]) >= 5
-    # 三类文档 label 都被收录
+    # 五类文档 label 都被收录（C2/D-11：新增 Function/Class 双语卡片档）
     labels = {m["label"] for m in idx.meta.values()}
-    assert labels == {"Concept", "Commit", "Module"}
+    assert labels == {"Concept", "Commit", "Module", "Function", "Class"}, labels
     print("test_corpus_index OK")
 
 

@@ -138,8 +138,12 @@ _STRUCT_1 = r"(最|前\s*\d+|多少|几个|统计|列出(?:所有|全部)?|排(?
 # （落地设计 §4.2 global = 项目级问题），使"为什么这项目用 X"这类项目级问法落 global 概览
 # 而非被弱主题词拽进 topic。仓库范围名词只取 项目/仓库/工程/代码库（**不含** 系统/代码/程序——
 # 后者出现在 FZ 口语题里，会误伤主题召回），已核对 eval L0/FZ 无回归。
+# 注：**不含「大概」**（v0.3 · C2 修）——「大概」歧义：既可作全局触发（"大概介绍一下"，已由
+# 介绍/讲讲 覆盖），也常作口语程度副词修饰具体问题（FZ-d05「怎么估摸一段话大概占多少篇幅」
+# 是 topic 题，误落 global 会丢弃 topic 召回）。全局「大概讲讲/大概是个什么…总览」由 讲讲/
+# 介绍/总览/仓库指称 兜底，故删「大概」不损全局覆盖、消除对 topic 题的误路由（F3 附回归用例）。
 _GLOBAL_1 = (
-    r"整体|总体|全局|大概|架构|结构|介绍|讲讲|说说|是(?:干|做)(?:什么|嘛|啥)"
+    r"整体|总体|全局|架构|结构|介绍|讲讲|说说|是(?:干|做)(?:什么|嘛|啥)"
     r"|干啥|干什么的|质量|难点|亮点|风格|规模|多大|总览|概览|概述"
     r"|(?:这|这个|该|本|你们的?|整个|我的|我这|咱们?的?)\s*(?:项目|仓库|工程|代码库)"
 )
@@ -226,3 +230,112 @@ _SUGGESTIONS_GENERIC = (
 def default_suggestions() -> list[str]:
     """回退阶梯的默认建议问法（≥1 条，指向本仓库确定性可答方向）。"""
     return list(_SUGGESTIONS_GENERIC)
+
+
+# ---------------------------------------------------------------------------
+# S3 链接候选合并 + 分带（落地设计 §4.6 / 裁定 D-N1、D-20；C2 上线）
+#
+# 三路候选合并（link_entities ∪ 缩写扩展命中 ∪ BM25-over-实体卡片），按 entity_id 去重、
+# **方法档优先**：exact_qualname > suffix_qualname > short_name > concept_name > module_path
+# > bm25_card（恒最低）。缩写扩展命中已在 link_entities 内经 _tokenize 折叠，故实参通常是
+# link_entities 结果 + bm25_card 两路；函数按任意路数合并，语义一致。
+# ---------------------------------------------------------------------------
+
+# 方法档优先级（越大越强）；bm25_card（纯 BM25 卡片召回）恒低于 link_entities 任一方法档。
+_METHOD_RANK = {
+    "exact_qualname": 5,
+    "suffix_qualname": 4,
+    "short_name": 3,
+    "concept_name": 2,
+    "module_path": 1,
+    "bm25_card": 0,
+}
+
+# 过渡规则（D-N1，V0 校准未产可行参数前生效）：仅 exact/suffix 方法档（_SCORE≥80）允许
+# **自动锚定给确定性工具**（impact_analysis 等硬 ID 消费方）。topic/BM25 侧永不自动锚定。
+_STRONG_METHODS = ("exact_qualname", "suffix_qualname")
+
+
+def _cand_key(c: dict) -> str:
+    return c.get("entity_id") or c.get("node_id") or ""
+
+
+def merge_link_candidates(*cand_lists: list) -> list[dict]:
+    """合并多路链接候选（link ∪ 缩写 ∪ bm25_card），按 entity_id 去重、方法档优先。
+
+    每个候选形如 ``{entity_id|node_id, label, score, method, ...}``。同一 entity_id 保留
+    **方法档更强**者（_METHOD_RANK 高）；同档保留 score 高者。返回按 (方法档, score, id) 降序
+    排列的合并候选列表（每项含原字段 + 规范化 ``entity_id``）。bm25_card 恒排在方法档候选之后。
+    """
+    best: dict[str, dict] = {}
+    for lst in cand_lists:
+        for c in lst or []:
+            eid = _cand_key(c)
+            if not eid:
+                continue
+            rank = _METHOD_RANK.get(c.get("method"), 0)
+            score = c.get("score") or 0
+            cur = best.get(eid)
+            if (cur is None or rank > cur["_rank"]
+                    or (rank == cur["_rank"] and score > (cur.get("score") or 0))):
+                merged = dict(c)
+                merged["entity_id"] = eid
+                merged["_rank"] = rank
+                best[eid] = merged
+    out = sorted(best.values(),
+                 key=lambda c: (-c["_rank"], -(c.get("score") or 0), c["entity_id"]))
+    for c in out:
+        c.pop("_rank", None)
+    return out
+
+
+def has_strong_method(cand: dict) -> bool:
+    """候选是否为强方法档（exact/suffix qualname，_SCORE≥80）——过渡规则自动锚定的必要条件。"""
+    return cand.get("method") in _STRONG_METHODS
+
+
+def content_terms(matched_terms, min_len: int = 2) -> list[str]:
+    """从命中词里筛"内容词"：非中文停用/功能/疑问词、且长度≥min_len（D-N1 绝对下限操作化）。
+
+    V0 校准诊断：高 IDF 的 n-gram 多为非内容词碎片（的单/起来/台账），仅"高 IDF"挡不住噪声，
+    须叠加中文停用词黑名单过滤（见 lexicon）。本函数即"≥1 高 IDF 内容词"里"内容词"谓词的落地。
+    """
+    from .lexicon import is_zh_stopword
+    return [t for t in (matched_terms or [])
+            if len(t) >= min_len and not is_zh_stopword(t)]
+
+
+def can_auto_anchor(cand: dict, matched_terms=None) -> bool:
+    """能否把候选**自动锚定给确定性工具**（硬 ID 消费方）——D-N1 过渡规则 + 绝对证据下限。
+
+    合并规则（取更严，落地设计 §4.6 / calibration §3）：
+    1. **纯 bm25_card 永不自动锚定**（无方法档支撑，绝对下限，永不被分带放宽）；
+    2. **过渡规则**：仅方法档 ∈ {exact,suffix}（≥80）自动锚定（V0 未产可行参数，续用）；
+    3. **绝对下限**：若提供 ``matched_terms``，要求其中 ≥1 个内容词（非停用词）——纯停用词
+       碎片命中不足以自动锚定（对症 V0 高 IDF 碎片误触发）。
+
+    返回 True 仅当以上全满足。消歧 / 低置信呈现不走本闸（那是"呈现"非"喂确定性工具"）。
+    """
+    if cand.get("method") == "bm25_card":
+        return False
+    if not has_strong_method(cand):
+        return False
+    if matched_terms is not None and not content_terms(matched_terms):
+        return False
+    return True
+
+
+def card_hits_to_candidates(recall: list) -> list[dict]:
+    """把 topic_recall 的 Function/Class 命中项映射为 ``method='bm25_card'`` 链接候选（§4.6）。
+
+    ``{node_id,label,score,matched_terms}`` → ``{entity_id,label,score,method:'bm25_card',matched_terms}``。
+    只收 Function/Class（Concept 命中仍走 topic 档的 IMPLEMENTS 展开，不在此重复）。
+    这类候选只作锚定/消歧输入，优先级恒低于 exact/suffix（见 merge_link_candidates）。
+    """
+    out = []
+    for r in recall or []:
+        if r.get("label") in ("Function", "Class"):
+            out.append({"entity_id": r["node_id"], "label": r["label"],
+                        "score": r.get("score", 0.0), "method": "bm25_card",
+                        "matched_terms": r.get("matched_terms", [])})
+    return out

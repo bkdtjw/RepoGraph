@@ -25,6 +25,8 @@ sys.path.insert(0, "src")
 from repograph.models import GraphStore
 from repograph.retrieve.router import (
     normalize, is_code_token, route, ROUTER_RULES, default_suggestions,
+    merge_link_candidates, has_strong_method, can_auto_anchor,
+    content_terms, card_hits_to_candidates,
 )
 from repograph.retrieve.context import build_repo_context
 
@@ -206,6 +208,69 @@ def test_fallback_and_schema(store):
     print("test_fallback_and_schema OK")
 
 
+# ---------------------------------------------------------------------------
+# H) 分带候选合并 + 绝对证据下限（§4.6 / D-N1，C2 上线；F3 机制附回归用例）
+# ---------------------------------------------------------------------------
+
+def test_merge_link_candidates():
+    link = [{"entity_id": "A", "score": 100, "method": "exact_qualname"},
+            {"entity_id": "B", "score": 60, "method": "short_name"}]
+    cards = [{"node_id": "A", "label": "Function", "score": 3.2, "method": "bm25_card"},
+             {"node_id": "C", "label": "Function", "score": 5.1, "method": "bm25_card"}]
+    merged = merge_link_candidates(link, cards)
+    ids = [c["entity_id"] for c in merged]
+    # 去重：A 同 id 取方法档更强者（exact > bm25_card），仍是 exact
+    a = next(c for c in merged if c["entity_id"] == "A")
+    assert a["method"] == "exact_qualname", f"A 应保留强方法档，实得 {a['method']}"
+    # 方法档优先：exact(A) > short(B) > bm25_card(C)，bm25_card 恒最后
+    assert ids == ["A", "B", "C"], f"合并排序应方法档优先，实得 {ids}"
+    print("test_merge_link_candidates OK")
+
+
+def test_has_strong_method_and_auto_anchor():
+    strong = {"entity_id": "f", "score": 100, "method": "exact_qualname"}
+    suffix = {"entity_id": "g", "score": 80, "method": "suffix_qualname"}
+    short = {"entity_id": "h", "score": 60, "method": "short_name"}
+    card = {"entity_id": "k", "score": 9.9, "method": "bm25_card"}
+    assert has_strong_method(strong) and has_strong_method(suffix)
+    assert not has_strong_method(short) and not has_strong_method(card)
+    # 过渡规则：仅 exact/suffix 自动锚定
+    assert can_auto_anchor(strong) and can_auto_anchor(suffix)
+    assert not can_auto_anchor(short), "short_name 不满足过渡规则「仅≥80」"
+    # 绝对下限：纯 bm25_card 永不自动锚定（即便分很高）
+    assert not can_auto_anchor(card), "纯 bm25_card 永不自动锚定（D-N1 绝对下限）"
+    # 内容词证据要求：强档但命中词全是停用词 → 不自动锚定
+    assert not can_auto_anchor(strong, matched_terms=["怎么", "哪个"]), "全停用词不足以锚定"
+    assert can_auto_anchor(strong, matched_terms=["终止", "派发"]), "含内容词应可锚定"
+    print("test_has_strong_method_and_auto_anchor OK")
+
+
+def test_dagai_not_global_regression(store):
+    """回归（C2 · F3）：「大概」作程度副词的 topic 题不得误落 global；作全局问法仍 global。"""
+    # topic 题：「大概占多少篇幅」是具体问题，删「大概」全局触发后应回到 entity_local(topic)
+    ctx = build_repo_context(store, "怎么估摸一段话大概占多少篇幅")
+    assert ctx.get("route_label") == "entity_local", (
+        f"'大概占多少篇幅' 应 entity_local(topic)，实得 {ctx.get('route_label')}")
+    # 全局题：「大概讲讲这个项目」仍由 讲讲/项目 兜底为 global
+    ctx2 = build_repo_context(store, "大概讲讲这个项目是做什么的")
+    assert ctx2.get("route_label") in ("global", "meta"), (
+        f"'大概讲讲这个项目' 应 global/meta，实得 {ctx2.get('route_label')}")
+    print("test_dagai_not_global_regression OK")
+
+
+def test_content_terms_and_card_mapping():
+    # content_terms 滤停用词
+    assert content_terms(["怎么", "终止", "起来", "派发"]) == ["终止", "派发"]
+    # card_hits_to_candidates 只收 Function/Class，method=bm25_card
+    recall = [{"node_id": "fn1", "label": "Function", "score": 3.0, "matched_terms": ["终止"]},
+              {"node_id": "c1", "label": "Concept", "score": 4.0, "matched_terms": ["恢复"]},
+              {"node_id": "cls1", "label": "Class", "score": 2.0, "matched_terms": ["适配"]}]
+    cands = card_hits_to_candidates(recall)
+    assert {c["entity_id"] for c in cands} == {"fn1", "cls1"}, "只收 Function/Class"
+    assert all(c["method"] == "bm25_card" for c in cands)
+    print("test_content_terms_and_card_mapping OK")
+
+
 if __name__ == "__main__":
     store = _load()
     test_normalize()
@@ -220,4 +285,8 @@ if __name__ == "__main__":
     test_oos_repo_concept_not_out_of_scope(store)
     test_foo_module_regression(store)
     test_fallback_and_schema(store)
+    test_merge_link_candidates()
+    test_has_strong_method_and_auto_anchor()
+    test_content_terms_and_card_mapping()
+    test_dagai_not_global_regression(store)
     print("\nALL TESTS PASSED")

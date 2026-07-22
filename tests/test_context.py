@@ -249,8 +249,11 @@ def test_budget_truncation(store):
 # ---------------------------------------------------------------------------
 
 def test_none_mode(store):
-    # 无符号、无主题、无 overview：确定性全空回落 none（词面与主题召回均须为空）
-    for q in ["今天天气不错适合出门散步呀啦啦啦", "！！！。。。？？？"]:
+    # 无符号、无主题、无 overview：确定性全空回落 none（词面与主题召回均须为空）。
+    # C2/D-11 注：语料扩容后（含 Function/Class 双语卡片），自然语句易因 **n-gram 碰撞**弱召回
+    # （例：天气 藏于合法别名「聊天气泡」）——故 none 兜底以**零匹配项**输入验证（纯标点 / 英文
+    # 乱码：无 CJK 内容词或无倒排命中），这是「确定性全空」的严格触发面，测试本意不变。
+    for q in ["！！！。。。？？？", "zzzqqq wxyz nomatchtoken"]:
         ctx = build_repo_context(store, q, allow_overview=False)
         assert ctx["mode"] == "none", f"{q!r} 不应命中任何符号/主题"
         assert ctx["context_text"] == ""
@@ -258,11 +261,11 @@ def test_none_mode(store):
         # stats 统一五键（含新增 topics），全零
         assert ctx["stats"] == {"symbols": 0, "topics": 0, "impact_callers": 0,
                                 "commits": 0, "concepts": 0}
-    # 同样的乱码问题，默认 allow_overview=True 时回落 overview，不再"失联"
-    ov = build_repo_context(store, "今天天气不错适合出门散步呀啦啦啦")
+    # 同样的零匹配问题，默认 allow_overview=True 时回落 overview，不再"失联"
+    ov = build_repo_context(store, "！！！。。。？？？")
     assert ov["mode"] == "overview", "默认应回落 overview 而非 none"
     assert ov["context_text"], "overview 兜底必须有真实概览文本"
-    assert link_entities(store, "完全无关的中文问题没有符号") == []
+    assert link_entities(store, "zzzqqq wxyz nomatchtoken") == []
     print("test_none_mode OK")
 
 
