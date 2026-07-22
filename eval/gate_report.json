@@ -2,12 +2,12 @@
   "meta": {
     "phase": "A (治理与再基线) · 任务 A4 门禁基线",
     "git": {
-      "head": "8874a8dd04c0ee126cea0434aebb431d7ca418df",
+      "head": "c0f3b7ab4e0597cd69eb1c4484bc40fdcd8c7f13",
       "tags_at_head": [
-        "rebaseline-20260723"
+        "phase-b-frozen-20260722"
       ],
       "expected_tag": "rebaseline-20260723",
-      "tag_bound": true
+      "tag_bound": false
     },
     "graph": {
       "path": "output\\graph.json",
@@ -69,10 +69,11 @@
   },
   "locked_failures": {
     "B-1": {
-      "desc": "L0-02 口语元问题误路由至 topic",
+      "desc": "L0-02 口语元问题未整题通过（误路由至 topic / 事实命中<3）",
       "expected": "red",
       "actual_mode": "topic",
       "actual_mode_class": "topic",
+      "l0_02_judge_pass": false,
       "is_red": true
     },
     "B-2": {

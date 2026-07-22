@@ -1,3 +1,24 @@
+禁止使用任何工具、禁止读取任何文件，只依据下方内嵌内容直接作答。你是资深评审，审查门禁脚本 eval/gate.py。它离线消费 build_repo_context（不经网关/LLM），对 48 题分子集断言，Phase A 基线预期 B-1/B-2/B-3 全「红」。用中文只输出「发现清单」：每条=【严重度 高/中/低】+【定位 函数/行为】+【问题】+【失败场景（构造出会误判的输入或状态）】+【依据】。无问题写“无”。不复述整段代码、不夸奖。
+重点找「假绿」风险（最高优先）：
+- 断言恒真/恒假：某 pass 判据与被测系统实际能力无关，永远同一结果，使红绿失去意义。
+- 异常吞掉当通过：build_repo_context 或 judge 抛错被静默 except 吞掉、或缺字段被当成通过/正常。
+- gold 对不上 dataset：judge 读的字段与数据集不存在或类型不符，导致 KeyError 或静默 None 命中。
+- B-1/B-2/B-3 的红判据是否真实反映能力缺失（而非写死为红）。
+其次核 L0/FZ/AMB/PP 四判据是否与下方「判定设计契约（eval-design §7 摘要）」一致；不一致处指出并说明是否更严/更松（更松=可能假绿=高危）。
+再次：mode_class / anchors_of / gold_equiv_ids / is_bare_refusal 的逻辑正确性与边界。
+
+【数据事实（外部已核）】
+- 图谱 output/graph.json：510 节点；节点有 id/label；边有 type/src/dst/properties；边类型 IMPLEMENTS(390)/DESCRIBES(104)/CALLS/MODIFIES/CONTAINS/IMPORTS。
+- dataset.jsonl 48 题：L0=10, FZ_dev=10, FZ_test=10, AMB=10, PP=8。FZ 每题 gold_entity 均存在于图（无缺失）。gold_mode_class 全有。AMB gold_behavior=7 autopick/3 disambiguate。PP 每题均有 absent_keywords 与 truth_anchors。
+- 当前基线红值：L0 pass 8/10（L0-02、L0-07 fail）；FZ_dev hit@3=0.1；FZ_test hit@3=0.1；AMB 行为一致率 0.7；PP premise_flags 能力=false。B-1/B-2/B-3 全红。
+
+【判定设计契约（eval-design §7 摘要，权威）】
+- §7.1 L0：text=answer+context_text；hits=命中 L0_FACTS_STR 子串 + L0_FACTS_NUM(带非数字边界)；pass = (mode_class==overview) 且 hits>=3。
+- §7.2 FZ：gold_equiv = gold ∪ 其 IMPLEMENTS/DESCRIBES 1 跳双向邻居；hit@k = gold_equiv ∩ anchors[:k] 非空。
+- §7.3 AMB：δ_score=20；v1 代理——无 needs_disambiguation 字段时用 linked 并列 top 数推断 nd（tied>=2 且 top-second<20）；should_disambiguate 的 pass=nd且候选>=2；should_autopick 的 pass=(not nd)且有 anchors。
+- §7.4 PP：登记 absent 关键词与 truth 真值锚；screen_correction=（命中否定词）且（提及 truth 或 truth 为空）→ 疑似已纠正（非终判）。
+- §7.5 裸拒：无任何可行动元素（无 suggestions/candidates/anchors/context_text）即裸拒。
+====CODE eval/gate.py START====
 # -*- coding: utf-8 -*-
 """RepoGraph v0.3 门禁脚本（Phase A · 任务 A4）——48 题全量 + 硬指标 + 锁定失败回归。
 
@@ -122,9 +143,7 @@ def judge_amb(resp: dict, gold_behavior: str) -> dict:
     nd = bool(resp.get("needs_disambiguation")) if has_nd_field else False
     anc = anchors_of(resp)
     anchored = bool(anc) and mode_class(resp.get("mode")) == "symbol"
-    # 字段缺失时确定性预测=自选（当前实现无消歧能力）；一旦 needs_disambiguation
-    # 字段出现（Phase C4）则据实翻转，使 should_disambiguate 题在能力落地后可翻绿。
-    predicted = "should_disambiguate" if (has_nd_field and nd) else "should_autopick"
+    predicted = "should_autopick"  # 字段缺失下的确定性预测
     if gold_behavior == "should_disambiguate":
         consistent = (predicted == "should_disambiguate")  # 恒 False
         return {"pass": consistent, "predicted": predicted,
@@ -304,18 +323,15 @@ def main() -> int:
 
     # ---- 锁定失败 B-1 / B-2 / B-3 ----
     l0_02 = next(r for r in l0 if r["id"] == "L0-02")
-    # B-1 收紧：仅「路由=overview 且事实命中≥3」整题通过才算翻绿，避免只修路由（facts<3）
-    # 就误判为已修复（judge_l0.pass 已合取 mode==overview ∧ hits≥3）。当前 L0-02 仍红。
-    b1_red = (not l0_02["judge"]["pass"])
+    b1_red = (l0_02["mode_class"] != "overview")   # 误路由 = 红
     fzd_hit3 = subset_summary["FZ_dev"]["hit@3"]
     b2_red = (fzd_hit3 < 0.8)
     b3_red = (not pp_has_pf)                        # premise_flags 能力缺失 = 红
 
     locked = {
-        "B-1": {"desc": "L0-02 口语元问题未整题通过（误路由至 topic / 事实命中<3）",
+        "B-1": {"desc": "L0-02 口语元问题误路由至 topic",
                 "expected": "red",
                 "actual_mode": l0_02["mode"], "actual_mode_class": l0_02["mode_class"],
-                "l0_02_judge_pass": l0_02["judge"]["pass"],
                 "is_red": b1_red},
         "B-2": {"desc": "FZ-dev hit@3 < 0.8",
                 "expected": "red", "fz_dev_hit@3": fzd_hit3, "threshold": 0.8,
@@ -417,3 +433,4 @@ def _print_console(report: dict) -> None:
 
 if __name__ == "__main__":
     sys.exit(main())
+====CODE END====

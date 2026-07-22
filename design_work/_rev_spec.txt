@@ -1,0 +1,109 @@
+禁止使用任何工具、禁止读取任何文件，只依据下方内嵌内容直接作答。你是资深评审，审查 v0.3 spec 的「冻结块 + §4.6 V0 校准指向注 + 文末 §B Phase B 验证裁定（冻结增量）」。用中文只输出「发现清单」：每条=【严重度 高/中/低】+【定位 §编号/句】+【问题】+【依据】。无问题写“无”。不复述原文、不夸奖。
+逐项核：
+1) §B 是否把 V0/V1/V2/V3/V4 五项前置验证裁定全部写入（分别对应 §B.0 分带校准、§B.1 分词、§B.4 改写地位=V2、§B.2 blocking=V3、§B.3 主评测集=V4）。缺哪项指出。
+2) §B 与下方 calibration.md/实验 数值是否逐项一致（零可行单元、hit 值、Jaccard、404/402、60题补建等）。
+3) §B 与 DECISIONS.md 摘要是否有矛盾（D-P1/P2/P3 生效、D-11 重议中、D-N1 过渡规则、D-N4 通道）。
+4) 冻结块自身：FROZEN 声明、R1「以实测为准」、§4.6 指向注与 §B 是否自洽；有无“已冻结分带数字”与“不冻结任何 topic 分带阈值”的自相矛盾。
+5) 节点数/tag 等事实错误。
+
+【可信数值（外部已核，只查 spec 与之一致性）】
+- 图谱 output/graph.json 510 节点（其中 Function 259/Concept 139/Commit 75/Module 22/Class 15）；tag rebaseline-20260723。
+- calibration.md（V0）：FZ-dev 32 单元网格零可行单元；hit@1 恒0、hit@3 恒0.1；over_ask 0.3–0.5 全>0.2；ratified=false、不产出可批准分带参数；过渡规则「仅方法档≥80 自动锚定」续用；D-N1「≥1高IDF内容词」修订为须叠加中文停用/功能/疑问词过滤（高IDF n-gram 多为「的单/起来/台账/放行」碎片）。
+- V1：FZ-dev base=ngram=jieba hit@3=0.1；FZ-test ngram hit@3=0.4、jieba hit@3=0.5；D-P1=n-gram 守 stdlib；D-11 转「重议中」（未证伪，归 C2 修卡片）。
+- V3：精确 norm_key 召回0/15；词面 bigram Jaccard τ=0.15 召回14/15=0.933、成本0.87%；embeddings 404、grok 402；D-P2=词面 Jaccard 守 stdlib。
+- V4：90题 L1/L2/L3 主集不存在→补建分支，可裁至60题（L1 20/L2 30/L3 10），工期+2天；D-P3 生效。
+- V2：全仓 grep 确认 S2 改写不存在→C2 首建（非恢复），S2 升格 C3 主召回（D-N2）。
+====SPEC 冻结块（文档头 1-8 行）====
+# RepoGraph 模糊语义处理 · 落地设计
+
+> **v0.3 spec · FROZEN 2026-07-22 · 唯一实施事实源（R1）**
+> 执行计划 = `docs/RepoGraph-v0.3-执行计划书.md`；as-built 附件 = `docs/v0.3-asbuilt.md`；决策台账 = `DECISIONS.md`。
+> 本文件（原 `RepoGraph-模糊语义处理-落地设计.md`，v0.2-impl）自 2026-07-22 冻结为 **v0.3 spec 母本**（路径 `docs/RepoGraph-v0.3-spec.md`）。Phase B 前置验证（V0–V4）裁定见文末 **§B Phase B 验证裁定（冻结增量）**；分带阈值以 §B / `eval/calibration.md` 校准结论为准（见 §4.6 指向注）。凡本 spec 决策表、`DECISIONS.md`、`docs/v0.3-asbuilt.md` 三源对同一机制表述冲突，**以验证实测为准（R1 单一事实源）**。
+
+**副标题**：v0.2 落地版——基于补充稿与现有四层瀑布实现的融合设计
+**版本**：v0.2-impl（落地版，取代 `RepoGraph-模糊语义处理设计.md` 的实施部分，保留其机制定义与骨架）
+====SPEC §4.6 分数标度对账 + V0 指向注====
+写入（锚定后）：强锚（method∈{exact,suffix} 或 topic 高分概念）压栈 rg_focus
+              → 就近挂在追加 assistant 消息的 write_session 之前，零额外落盘
+```
+
+- **`rg_focus` 结构冻结**：`sess["rg_focus"] = [{entity_id, label, turn}]`（最多 5 条）；`turn` = 该实体锚定时的 assistant 消息序号（`len(sess["messages"])` 快照，独立自增）；过期判定 `当前 turn − entry.turn > 10` 即弹出。读写各挂现有 `read_session`/`write_session`（`server.py:610/618`），零新增 I/O。
+- **非 llm 档（lexical/off）的 P5 保底**：无 S2 改写时，指代若焦点栈也未命中 → `resolved_query` 原样回显问题 + `suggestions` 提示「请点名具体实体/符号」，**禁止静默错锚**（宁可不消解，也不乱消解，守 P5）。
+
+### 4.6 分数标度对账（最隐蔽的落地陷阱，单列）
+
+原稿 τ_hi=0.62/τ_lo=0.45/δ=0.05 假设 embedding 余弦 ∈[0,1]。**现实两套分数都不是这个标度**：`link_entities._SCORE` 是整数档 `{100,80,60,40,30}`；`topic_recall` 是无上界 BM25 分（`_MIN_SCORE=1.0` 起，实测常见 1–10）。分带**按方法档 + BM25 边际**重定义：
+
+- **自动锚定**（原 s≥τ_hi）：`method∈{exact_qualname, suffix_qualname}` 或词面精确命中；
+- **进消歧**（原中段）：`method∈{short_name, concept_name}` 且多候选，或 topic Top-2 相对边际 `(s1-s2)/s1 < 0.15`（取代绝对 δ）；
+- **判无锚**（原 s<τ_lo）：`link_entities` 空 且 `topic_recall` 全部 <`_MIN_SCORE`。
+- **单一弱候选（补 §3.2 S4 的分带缝隙）**：只有 1 个 `short_name`/`concept_name`/`bm25_card` 候选且无更强档 → autopick 但置 `degraded=true` + `resolved_query` 披露「按 X 解读（弱匹配）」，不进消歧（本图真歧义仅 2 组，over-ask 面小）。
+- **BM25-over-实体卡片候选的落地 schema（补 §3.1 双语 / §3.2 S3 的悬空集成）**：`topic_recall` 扩收 Function/Class 后，命中项 `{node_id,label,score,matched_terms}` 映射为链接候选 `{entity_id=node_id, score=BM25 分, method='bm25_card'}`，按 `entity_id` 与 `link_entities` 去重（同 id 时 `link_entities` 方法档优先），优先级恒**低于** exact/suffix；这类候选**只作锚定/消歧输入，不再触发 Concept 的 IMPLEMENTS 展开**（避免与 topic 档重复）。
+- **AMB 消歧的整数分差**：`δ_score=20`，使 `recover`(fn 100 vs mod 30) 判 autopick、`invoke`(6×60 并列) 判 disambiguate。
+- §8.4 校准三元组随之从 `(τ_hi,τ_lo,δ)` 换为 `(topic 相对边际, 短名档是否强候选, min_score)`；校准流程（FZ-dev 网格→FZ-test 冻结）不变。
+
+**不处理这条，原稿阈值会被当余弦直接套到整数/BM25 分上，全盘失效。**
+
+> **【FROZEN · V0 校准指向注（2026-07-22，与本节冲突处以此为准）】**：本节列出的具体分带阈值中，**topic 侧相对边际参数经 Phase B·V0 校准仍未产出可批准值**——FZ-dev 32 单元网格 hit@1 恒 0、hit@3 恒 0.1、消歧触发率 0.3–0.5 全 >0.2 上限 → **零可行单元**（详见 `eval/calibration.md`、`design_work/v0_calibration.json`）。故裁定：① **过渡规则「仅方法档 ≥80 自动锚定」继续生效、不退休**（D-N1）；② D-N1「自动锚定要求 ≥1 高 IDF 内容词」须叠加**中文停用/功能/疑问词黑名单过滤**方生效——V0 实测高 IDF 的 n-gram 多为「的单/起来/台账/放行」等非内容词碎片，落地设计 §4.4 停用词过滤**列为前置**；③ AMB 侧整数分差 `δ_score=20` 为方法档硬锚，不受 topic 校准影响、维持。C2 中文卡片入库后**强制复跑本校准**再冻结数字（本文件当前不冻结任何 topic 分带阈值）。本节其余分带**语义**（方法档为主 + 档内相对边际 + 绝对证据下限）不变。参见文末 §B。
+====SPEC §B（文末验证裁定）====
+## §B Phase B 验证裁定（冻结增量，2026-07-22）
+
+> 本节为 v0.3 spec 冻结时并入的 Phase B 前置验证（V0–V4）实测收敛，是对上文机制的**数字/存活性核实**。每条附 D-编号（详见 `DECISIONS.md`）与可复现产物；绑定基线 tag `rebaseline-20260723`、`output/graph.json` 510 节点。与上文表述冲突处，**以本节实测为准（R1）**。
+
+### §B.0 V0 分带校准 —— 未产出可批准参数，过渡规则续用（承 D-N1）
+- **结论（真实）**：FZ-dev 10 题、32 单元网格（`rel_margin∈{0.10,0.15,0.20,0.25}` × `min_score∈{0.5,1.0,1.5,2.0}` × `autopick∈{on,off}`）**零可行单元**——hit@1 恒 **0**、hit@3 恒 **0.1**、消歧触发率 **0.3–0.5** 全 >0.2 上限；`min_score`/`autopick` 完全惰性，仅 `rel_margin` 影响过问率。
+- **裁定**：**不冻结任何 topic 分带阈值**（`ratified=false`）；过渡规则「**仅方法档 ≥80 自动锚定**」继续生效；D-N1「≥1 高 IDF 内容词」修订为**必须叠加中文停用/功能/疑问词过滤**（V0 实测高 IDF n-gram 多为「的单/起来/台账/放行」等非内容词碎片，落地设计 §4.4 列前置）。根因=召回被 V1 卡片天花板卡住 → 归 C2「先修卡片再校准」，C2 上线后强制复跑。
+- **产物/引用**：`eval/calibration.md`、`design_work/v0_calibration.{py,json}`；§4.6 指向注；D-N1。
+
+### §B.1 V1 中文分词 —— n-gram 守 stdlib（D-P1），D-11 转「重议中」
+- **裁定**：分词选 **n-gram（`topic.zh_terms`）守 stdlib**，jieba 不破例（依赖损失=无）。FZ-dev（裁定集）ngram=jieba（hit@3 均 0.1、hit@1 均 0.0，满足 `a≥90%b`）；jieba 仅 FZ-test 领先 1 题（噪声级）且与 ngram 互有胜负。
+- **D-11 重议警报**：FZ-dev 卡片**零净提升**（base=a=b=0.1）→ 警报触发、D-11 转「**重议中**」；但 FZ-test 证明机制有效（hit@3 0.1→0.5、hit@1 0→0.3，函数卡片直接召回 t06/t07），**未证伪**，重议方向=修卡片质量（归 C2），非砍除。
+- **产物/引用**：`design_work/v1_tokenize_report.md`、`v1_tokenize_eval.json`、`v1_cards.json`；D-P1、D-11、D-16。
+
+### §B.2 V3 概念对齐 blocking —— 词面 Jaccard 守 stdlib（D-P2）
+- **裁定**：blocking 选 **(a) 词面 bigram Jaccard**（`norm_key` 归一 + 字符 bigram Jaccard ≥ τ，τ=0.15–0.20），matching 层（LLM 裁决）不变。
+- **依据（真实）**：(b) 索引期 API embedding blocking **as-built 不可运行**（网关 `/v1/embeddings`、`/embeddings` 实测 **404**，grok **402**）；生产精确 `norm_key` blocking 对 15 对真实近义概念召回 **0/15**，词面 Jaccard τ=0.15 召回 **14/15(0.933)**、候选成本 0.87%（83/9591 全对）；本语料真同义对 14/15 表面相似，embedding 优势区近空。依赖损失=无。
+- **落地**：`extract/semantic.py:344 _norm_key` 的「精确相等」升级为「Jaccard≥0.15 入候选」，Phase C 同时补 matching 裁决层方可安全采纳。
+- **产物/引用**：`design_work/v3-blocking-report.md`、`v3_blocking_eval.{py,json}`；D-P2。（本轮 V3 由 Phase B 收口 agent 补跑，前序无产物。）
+
+### §B.3 V4 主评测集 —— 走补建分支（D-P3）
+- **裁定**：90 题 L1/L2/L3 主集**不存在**（实测 `eval/` 原无、唯一 `.jsonl` 为对齐审计产物、非评测集）→ 走计划书 **V4 补建分支**：Phase D 前补建，规模可裁至 **60 题（L1 20/L2 30/L3 10）**，出题纪律沿用 v0.1 §9.1（冻结一半防偏置），工期 +2 天。
+- **产物/引用**：`docs/v0.3-asbuilt.md` §5；D-P3、F12。
+
+### §B.4 V2 改写地位 —— S2 为 C3 类主召回机制、C2 首项新建（D-N2）
+- **核实（真实）**：全仓 grep 确认 **S2 改写扩展不存在**（`src/repograph/retrieve` 与 `claude-ui/server.py` 均无 `_rg_llm_rewrite`/`symbol_guesses`/`premises` 抽取；`server.py:1020` 的「改写」是无关注释）。
+- **裁定**：按 **D-N2**，S2 改写升格为 **C3 类主召回机制**（向量层砍除后同义改述的唯一补偿），**Phase C2 首项从零新建**（非恢复），禁止顺手砍除。
+- **产物/引用**：`docs/v0.3-asbuilt.md` §4；D-N2、D-18。
+
+### §B.5 语义通道 as-built —— 阿里网关 HTTP（D-N4）
+- **as-built（真实）**：运行时 L2 语义走网关 flash（`server._rg_llm_select_concepts`，`model_haiku`，已在，grok 断供零影响）；索引期语义原走 grok CLI，2026-07-22 **402 断供**后切**阿里网关 HTTP 直连**（计划 `extract/llm_client.py`，`qwen3.8-max-preview`，Phase C 建；密钥仅入请求头，一律 sk-****）。计划书 §0.2「语义生成走 grok API」表述据此过时，**as-built 以网关为准**。
+- **产物/引用**：文档头「通道变更」注记、§4.7；`docs/v0.3-asbuilt.md` §2；D-N4。
+
+---
+
+## 附录 A：路由规则初始表（Python 字面量形态，替代 `router_rules.yaml`）
+
+> 落 `src/repograph/retrieve/router.py` 模块级常量，按序首中即出；全不中 → 网关 `_rg_llm_route` 兜底分类。正则须补 `_is_meta_question` 暴露的口语盲区。
+
+```python
+ROUTER_RULES = [
+    {"id": "meta-1",   "label": "meta",
+     "pattern": r"(你|您)?(知道|了解|认识|熟悉|清楚|晓得|懂|读得?懂)\s*(我的|这个|这)?(破)?(代码库|仓库|项目|工程|repo|codebase)"},
+    {"id": "meta-2",   "label": "meta",
+     "pattern": r"你(是谁|能(干|做)(什么|啥|嘛)|有(什么|哪些)(功能|能力))|怎么用你|帮我看(代码|仓库)"},
+    {"id": "struct-1", "label": "structural", "requires": ["has_code_token"],
+     "pattern": r"(最|前\s*\d+|多少|几个|统计|列出(所有|全部)|排(序|名))"},
+    {"id": "entity-1", "label": "entity_local", "requires": ["has_code_token"]},
+    {"id": "global-1", "label": "global", "requires": ["no_code_token", "no_linker_hit"],
+     "pattern": r"(整体|总体|全局|大概|架构|介绍|讲讲|是(干|做)(什么|嘛|啥)|干啥|质量|难点|亮点|风格|规模|多大)"},
+    {"id": "oos-1",    "label": "out_of_scope", "requires": ["no_repo_reference"],
+     "pattern": r"(是什么意思|什么是)\s*(?!.*(本项目|这个项目|仓库))"},
+]
+# 规则表每次增删必须附对应回归用例（F3）。
+```
+
+**规则语义补注（落地必读，回应两处过宽/误判风险）**：
+- `entity-1` 无 `pattern`、仅 `requires:[has_code_token]`，是**含代码词元问题的默认桶**（按序在 struct-1 后、global-1 前，故「含符号的总览/界外」会先落 entity_local）——**有意设计**：误落总览题由 entity_local 自身的「无锚→S2 改写→仍空→`build_overview`」兜底纠偏（§4.3），误落界外题由链接空→概览兜底，均不违 P4。须附回归用例：`Foo 模块整体架构` 期望 entity_local 或 global 之一即算过。
+- `oos-1` 的 `requires:[no_repo_reference]` **必须**按 §4.2 的**组合谓词**（`no_linker_hit ∧ topic_recall 全 <_MIN_SCORE ∧ 无指代 ∧ 无反引号`）判定，**不能**只靠 `什么是/是什么意思` 字面 + 无「本项目」——否则「什么是适配层」（`适配层` 是本仓 `L0_FACTS` 概念）会被误判界外。正则只作触发候选，最终由组合谓词把关。
+
+====END====
