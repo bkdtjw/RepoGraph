@@ -1,0 +1,11 @@
+**缺陷 1**
+
+`llm_client.py:76-78` — `json.load(f)` 解析损坏的 config.json 时抛出未捕获的 `json.JSONDecodeError`，违反契约"缺文件→抛明确异常"；且该异常对象的 `.doc` 属性持有完整文件内容（含 token），若上游以 `repr(e)` 记录则泄露密钥。
+
+触发场景：config.json 存在但内容非法 JSON（如被编辑器截断、BOM 头、尾逗号）。
+
+修法：将 76-78 行包入 `try/except (json.JSONDecodeError, UnicodeDecodeError, OSError)`，统一转抛 `GatewayConfigError("config.json 解析失败：<path>")`，消息中不含文件内容。
+
+---
+
+其余三维度（契约字段/阈值/优先级、假数据、token 仅入 Authorization 头且异常消息无 token）逐条核对未发现缺陷。

@@ -36,7 +36,7 @@
  454	# LLM 前提断言里可校验 term 的抽取样式：英文标识符 + 数字/中文数字 + 量词（五级 / 100 轮）。
  455	# 数字与量词间允许空白（"100 轮"），抽出后归一去空白（→ "100轮"）再做图谱存在性比对。
  456	_EN_IDENT_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]{1,}")
- 457	_NUM_UNIT_RE = re.compile(r"[0-9一二三四五六七八九十百千两]+\s*(?:级|轮|层|阶段|个|次|步|档|重)")
+ 457	_NUM_UNIT_RE = re.compile(r"[0-9一二三四五六七八九十百千零两]+\s*(?:级|轮|层|阶段|个|次|步|档|重)")
  458	
  459	
  460	def extract_lexical_premises(question: str) -> list[dict]:

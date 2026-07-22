@@ -1,0 +1,7 @@
+**claude-ui/web/app.js:563** — `c.path !== c.entity_id` 应为 `c.path !== primary`。
+
+- **问题**：当候选对象缺少 `entity_id` 仅有 `path` 时，`primary` 已回退为 `c.path`（行 556），但行 563 仍与原始 `c.entity_id`（undefined）比较，条件恒真，导致同一字符串作为 name 和 path 重复渲染。
+- **触发**：`candidates: [{path: "src/foo.py"}]`（无 entity_id 字段）。
+- **修法**：`if (c.path && c.path !== primary)`。
+
+其余三个维度（契约一致、假数据、密钥处理）在该行段内未发现缺陷。

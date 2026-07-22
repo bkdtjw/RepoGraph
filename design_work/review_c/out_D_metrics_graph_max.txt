@@ -1,0 +1,9 @@
+**metrics.py:65（及 105）— 正确性：naive/aware datetime 混合比较抛 TypeError**
+
+- 问题：`_parse_dt` 对无时区后缀的 ISO 串（如 `"2026-07-06T22:45:09"`）返回 naive datetime，对带偏移的返回 aware datetime。第 65 行 `dt > latest` 与第 105 行 `dt >= win` 在两者一 naive 一 aware 时抛 `TypeError: can't compare offset-naive and offset-aware datetimes`，未被任何 try/except 捕获，直接崩溃。
+- 触发：仓库中任一 commit 的 `authored_at` 缺少时区偏移（或 Python <3.11 下使用 `Z` 后缀解析失败后被排除，使 latest 退化为 naive）。
+- 修法：在 `_parse_dt` 中统一归一化——解析后若 `dt.tzinfo is None` 则 `dt = dt.replace(tzinfo=timezone.utc)`；或将 'Z' 替换为 '+00:00' 后再 `fromisoformat`，确保所有 datetime 均为 aware。
+
+---
+
+其余三维度（契约一致、假数据、密钥处理）未发现缺陷。

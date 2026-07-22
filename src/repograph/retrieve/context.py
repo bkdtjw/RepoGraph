@@ -274,7 +274,7 @@ def build_repo_context(
     + ``is_code_token``（+ 无链接时 ``topic_recall``，供 oos 组合谓词与 topic 档复用）→
     ``route()`` 分诊到 5 标签 → 分派（确定性、不碰网关）：
 
-    - **meta**         → 注入 repo_card（``build_meta_context``），``mode='meta'``；
+    - **meta**         → 注入 repo_card（``build_meta_context``），``mode='overview'``（route_label='meta' 承载五分类）；
     - **global**       → ``build_overview`` 顶层概览，``mode='global'``；
     - **entity_local** → 现四档瀑布（L0 符号→L1 主题→L2 LLM→L3 概览），``mode∈{symbol,topic,llm,overview}``；
     - **structural**   → 能定量者走 ``build_overview`` 字段，``route_label=structural`` + ``degraded``；

@@ -1,0 +1,15 @@
+**缺陷 1 — 正确性（指代词误判）**
+
+`router.py:108` — `_RE_PRONOUN` 中裸字 `该` 会匹配"应**该**/该当/活该"等非指代用法，使 `has_pronoun` 误为 True → `no_repo_reference` 恒 False → oos-1 永远不触发。
+
+- 触发：`route("什么是微服务，应该怎么理解", linked=[], topic_hits=[], has_code_token=False)` → 期望 `out_of_scope`，实际落入 `entity_local` 兜底。
+- 修法：将 `该` 改为 `(?<!应)该` 或更精确的 `该(?=[个函模类方组文接端机系服])`，排除"应该"等副词用法。
+
+---
+
+**缺陷 2 — 正确性 / 契约一致（global-1 抢先 oos-1）**
+
+`router.py:146` — `_GLOBAL_1` 含独立触发词 `结构`，会匹配"数据**结构**/组织**结构**"等非项目级概念；因 global-1（第 5 条）排在 oos-1（第 6 条）之前，纯界外问题被误路由为 global。
+
+- 触发：`route("什么是数据结构", linked=[], topic_hits=[], has_code_token=False)` → 期望 `out_of_scope`（无仓库指向），实际命中 global-1 的 `结构` 返回 `global`。
+- 修法：将 `结构` 收窄为 `项目结构|代码结构|整体结构|模块结构`，或将 oos-1 提到 global-1 之前（需同步回归 eval 用例验证无副作用）。

@@ -69,13 +69,25 @@ def _candidate_config_paths(explicit: str | None) -> list[str]:
 
 
 def load_gateway_config(config_path: str | None = None) -> dict:
-    """读取网关配置 dict。找不到文件抛 ``GatewayConfigError``（含所有已查路径，不含 token）。"""
+    """读取网关配置 dict。找不到文件 / 无法读取 / JSON 非法 → 抛 ``GatewayConfigError``。
+
+    契约「异常消息不含 token」的硬保证：损坏 JSON 抛的 ``json.JSONDecodeError`` 其 ``.doc``
+    属性携带**整份配置正文（含 token）**；故此处捕获后**只留异常类型名与路径**、并 ``from None``
+    切断异常链，绝不透传原异常对象/消息/doc（否则上游打印 traceback 即泄露 sk-****）。同时把
+    损坏配置归一为 ``GatewayConfigError``，令调用方（如 generate_card_summary）如实降级而非崩溃。
+    """
     tried: list[str] = []
     for p in _candidate_config_paths(config_path):
         tried.append(p)
         if os.path.exists(p):
-            with open(p, "r", encoding="utf-8") as f:
-                return json.load(f)
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except (OSError, ValueError, UnicodeDecodeError) as e:
+                # ValueError 覆盖 json.JSONDecodeError；只记类型名，绝不带 e 的消息/doc/args。
+                raise GatewayConfigError(
+                    f"网关配置 config.json 读取/解析失败（{type(e).__name__}）：{p}"
+                ) from None
     raise GatewayConfigError(
         "找不到网关配置 config.json；已尝试：" + " | ".join(tried)
     )

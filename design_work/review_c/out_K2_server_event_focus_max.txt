@@ -1,0 +1,3 @@
+未发现缺陷。
+
+代码在四个维度上均与契约吻合：TTL 判定 `age > 10` 与 spec "当前turn−entry.turn>10 弹出" 一致；`_rg_build_event` 恒在字段与纯增字段逻辑正确；`_rg_inject_prefix` / `_rg_normalize_mode` 分支覆盖与 spec 逐条对应；无硬编码假数据；无密钥处理逻辑。

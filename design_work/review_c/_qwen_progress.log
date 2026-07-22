@@ -1,0 +1,18 @@
+=== glm-5.2 主审 15 段 00:38:24 ===
+RETRY A_router_route glm rc=124 empty=yes wait60
+FAIL A_router_route glm rc=1 20s
+DONE B_router_banding glm 242s bytes=1717
+DONE C_router_premise glm 209s bytes=1570
+RETRY D_metrics_graph glm rc=124 empty=yes wait60
+FAIL D_metrics_graph glm rc=1 116s
+DONE E_metrics_cyclo glm 169s bytes=1891
+RETRY F_llm_client glm rc=1 empty=yes wait60
+FAIL F_llm_client glm rc=124 301s
+DONE G_repocard_det glm 151s bytes=1600
+DONE H_repocard_summary glm 229s bytes=1883
+DONE I_enrich glm 215s bytes=1837
+RETRY J_context_route glm rc=124 empty=yes wait60
+FAIL J_context_route glm rc=124 300s
+RETRY K1_server_rewrite_premise glm rc=124 empty=yes wait60
+FAIL K1_server_rewrite_premise glm rc=124 300s
+RETRY K2_server_event_focus glm rc=124 empty=yes wait60

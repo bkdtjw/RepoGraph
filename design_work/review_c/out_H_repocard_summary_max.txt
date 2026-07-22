@@ -1,0 +1,13 @@
+**缺陷 1 — 契约不一致（缺 `route_label`）**
+
+`repo_card.py:343-349`：`build_meta_context` 返回的 dict 缺少 `route_label: "meta"` 字段。契约要求 "route_label='meta' 承载精确五分类"，代码自身注释（L341）也写明 "此处以 route_label='meta' 承载精确五分类"，但返回体只有 `{mode, linked, context_text, stats, degraded}`，下游网关侧无法据 `route_label` 完成事件 mode 改写。
+触发：任何查询期 meta 路由调用，网关侧读不到 `route_label` → 五分类路由失效或回退默认。
+修法：返回 dict 增加 `"route_label": "meta"`。
+
+---
+
+**缺陷 2 — 假数据（写死统计零值）**
+
+`repo_card.py:335`：`"symbols": 0, "topics": 0, "impact_callers": 0, "commits": 0` 为硬编码统计数字，违反项目铁律"无假数据"。若展示态将这些字段呈现给用户，0 并非真实统计而是占位值。
+触发：任意 meta 路由返回的 `stats` 中这四个字段恒为 0，与实际仓库规模不符。
+修法：若 repo_card 确实不产出这些指标，应从 `stats` 中移除这些键（让消费侧按缺失处理），或从真实数据源读取；不得以写死 0 充当统计值。

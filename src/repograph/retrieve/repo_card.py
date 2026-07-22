@@ -4,7 +4,8 @@
 **索引期显式制造**，不指望检索碰巧覆盖。本模块把 v0.1 惰性拼装的 ``build_overview``
 升格为**结构化卡片**：
 
-- **确定性字段**（纯图谱统计，零网络）：``stats``（22/15/259/75/139 五类规模）、
+- **确定性字段**（纯图谱统计，零网络）：``stats``（模块/类/函数/提交/概念五类规模，
+  数值一律来自 ``store.counts()``，docstring 不写死具体数字以免再索引后失准）、
   ``top_modules``（按 loc）、``hot_functions``（按 MODIFIES 计数）、``core_concepts``
   （按 IMPLEMENTS 落点）、``entrypoints``（聚合 ``Function.is_endpoint``，本图为 0 则如实空）。
 - **summary**（唯一一次索引期真实网关调用，qwen3.8-max-preview，≤300 字）：由
@@ -324,7 +325,10 @@ def load_or_build_repo_card(store: GraphStore,
 
 
 def build_meta_context(store: GraphStore, cache_path: Optional[str] = None) -> dict:
-    """meta 路由：注入 repo_card（缓存优先），返回 ``mode='meta'`` 的上下文 dict。
+    """meta 路由：注入 repo_card（缓存优先），返回 ``mode='overview'`` 的上下文 dict。
+
+    展示 mode 取 ``overview``（v1 消费方兼容、server._RG_VALID_MODES 兼容零改动）；精确五分类
+    由上游 _finalize 挂的 ``route_label='meta'`` 承载（见下方 mode 注释）。
 
     返回统一 ``{mode, linked, context_text, stats, degraded}``；``degraded`` 标识本次是否
     走了现场降级（缓存缺失/损坏）。绝不裸拒（context_text 恒含规模事实）。

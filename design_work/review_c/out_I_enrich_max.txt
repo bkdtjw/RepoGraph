@@ -1,0 +1,20 @@
+**1) 正确性 — `代码库知识图谱/src/repograph/enrich.py:74`**
+问题：无 `id` 的卡片被 `continue` 静默跳过，无任何报错/计数。
+触发：c2_cards.json 中某卡缺失 `"id"` 字段（生成端 bug 或手工编辑）。
+修法：改为 `raise ValueError(f"卡片缺少 id 字段：{c}")`，或至少计入 stats 并在 main 中报错退出。
+
+**2) 正确性 — `代码库知识图谱/src/repograph/enrich.py:84`**
+问题：哨兵键 `"__dup_ids__"` 与真实 node_id 共用同一 dict 命名空间；若某节点 id 恰为 `"__dup_ids__"`，其属性会被 dup_ids 列表覆盖而丢失。
+触发：graph 中存在 id 为 `"__dup_ids__"` 的节点（极端但合法输入）。
+修法：将 dup_ids 作为独立返回值（如返回 `(attr, dup_ids)` 元组），不混入 attr dict。
+
+**3) 正确性 — `代码库知识图谱/src/repograph/enrich.py:129-130`**
+问题：不变量守卫用 `assert`，在 `python -O` 下被整体剥离，节点/边集被意外修改时将无报错直接写出损坏 graph。
+触发：CI/生产环境以 `python -O -m repograph.enrich` 运行。
+修法：改为显式 `if ...: raise RuntimeError(...)`（契约要求"assert 守"，但 assert 在 -O 下不等于守）。
+
+**4) 契约一致 — `代码库知识图谱/src/repograph/enrich.py:74`（同 #1 的契约角度）**
+契约要求"结构不符→明确报错退出，绝不静默"；单卡缺 id 属结构不符，当前实现静默丢弃，违反铁律。
+
+假数据维度：未发现。
+密钥处理维度：本文件无鉴权逻辑，不适用。

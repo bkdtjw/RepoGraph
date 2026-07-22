@@ -1,0 +1,17 @@
+**缺陷 1 — 正确性 / 契约一致**
+`router.py:337-338`
+`disambiguate` 仅按 `score` 降序排序，未考虑方法档优先级。
+触发：`short_name` 候选 score=90、`exact_qualname` 候选 score=80 时，top 为弱档，强档 autopick 路径被跳过，可能误判为 `needs_disambiguation`。
+修法：排序键改为 `(-_METHOD_RANK.get(c.get("method"),0), -(c.get("score") or 0), _cand_key(c))`，与 `merge_link_candidates` 一致。
+
+**缺陷 2 — 契约一致 (D-N1)**
+`router.py:293-294` 及 `411`
+`has_strong_method` / `can_auto_anchor` 未校验 `score ≥ 80`；契约明确"仅 exact/suffix(≥80) 可自动锚定"。
+触发：某 `exact_qualname` 候选因打分异常得 score=55，仍通过 `can_auto_anchor` 被喂给确定性工具。
+修法：在 `can_auto_anchor` 中 `has_strong_method` 判定后追加 `if (cand.get("score") or 0) < 80: return False`。
+
+**缺陷 3 — 正确性（边界）**
+`router.py:382`
+`node.get("fan_in", 0)` 仅在键缺失时返回 0；若 metrics.py 写入 `"fan_in": None`，结果为 `None` 而非文档承诺的 0，下游算术运算将 `TypeError`。
+触发：节点存在但 fan_in 字段为 `None`（预计算跳过/写入异常）。
+修法：`meta["fan_in"] = node.get("fan_in") or 0`。

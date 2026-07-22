@@ -1,0 +1,7 @@
+**claude-ui/server.py:641** — 正确性：瞬态失败被永久缓存。`_rg_llm_json` 超时/网络抖动时 `_parse_rewrite` 返回空结构，641 行将其写入缓存；后续同问题命中 630 行缓存直接返回空，永不重试，直到被 LRU 逐出（<256 不同问题时可能永不逐出）。
+触发：首次提问恰遇网关 20s 超时，该问题此后永远无改写。
+修法：仅缓存有效结果，例如 `if result["queries"]: _rg_cache_put(...)` 再 `return result`；或对失败结果不写入缓存。
+
+**claude-ui/server.py:630 + 589-595** — 契约一致：契约要求"按问题 LRU 缓存"，但读路径（630 行 `.get(q)`）不提升键序；仅 `_rg_cache_put` 重写时才 pop+re-insert。每个问题通常只写一次后全走读，实际退化为 FIFO。>256 不同问题时，早插入但高频命中的问题会被优先逐出，违反 LRU 语义。
+触发：累计 >256 个不同问题后，早期高频问题被逐出、反复触发 LLM 往返。
+修法：读命中时提升：`cached = _RG_REWRITE_CACHE.pop(q, None); if cached is not None: _RG_REWRITE_CACHE[q] = cached; return cached`。

@@ -450,6 +450,26 @@ def test_enrich_candidates(store):
     print("test_enrich_candidates OK")
 
 
+def test_pronoun_excludes_yinggai():
+    """审查修订 [D-C-A1]：「应该」的「该」是副词非指代，不得置 has_pronoun（否则误压 oos 组合谓词）。
+
+    对症 opencode 补审意见 A-op1：`_RE_PRONOUN` 裸字「该」误匹配「应该」→ no_repo_reference
+    恒 False → oos-1 永不触发。修法用负向后顾 `(?<!应)该` 排除「应该」，真指代「该函数」仍命中。
+    """
+    from repograph.retrieve.router import _RE_PRONOUN
+    # 反例：「应该」不得判为含指代（测试串刻意不含其它指代词）
+    assert not _RE_PRONOUN.search("应该怎么处理才好"), "「应该」不应被判为含指代词"
+    assert not _RE_PRONOUN.search("这问题应该问谁"), "「应该」不应被判为含指代词"
+    # 正例：真指代「该X」仍命中，其它指代词不受影响
+    assert _RE_PRONOUN.search("该函数在哪定义的"), "「该函数」的「该」是真指代，须命中"
+    assert _RE_PRONOUN.search("它怎么工作的"), "「它」是指代词"
+    assert _RE_PRONOUN.search("这个模块干嘛的"), "「这个」是指代词"
+    # 端到端：修「该」后，含「应该」但无仓库指向/无 topic/无 linker 的问题落 out_of_scope
+    label = _label("什么是拜占庭将军问题，应该如何理解")
+    assert label == "out_of_scope", f"含「应该」的纯界外问题应判 oos，实得 {label}"
+    print("test_pronoun_excludes_yinggai OK")
+
+
 if __name__ == "__main__":
     store = _load()
     test_normalize()
@@ -476,4 +496,5 @@ if __name__ == "__main__":
     test_disambiguate_delta_boundary()
     test_amb_dataset_end_to_end(store)
     test_enrich_candidates(store)
+    test_pronoun_excludes_yinggai()
     print("\nALL TESTS PASSED")

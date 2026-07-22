@@ -1,0 +1,17 @@
+=== max-preview 全段主审 01:04:42 ===
+DONE A_router_route 211s bytes=1253
+DONE B_router_banding 96s bytes=1262
+DONE C_router_premise 112s bytes=682
+DONE D_metrics_graph 81s bytes=926
+DONE E_metrics_cyclo 79s bytes=346
+DONE F_llm_client 56s bytes=764
+DONE G_repocard_det 66s bytes=486
+DONE H_repocard_summary 79s bytes=1203
+DONE I_enrich 61s bytes=1571
+DONE J_context_route 132s bytes=934
+DONE K1_server_rewrite_premise 110s bytes=1141
+DONE K2_server_event_focus 75s bytes=330
+DONE L_server_apichat 136s bytes=1447
+DONE M_appjs_a 91s bytes=574
+DONE N_appjs_b 86s bytes=988
+ALL_DONE 01:29:17

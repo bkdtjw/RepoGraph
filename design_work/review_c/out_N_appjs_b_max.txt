@@ -1,0 +1,12 @@
+**claude-ui/web/app.js:670** — `tConcepts` 取 `num(stats.concepts, topicConcepts.length)`，当 `stats.concepts` 存在且 ≠ `topicConcepts.length` 时，标题数字与展开列表实际条目数不一致，违反本函数注释（L665）自身声明的不变量"数量与展开所列概念严格一致"。
+
+- **触发场景**：后端 topic 档返回 `stats.concepts=8`，但 `linked` 中仅 5 项 `label==='Concept'`（如 linked 被截断或 stats 统计口径含未注入 linked 的概念）。用户看到"8 个相关概念"，展开只列 5 条。
+- **修法**：既然展开列表固定渲染 `topicConcepts`，标题计数应直接用 `topicConcepts.length`：
+  ```js
+  var tConcepts = topicConcepts.length;
+  ```
+  若需保留 stats 权威值，则展开列表也应展示 stats 所声称的全部概念（补齐数据源），二者选其一保持一致。
+
+---
+
+其余三个维度（契约字段吻合、假数据、密钥处理）在所示行段内未发现缺陷。

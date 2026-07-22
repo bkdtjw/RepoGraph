@@ -1,0 +1,9 @@
+**context.py:308 — 契约违反：meta 路由未保证 mode='overview'**
+
+- **问题**：契约 §5.1 要求 "meta/global/structural 展示 mode=overview，route_label 承载五分类"。global（L312）和 structural（L316）均通过 `build_overview` 天然返回 `mode='overview'`，但 meta 分支直接 `_finalize(build_meta_context(store), "meta", src)` 未传 `mode='overview'` 覆盖；本文件 docstring（L277）明确标注 `mode='meta'`，与契约矛盾。
+- **触发场景**：任何命中 meta 规则的问题（如 "这个仓库是干什么的"），v1 消费方收到未知 `mode='meta'` 而非约定的 `'overview'`，解析回退或报错。
+- **修法**：与 global 对齐，改为 `_finalize(build_meta_context(store), "meta", src, mode="overview")`，由 `route_label='meta'` 承载五分类语义。
+
+---
+
+其余三维度（正确性边界/假数据/密钥处理）在 243-462 行段内未发现缺陷。

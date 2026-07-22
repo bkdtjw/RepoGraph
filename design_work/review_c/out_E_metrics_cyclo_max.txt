@@ -1,0 +1,3 @@
+未发现缺陷。
+
+代码在四个维度上均无真实问题：cyclomatic 按 symbol_id 回填、缺失/不可解析如实记 `missing_files`、`--repo-root` 缺省正确跳过且其余指标照常、`compute_all` 返回 `node_props+stats`、`write_metrics` 经 `merge_node` 幂等合并；无写死统计/假数据；无密钥处理逻辑。

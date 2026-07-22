@@ -1,0 +1,11 @@
+**1. claude-ui/server.py:1405 — S2 改写命中强锚后 focus_anchor 仍为 None（正确性）**
+
+- 问题：L2/S2 分支（1376-1382）成功后只更新了局部变量 `mode/linked/stats/ctx`，未更新 `rg` 字典本身；1405 行 `_rg_strong_anchor(rg)` 检查的仍是原始 rg（其 mode 为 overview/none、无强锚），导致改写命中的强锚不会压入焦点栈。
+- 触发：llm 档，原始检索落 overview/none → S2 改写二次召回命中 exact/suffix 实体 → 本轮 focus_anchor=None → 后续指代轮 `_rg_focus_peek` 取不到该实体，消歧链断裂。
+- 修法：在 1382 行后补充 `focus_anchor = _rg_strong_anchor(rw_ctx)`（或令 `_rg_try_rewrite_link` 返回完整 rg 结构后 `rg = rw_ctx`），使 1405 行改为 `focus_anchor = focus_anchor or _rg_strong_anchor(rg)`。
+
+**2. claude-ui/server.py:1412 — 异常消息未脱敏即存入 `_RG["error"]`（密钥处理）**
+
+- 问题：`str(e)` 原样拼接写入 `_RG` 字典；若网关/HTTP 库抛出的异常消息含 Authorization 头或 URL 中的 token（requests/httpx 常见），token 明文驻留内存，一旦 `_RG` 被调试端点/日志序列化即泄露，违反"提及应为 sk-****"。
+- 触发：网关 401/连接异常，异常消息包含 `Bearer sk-...` 完整值。
+- 修法：存入前对 `str(e)` 做正则脱敏，如 `re.sub(r'sk-[A-Za-z0-9]{4,}', 'sk-****', str(e))`，或仅存 `type(e).__name__` 不存 message。
