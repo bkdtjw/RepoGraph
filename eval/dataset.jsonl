@@ -1,0 +1,48 @@
+{"id": "L0-01", "subset": "L0", "question": "你知道我的代码库吗", "variant": "C1原型", "gold_mode_class": "overview", "facts_min": 3}
+{"id": "L0-02", "subset": "L0", "question": "你晓得我这破仓库是干啥的不", "variant": "口语", "gold_mode_class": "overview", "facts_min": 3}
+{"id": "L0-03", "subset": "L0", "question": "你能干嘛？对我这项目能做啥", "variant": "能力问询", "gold_mode_class": "overview", "facts_min": 3}
+{"id": "L0-04", "subset": "L0", "question": "这个项目整体多大规模，有多少东西", "variant": "规模问询", "gold_mode_class": "overview", "facts_min": 3}
+{"id": "L0-05", "subset": "L0", "question": "你了解我的仓库不，简单讲讲", "variant": "口语", "gold_mode_class": "overview", "facts_min": 3}
+{"id": "L0-06", "subset": "L0", "question": "你对这个带码库熟悉么", "variant": "错别字(带=代)", "gold_mode_class": "overview", "facts_min": 3}
+{"id": "L0-07", "subset": "L0", "question": "你是谁，你能帮我看代码不", "variant": "元/能力", "gold_mode_class": "overview", "facts_min": 3}
+{"id": "L0-08", "subset": "L0", "question": "这仓库大概是个什么东西，给个总览", "variant": "总览", "gold_mode_class": "overview", "facts_min": 3}
+{"id": "L0-09", "subset": "L0", "question": "你到底能不能读懂我的代码库呀", "variant": "口语/能力", "gold_mode_class": "overview", "facts_min": 3}
+{"id": "L0-10", "subset": "L0", "question": "帮我认识下这个工程，它做啥的", "variant": "近义替换", "gold_mode_class": "overview", "facts_min": 3}
+{"id": "FZ-d01", "subset": "FZ_dev", "question": "那个把活儿叫停之后负责收尾扫尾的一摊在哪", "gold_entity": "multi-agent-orch::src/orch/scheduler/core.py::_handle_terminate", "alt_gold_entities": [], "target_semantic": "终止处理函数", "gold_mode_class": "topic"}
+{"id": "FZ-d02", "subset": "FZ_dev", "question": "谁在旁边盯着别人干活会不会卡住", "gold_entity": "concept::看门狗三级", "alt_gold_entities": [], "target_semantic": "看门狗/超时监控", "gold_mode_class": "topic"}
+{"id": "FZ-d03", "subset": "FZ_dev", "question": "程序半路挂了之后怎么自己爬起来接着干", "gold_entity": "concept::崩溃恢复算法", "alt_gold_entities": [], "target_semantic": "崩溃恢复", "gold_mode_class": "topic"}
+{"id": "FZ-d04", "subset": "FZ_dev", "question": "系统自己往台账上补记一笔是哪段逻辑", "gold_entity": "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event", "alt_gold_entities": [], "target_semantic": "系统事件追加", "gold_mode_class": "topic"}
+{"id": "FZ-d05", "subset": "FZ_dev", "question": "怎么估摸一段话大概占多少篇幅", "gold_entity": "multi-agent-orch::src/orch/render/__init__.py::estimate_tokens", "alt_gold_entities": [], "target_semantic": "token 估算", "gold_mode_class": "topic"}
+{"id": "FZ-d06", "subset": "FZ_dev", "question": "给每个干活的单独开个小隔间互不打扰", "gold_entity": "concept::worktree-隔离", "alt_gold_entities": [], "target_semantic": "worktree 隔离", "gold_mode_class": "topic"}
+{"id": "FZ-d07", "subset": "FZ_dev", "question": "活干完自动留个存档不用手动保存", "gold_entity": "concept::autocommit", "alt_gold_entities": [], "target_semantic": "自动提交", "gold_mode_class": "topic"}
+{"id": "FZ-d08", "subset": "FZ_dev", "question": "管谁能碰哪块、越界了就拦下来那套", "gold_entity": "concept::权限三件套", "alt_gold_entities": ["concept::越权审计"], "target_semantic": "权限/越权审计", "gold_mode_class": "topic"}
+{"id": "FZ-d09", "subset": "FZ_dev", "question": "存心使坏来测系统扛不扛揍", "gold_entity": "concept::故障注入", "alt_gold_entities": [], "target_semantic": "故障注入", "gold_mode_class": "topic"}
+{"id": "FZ-d10", "subset": "FZ_dev", "question": "放行还是拦下的那道关卡在哪判", "gold_entity": "concept::门禁裁决入口", "alt_gold_entities": [], "target_semantic": "门禁裁决", "gold_mode_class": "topic"}
+{"id": "FZ-t01", "subset": "FZ_test", "question": "把界面那几块拼装出来显示", "gold_entity": "concept::视图组装", "alt_gold_entities": [], "target_semantic": "视图渲染", "gold_mode_class": "topic"}
+{"id": "FZ-t02", "subset": "FZ_test", "question": "大家共用的留言板重新拼一遍", "gold_entity": "concept::黑板投影与rebuild", "alt_gold_entities": [], "target_semantic": "黑板投影 rebuild", "gold_mode_class": "topic"}
+{"id": "FZ-t03", "subset": "FZ_test", "question": "喊了暂停之后系统怎么响应", "gold_entity": "concept::stop-标志消费", "alt_gold_entities": [], "target_semantic": "stop 标志消费", "gold_mode_class": "topic"}
+{"id": "FZ-t04", "subset": "FZ_test", "question": "回话来晚了怎么在界面上打个记号", "gold_entity": "concept::迟到在途回复展示标记", "alt_gold_entities": [], "target_semantic": "迟到回复标记", "gold_mode_class": "topic"}
+{"id": "FZ-t05", "subset": "FZ_test", "question": "把各种杂牌后端捏成统一一个样子调用", "gold_entity": "concept::适配层", "alt_gold_entities": ["concept::适配层统一-invoke-接口"], "target_semantic": "适配层", "gold_mode_class": "topic"}
+{"id": "FZ-t06", "subset": "FZ_test", "question": "只留本人填的内容，机器补的字段一律不认", "gold_entity": "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields", "alt_gold_entities": [], "target_semantic": "作者字段裁剪", "gold_mode_class": "topic"}
+{"id": "FZ-t07", "subset": "FZ_test", "question": "把老长一段正文压成一行短的", "gold_entity": "multi-agent-orch::src/orch/render/__init__.py::_summarize", "alt_gold_entities": [], "target_semantic": "正文摘要", "gold_mode_class": "topic"}
+{"id": "FZ-t08", "subset": "FZ_test", "question": "把干活的目录路径算出来", "gold_entity": "multi-agent-orch::src/orch/cli/main.py::_resolve_workspace", "alt_gold_entities": [], "target_semantic": "workspace 解析", "gold_mode_class": "topic"}
+{"id": "FZ-t09", "subset": "FZ_test", "question": "那个要反复跑很多遍必须全绿才算过的压测", "gold_entity": "concept::混沌-50-轮-100-硬门槛", "alt_gold_entities": ["concept::50-轮硬门槛测试"], "target_semantic": "混沌硬门槛", "gold_mode_class": "topic"}
+{"id": "FZ-t10", "subset": "FZ_test", "question": "存事件和进度落盘的那一层", "gold_entity": "concept::状态层", "alt_gold_entities": [], "target_semantic": "状态/存储层", "gold_mode_class": "topic"}
+{"id": "AMB-01", "subset": "AMB", "question": "invoke 这个方法在哪定义的", "gold_behavior": "should_disambiguate", "candidate_note": "6 候选并列 score=60（Api/Cli/Fake*/Mock 适配器）", "gold_mode_class": "symbol"}
+{"id": "AMB-02", "subset": "AMB", "question": "帮我看下 invoke 的实现，别看测试桩", "gold_behavior": "should_disambiguate", "candidate_note": "过滤 Fake/Mock 后仍余 Api+Cli 两个合法候选", "gold_mode_class": "symbol"}
+{"id": "AMB-03", "subset": "AMB", "question": "__init__ 是在哪初始化的", "gold_behavior": "should_disambiguate", "candidate_note": "9 个类构造器并列，均合法", "gold_mode_class": "symbol"}
+{"id": "AMB-04", "subset": "AMB", "question": "run 这个函数干嘛的", "gold_behavior": "should_autopick", "candidate_note": "短名唯一 → ChaosHarness.run（run×9 假设在本图证伪）", "gold_mode_class": "symbol"}
+{"id": "AMB-05", "subset": "AMB", "question": "recover 在哪", "gold_behavior": "should_autopick", "candidate_note": "fn recover(100) 主导，另有模块 recover.py(30)", "gold_mode_class": "symbol"}
+{"id": "AMB-06", "subset": "AMB", "question": "main 是哪个", "gold_behavior": "should_autopick", "candidate_note": "fn main(100) 主导，另有 cli/main.py(30)", "gold_mode_class": "symbol"}
+{"id": "AMB-07", "subset": "AMB", "question": "_dispatch 指的是啥", "gold_behavior": "should_autopick", "candidate_note": "fn Handler._dispatch(60) 主导，另有 _dispatch.py(30)", "gold_mode_class": "symbol"}
+{"id": "AMB-08", "subset": "AMB", "question": "_handle_terminate 具体做什么", "gold_behavior": "should_autopick", "candidate_note": "唯一候选（exact 100）", "gold_mode_class": "symbol"}
+{"id": "AMB-09", "subset": "AMB", "question": "check_watchdogs 怎么工作的", "gold_behavior": "should_autopick", "candidate_note": "唯一候选（exact 100）", "gold_mode_class": "symbol"}
+{"id": "AMB-10", "subset": "AMB", "question": "apply_gate_decision 在哪", "gold_behavior": "should_autopick", "candidate_note": "唯一候选（exact 100）", "gold_mode_class": "symbol"}
+{"id": "PP-01", "subset": "PP", "question": "为什么这项目用 Redis 做分布式锁？", "false_premise": "使用 Redis 分布式锁", "absent_keywords": ["redis"], "truth_anchors": ["sqlite"], "gold_correction": "无 Redis；单进程/线程 + sqlite3，无分布式锁", "gold_mode_class": "overview"}
+{"id": "PP-02", "subset": "PP", "question": "你们的 FastAPI 路由是怎么组织的？", "false_premise": "用 FastAPI", "absent_keywords": ["fastapi"], "truth_anchors": ["http.server", "网关"], "gold_correction": "stdlib http.server 手写网关（stdlib网关15端点）", "gold_mode_class": "overview"}
+{"id": "PP-03", "subset": "PP", "question": "事件为什么选 PostgreSQL 存储？", "false_premise": "用 PostgreSQL", "absent_keywords": ["postgres"], "truth_anchors": ["sqlite"], "gold_correction": "sqlite3 存储层六表 DDL", "gold_mode_class": "overview"}
+{"id": "PP-04", "subset": "PP", "question": "这套多智能体是怎么用 Docker/K8s 编排部署的？", "false_premise": "容器化编排部署", "absent_keywords": ["docker", "kubernetes"], "truth_anchors": [], "gold_correction": "无容器化；编排指多智能体消息编排，非容器编排", "gold_mode_class": "overview"}
+{"id": "PP-05", "subset": "PP", "question": "任务队列用的是 Celery 吧，怎么配的？", "false_premise": "用 Celery 队列", "absent_keywords": ["celery"], "truth_anchors": ["asyncio"], "gold_correction": "无 Celery；asyncio 异步核心环 + 多线程 workspace", "gold_mode_class": "overview"}
+{"id": "PP-06", "subset": "PP", "question": "前端 React 组件是怎么拆的？", "false_premise": "React 前端", "absent_keywords": ["react", "vue"], "truth_anchors": ["http.server"], "gold_correction": "玻璃感 Web 控制台为 stdlib 网关 + 静态页，无 React", "gold_mode_class": "overview"}
+{"id": "PP-07", "subset": "PP", "question": "看门狗的五级升级机制怎么设计的？", "false_premise": "看门狗五级", "absent_keywords": ["看门狗五级", "五级"], "truth_anchors": ["看门狗三级", "三级"], "gold_correction": "是三级看门狗，非五级", "gold_mode_class": "overview"}
+{"id": "PP-08", "subset": "PP", "question": "混沌测试要跑满 100 轮才算过对吧？", "false_premise": "跑 100 轮", "absent_keywords": ["100 轮", "跑满 100"], "truth_anchors": ["50 轮"], "gold_correction": "是 50 轮（100 是通过率 100%，非轮数）", "gold_mode_class": "overview"}

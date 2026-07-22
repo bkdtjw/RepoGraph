@@ -1,0 +1,181 @@
+{
+ "exact": [
+  {
+   "name": "看门狗三级",
+   "found": true,
+   "ids": [
+    "concept::看门狗三级"
+   ]
+  },
+  {
+   "name": "崩溃恢复算法",
+   "found": true,
+   "ids": [
+    "concept::崩溃恢复算法"
+   ]
+  },
+  {
+   "name": "worktree-隔离",
+   "found": false,
+   "ids": null
+  },
+  {
+   "name": "autocommit",
+   "found": true,
+   "ids": [
+    "concept::autocommit"
+   ]
+  },
+  {
+   "name": "权限三件套",
+   "found": true,
+   "ids": [
+    "concept::权限三件套"
+   ]
+  },
+  {
+   "name": "越权审计",
+   "found": true,
+   "ids": [
+    "concept::越权审计"
+   ]
+  },
+  {
+   "name": "故障注入",
+   "found": true,
+   "ids": [
+    "concept::故障注入"
+   ]
+  },
+  {
+   "name": "门禁裁决入口",
+   "found": true,
+   "ids": [
+    "concept::门禁裁决入口"
+   ]
+  },
+  {
+   "name": "视图组装",
+   "found": true,
+   "ids": [
+    "concept::视图组装"
+   ]
+  },
+  {
+   "name": "黑板投影与rebuild",
+   "found": true,
+   "ids": [
+    "concept::黑板投影与rebuild"
+   ]
+  },
+  {
+   "name": "stop-标志消费",
+   "found": false,
+   "ids": null
+  },
+  {
+   "name": "迟到在途回复展示标记",
+   "found": true,
+   "ids": [
+    "concept::迟到在途回复展示标记"
+   ]
+  },
+  {
+   "name": "适配层",
+   "found": true,
+   "ids": [
+    "concept::适配层"
+   ]
+  },
+  {
+   "name": "适配层统一 invoke 接口",
+   "found": true,
+   "ids": [
+    "concept::适配层统一-invoke-接口"
+   ]
+  },
+  {
+   "name": "混沌-50-轮-100-硬门槛",
+   "found": false,
+   "ids": null
+  },
+  {
+   "name": "50 轮硬门槛测试",
+   "found": true,
+   "ids": [
+    "concept::50-轮硬门槛测试"
+   ]
+  },
+  {
+   "name": "状态层",
+   "found": true,
+   "ids": [
+    "concept::状态层"
+   ]
+  }
+ ],
+ "probe": {
+  "看门狗": [
+   "看门狗三级",
+   "看门狗升级水位去重",
+   "核心环每轮主动调用看门狗"
+  ],
+  "崩溃恢复": [
+   "崩溃恢复算法",
+   "启动时对线程机械执行崩溃恢复"
+  ],
+  "worktree": [
+   "worktree 隔离装配",
+   "target_repo 时 ensure_worktrees 与审计接线",
+   "worktree 隔离"
+  ],
+  "autocommit": [
+   "autocommit"
+  ],
+  "权限": [
+   "权限三件套"
+  ],
+  "越权": [
+   "越权审计"
+  ],
+  "故障注入": [
+   "故障注入"
+  ],
+  "门禁": [
+   "门禁琥珀banner",
+   "门禁裁决入口"
+  ],
+  "视图组": [
+   "render四层视图组装",
+   "视图组装"
+  ],
+  "黑板": [
+   "黑板投影与rebuild",
+   "A类加重(已入黑板图钉)",
+   "黑板栏三节"
+  ],
+  "stop": [
+   "stop 标志消费",
+   "stop 语义链条"
+  ],
+  "迟到": [
+   "迟到在途回复展示标记"
+  ],
+  "适配层": [
+   "适配层统一 invoke 接口",
+   "适配层"
+  ],
+  "混沌": [
+   "混沌 50 轮 100% 硬门槛",
+   "混沌 harness"
+  ],
+  "硬门槛": [
+   "混沌 50 轮 100% 硬门槛",
+   "50 轮硬门槛测试"
+  ],
+  "状态层": [
+   "状态层"
+  ],
+  "recover": []
+ }
+}

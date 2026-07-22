@@ -1,0 +1,1409 @@
+{
+  "meta": {
+    "model": "qwen3.8-max-preview",
+    "base": "https://token-plan.cn-beijing.maas.aliyuncs.com/apps/anthropic",
+    "blocked": false,
+    "n_targets": 58,
+    "n_accepted": 58,
+    "n_discarded": 0,
+    "n_netfail": 0,
+    "whitelist_rule": "输出英文标识符须为输入子串(忽略大小写)，违规重试1次后弃用",
+    "max_card_chars": 40,
+    "backfilled": 1
+  },
+  "blocked": false,
+  "cards": [
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/core.py::_handle_terminate",
+      "label": "Function",
+      "name": "_handle_terminate",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "_handle_terminate",
+        "doc": "§5.4 终止清单：汇总产物 → system 总结事件 → status=terminated → 拒绝新派发。"
+      },
+      "card_text": "处理终止清单，汇总产物，system总结事件，状态终止并拒绝新派发。",
+      "card_raw": "处理终止清单，汇总产物，system总结事件，状态终止并拒绝新派发。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 34,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "处理终止清单，汇总产物，system总结事件，状态终止并拒绝新派发。",
+          "cleaned": "处理终止清单，汇总产物，system总结事件，状态终止并拒绝新派发。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::看门狗三级",
+      "label": "Concept",
+      "name": "看门狗三级",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "看门狗三级",
+        "doc": "§5.3 看门狗分为三级。"
+      },
+      "card_text": "描述看门狗被划分为三个级别，帮助理解其分级方式。",
+      "card_raw": "描述看门狗被划分为三个级别，帮助理解其分级方式。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 24,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "描述看门狗被划分为三个级别，帮助理解其分级方式。",
+          "cleaned": "描述看门狗被划分为三个级别，帮助理解其分级方式。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::崩溃恢复算法",
+      "label": "Concept",
+      "name": "崩溃恢复算法",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "崩溃恢复算法",
+        "doc": "§9.1 崩溃恢复算法，启动时对线程机械执行。"
+      },
+      "card_text": "在启动时机械执行线程，实现崩溃后的恢复处理。",
+      "card_raw": "在启动时机械执行线程，实现崩溃后的恢复处理。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 22,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "在启动时机械执行线程，实现崩溃后的恢复处理。",
+          "cleaned": "在启动时机械执行线程，实现崩溃后的恢复处理。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event",
+      "label": "Function",
+      "name": "append_system_event",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "append_system_event",
+        "doc": "编排器权威追加一条 system 事件（sender='system'，§3.1/§3.2/§16.11）。"
+      },
+      "card_text": "编排器权威追加一条发送者为 system 的事件。",
+      "card_raw": "编排器权威追加一条发送者为 system 的事件。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 25,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "编排器权威追加一条发送者为 system 的事件。",
+          "cleaned": "编排器权威追加一条发送者为 system 的事件。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/render/__init__.py::estimate_tokens",
+      "label": "Function",
+      "name": "estimate_tokens",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "estimate_tokens",
+        "doc": "字符系数近似（§17）。空串 → 0；单调不减；CJK 计更重。"
+      },
+      "card_text": "按字符系数近似估算tokens数，空串为0，单调不减，CJK计更重。",
+      "card_raw": "按字符系数近似估算tokens数，空串为0，单调不减，CJK计更重。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 34,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "按字符系数近似估算tokens数，空串为0，单调不减，CJK计更重。",
+          "cleaned": "按字符系数近似估算tokens数，空串为0，单调不减，CJK计更重。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::worktree-隔离",
+      "label": "Concept",
+      "name": "worktree 隔离",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "worktree 隔离",
+        "doc": "权限三件套之一：worktree 隔离。"
+      },
+      "card_text": "作为权限三件套之一，用 worktree 实现隔离以控制访问范围。",
+      "card_raw": "作为权限三件套之一，用 worktree 实现隔离以控制访问范围。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 33,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "作为权限三件套之一，用 worktree 实现隔离以控制访问范围。",
+          "cleaned": "作为权限三件套之一，用 worktree 实现隔离以控制访问范围。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::autocommit",
+      "label": "Concept",
+      "name": "autocommit",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "autocommit",
+        "doc": "权限三件套之一：autocommit。"
+      },
+      "card_text": "权限三件套之一，用于表示 autocommit 自动提交权限。",
+      "card_raw": "权限三件套之一，用于表示 autocommit 自动提交权限。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 31,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "权限三件套之一，用于表示 autocommit 自动提交权限。",
+          "cleaned": "权限三件套之一，用于表示 autocommit 自动提交权限。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::权限三件套",
+      "label": "Concept",
+      "name": "权限三件套",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "权限三件套",
+        "doc": "权限由 ensure_worktrees、audit_write_scope、autocommit 三件套构成并接入 core。"
+      },
+      "card_text": "权限三件套接入 core，管控工作树、写入范围审计和自动提交。",
+      "card_raw": "权限三件套接入 core，管控工作树、写入范围审计和自动提交。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 31,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "权限三件套接入 core，管控工作树、写入范围审计和自动提交。",
+          "cleaned": "权限三件套接入 core，管控工作树、写入范围审计和自动提交。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::越权审计",
+      "label": "Concept",
+      "name": "越权审计",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "越权审计",
+        "doc": "权限三件套之一：越权审计。"
+      },
+      "card_text": "审计是否存在越权行为，帮助发现权限滥用问题。",
+      "card_raw": "审计是否存在越权行为，帮助发现权限滥用问题。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 22,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "审计是否存在越权行为，帮助发现权限滥用问题。",
+          "cleaned": "审计是否存在越权行为，帮助发现权限滥用问题。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::故障注入",
+      "label": "Concept",
+      "name": "故障注入",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "故障注入",
+        "doc": "面向存储/事务路径的故障注入能力。"
+      },
+      "card_text": "在存储和事务路径中注入故障，模拟异常并测试处理能力。",
+      "card_raw": "在存储和事务路径中注入故障，模拟异常并测试处理能力。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 26,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "在存储和事务路径中注入故障，模拟异常并测试处理能力。",
+          "cleaned": "在存储和事务路径中注入故障，模拟异常并测试处理能力。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::门禁裁决入口",
+      "label": "Concept",
+      "name": "门禁裁决入口",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "门禁裁决入口",
+        "doc": "门禁裁决的入口能力。"
+      },
+      "card_text": "作为门禁裁决入口，用于发起裁决并判断能否通行。",
+      "card_raw": "作为门禁裁决入口，用于发起裁决并判断能否通行。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 23,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "作为门禁裁决入口，用于发起裁决并判断能否通行。",
+          "cleaned": "作为门禁裁决入口，用于发起裁决并判断能否通行。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::视图组装",
+      "label": "Concept",
+      "name": "视图组装",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "视图组装",
+        "doc": "渲染模块负责视图组装（spec §6）。"
+      },
+      "card_text": "渲染模块负责把视图内容组装起来，形成可供渲染的完整视图。",
+      "card_raw": "渲染模块负责把视图内容组装起来，形成可供渲染的完整视图。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 28,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "渲染模块负责把视图内容组装起来，形成可供渲染的完整视图。",
+          "cleaned": "渲染模块负责把视图内容组装起来，形成可供渲染的完整视图。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::黑板投影与rebuild",
+      "label": "Concept",
+      "name": "黑板投影与rebuild",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "黑板投影与rebuild",
+        "doc": "黑板状态通过投影与 rebuild 机制维护。"
+      },
+      "card_text": "用投影和rebuild机制维护黑板状态",
+      "card_raw": "用投影和rebuild机制维护黑板状态",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 19,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "用投影和rebuild机制维护黑板状态",
+          "cleaned": "用投影和rebuild机制维护黑板状态",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::stop-标志消费",
+      "label": "Concept",
+      "name": "stop 标志消费",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "stop 标志消费",
+        "doc": "消费 stop 标志以闭合停机语义链条。"
+      },
+      "card_text": "消费 stop 标志以完成停机语义闭合。",
+      "card_raw": "消费 stop 标志以完成停机语义闭合。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 20,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "消费 stop 标志以完成停机语义闭合。",
+          "cleaned": "消费 stop 标志以完成停机语义闭合。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::迟到在途回复展示标记",
+      "label": "Concept",
+      "name": "迟到在途回复展示标记",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "迟到在途回复展示标记",
+        "doc": "终止后到达的在途回复在 CLI/web replay 共用 _render_replay_lines 加 ⏱ 行标，控制台卡片加 late-pin 徽章；纯展示层，日志为真相不动。"
+      },
+      "card_text": "给终止后到达的在途回复加⏱行标与late-pin徽章，仅展示迟到不改日志。",
+      "card_raw": "给终止后到达的在途回复加⏱行标与late-pin徽章，仅展示迟到不改日志。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 37,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "给终止后到达的在途回复加⏱行标与late-pin徽章，仅展示迟到不改日志。",
+          "cleaned": "给终止后到达的在途回复加⏱行标与late-pin徽章，仅展示迟到不改日志。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::适配层",
+      "label": "Concept",
+      "name": "适配层",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "适配层",
+        "doc": "模块文档将本层命名为适配层。"
+      },
+      "card_text": "模块文档中命名的适配层，用来标识承担适配职责的层次。",
+      "card_raw": "模块文档中命名的适配层，用来标识承担适配职责的层次。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 26,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "模块文档中命名的适配层，用来标识承担适配职责的层次。",
+          "cleaned": "模块文档中命名的适配层，用来标识承担适配职责的层次。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::适配层统一-invoke-接口",
+      "label": "Concept",
+      "name": "适配层统一 invoke 接口",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "适配层统一 invoke 接口",
+        "doc": "适配层以统一的 invoke 接口对接各类后端。"
+      },
+      "card_text": "适配层用统一 invoke 接口对接各类后端，统一调用方式。",
+      "card_raw": "适配层用统一 invoke 接口对接各类后端，统一调用方式。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 30,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "适配层用统一 invoke 接口对接各类后端，统一调用方式。",
+          "cleaned": "适配层用统一 invoke 接口对接各类后端，统一调用方式。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields",
+      "label": "Function",
+      "name": "_strip_to_author_fields",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "_strip_to_author_fields",
+        "doc": "§3.1/§7.6：只保留作者字段。系统字段由编排器权威赋值，禁止后端自报（§16.11）。"
+      },
+      "card_text": "仅保留作者字段，禁止后端自报系统字段。",
+      "card_raw": "仅保留作者字段，禁止后端自报系统字段。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 19,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "仅保留作者字段，禁止后端自报系统字段。",
+          "cleaned": "仅保留作者字段，禁止后端自报系统字段。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/render/__init__.py::_summarize",
+      "label": "Function",
+      "name": "_summarize",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "_summarize",
+        "doc": "正文摘要：折叠换行为单空格 + 截断（背景一行 / 焦点摘要复用）。"
+      },
+      "card_text": "将正文换行折叠为单空格并截断，生成一行摘要供背景或焦点复用。",
+      "card_raw": "将正文换行折叠为单空格并截断，生成一行摘要供背景或焦点复用。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 30,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "将正文换行折叠为单空格并截断，生成一行摘要供背景或焦点复用。",
+          "cleaned": "将正文换行折叠为单空格并截断，生成一行摘要供背景或焦点复用。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/cli/main.py::_resolve_workspace",
+      "label": "Function",
+      "name": "_resolve_workspace",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "_resolve_workspace",
+        "doc": "把 --workspace 转为 Path；未提供则用当前目录。"
+      },
+      "card_text": "将 --workspace 转为 Path，未提供时用当前目录。",
+      "card_raw": "将 --workspace 转为 Path，未提供时用当前目录。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 32,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "将 --workspace 转为 Path，未提供时用当前目录。",
+          "cleaned": "将 --workspace 转为 Path，未提供时用当前目录。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::混沌-50-轮-100-硬门槛",
+      "label": "Concept",
+      "name": "混沌 50 轮 100% 硬门槛",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "混沌 50 轮 100% 硬门槛",
+        "doc": "M4 验收含 --chaos-50，50 轮 100% 通过为 spec §15 硬门槛。"
+      },
+      "card_text": "M4验收含--chaos-50，50轮全过为spec§15硬门槛。",
+      "card_raw": "M4验收含--chaos-50，50轮全过为spec§15硬门槛。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 33,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "M4验收含--chaos-50，50轮全过为spec§15硬门槛。",
+          "cleaned": "M4验收含--chaos-50，50轮全过为spec§15硬门槛。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::50-轮硬门槛测试",
+      "label": "Concept",
+      "name": "50 轮硬门槛测试",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "50 轮硬门槛测试",
+        "doc": "M4 引入 50 轮硬门槛测试，通过 --chaos-50 作为 pytest 可选开关。"
+      },
+      "card_text": "M4 通过 pytest --chaos-50 可选执行 50 轮硬门槛测试。",
+      "card_raw": "M4 通过 pytest --chaos-50 可选执行 50 轮硬门槛测试。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 39,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "M4 通过 pytest --chaos-50 可选执行 50 轮硬门槛测试。",
+          "cleaned": "M4 通过 pytest --chaos-50 可选执行 50 轮硬门槛测试。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "concept::状态层",
+      "label": "Concept",
+      "name": "状态层",
+      "tier": "gold",
+      "input_summary": {
+        "qualname": "状态层",
+        "doc": "状态层负责事件日志、派发表、黑板、会话表等持久化。"
+      },
+      "card_text": "用于持久化事件日志、派发表、黑板、会话表等状态数据。",
+      "card_raw": "用于持久化事件日志、派发表、黑板、会话表等状态数据。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 26,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "用于持久化事件日志、派发表、黑板、会话表等状态数据。",
+          "cleaned": "用于持久化事件日志、派发表、黑板、会话表等状态数据。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/watchdog.py::_defect_pair_counts",
+      "label": "Function",
+      "name": "_defect_pair_counts",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "_defect_pair_counts",
+        "doc": "从日志现数：同一有序对 (from→to) 的 **defect** 事件数（§5.3 互@环路）。"
+      },
+      "card_text": "统计日志中同一 from→to 有序对的 defect 事件数，用于互@环路。",
+      "card_raw": "统计日志中同一 from→to 有序对的 defect 事件数，用于互@环路。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 39,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "统计日志中同一 from→to 有序对的 defect 事件数，用于互@环路。",
+          "cleaned": "统计日志中同一 from→to 有序对的 defect 事件数，用于互@环路。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/watchdog.py::_loop_limit",
+      "label": "Function",
+      "name": "_loop_limit",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "_loop_limit",
+        "doc": ""
+      },
+      "card_text": "_loop_limit 用于表示或限制循环执行次数的上限值。",
+      "card_raw": "_loop_limit 用于表示或限制循环执行次数的上限值。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 30,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "_loop_limit 用于表示或限制循环执行次数的上限值。",
+          "cleaned": "_loop_limit 用于表示或限制循环执行次数的上限值。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/watchdog.py::_max_rounds",
+      "label": "Function",
+      "name": "_max_rounds",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "_max_rounds",
+        "doc": ""
+      },
+      "card_text": "_max_rounds 用于记录或限定最大回合数，控制流程不超过预设轮次。",
+      "card_raw": "_max_rounds 用于记录或限定最大回合数，控制流程不超过预设轮次。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 37,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "_max_rounds 用于记录或限定最大回合数，控制流程不超过预设轮次。",
+          "cleaned": "_max_rounds 用于记录或限定最大回合数，控制流程不超过预设轮次。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/recover.py::_blackboard_intact",
+      "label": "Function",
+      "name": "_blackboard_intact",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "_blackboard_intact",
+        "doc": "黑板 state.json 是否存在且为合法 JSON（§9.1：缺失或损坏即需 rebuild）。"
+      },
+      "card_text": "检查黑板 state.json 是否存在并为合法 JSON，缺失或损坏需重建。",
+      "card_raw": "检查黑板 state.json 是否存在并为合法 JSON，缺失或损坏需重建。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 39,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "检查黑板 state.json 是否存在并为合法 JSON，缺失或损坏需重建。",
+          "cleaned": "检查黑板 state.json 是否存在并为合法 JSON，缺失或损坏需重建。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/recover.py::recover",
+      "label": "Function",
+      "name": "recover",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "recover",
+        "doc": "§9.1 恢复算法。对单线程机械执行，禁止猜测，只查表与数日志。"
+      },
+      "card_text": "面向单线程机械执行的恢复算法，仅靠查表与数日志实现恢复，禁止猜测。",
+      "card_raw": "面向单线程机械执行的恢复算法，仅靠查表与数日志实现恢复，禁止猜测。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 33,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "面向单线程机械执行的恢复算法，仅靠查表与数日志实现恢复，禁止猜测。",
+          "cleaned": "面向单线程机械执行的恢复算法，仅靠查表与数日志实现恢复，禁止猜测。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/permissions.py::ensure_worktrees",
+      "label": "Function",
+      "name": "ensure_worktrees",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "ensure_worktrees",
+        "doc": "为 config.roles 中每个 write_scope 非空的角色建 worktree（§8.1）。"
+      },
+      "card_text": "为config.roles中write_scope非空角色建立worktree",
+      "card_raw": "为config.roles中write_scope非空角色建立worktree",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 39,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "为config.roles中write_scope非空角色建立worktree",
+          "cleaned": "为config.roles中write_scope非空角色建立worktree",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/permissions.py::autocommit",
+      "label": "Function",
+      "name": "autocommit",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "autocommit",
+        "doc": "§4.5：有改动 `git add -A && git commit -m \"wip:{role}@E{event_id}\"` → 返回 sha。"
+      },
+      "card_text": "有改动时自动添加并提交，用 role 和 event_id 生成说明并返回 sh",
+      "card_raw": "有改动时自动添加并提交，用 role 和 event_id 生成说明并返回 sha。",
+      "accepted": true,
+      "reason": "ok_truncated",
+      "char_count": 42,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "有改动时自动添加并提交，用 role 和 event_id 生成说明并返回 sha。",
+          "cleaned": "有改动时自动添加并提交，用 role 和 event_id 生成说明并返回 sha。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/core.py::run_thread",
+      "label": "Function",
+      "name": "run_thread",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "run_thread",
+        "doc": "§5.1 核心循环单线程串行版。跑到 thread status ∈ {suspended, terminated} 返回。"
+      },
+      "card_text": "运行核心循环单线程串行版，直到线程状态挂起或终止后返回。",
+      "card_raw": "运行核心循环单线程串行版，直到线程状态挂起或终止后返回。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 28,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "运行核心循环单线程串行版，直到线程状态挂起或终止后返回。",
+          "cleaned": "运行核心循环单线程串行版，直到线程状态挂起或终止后返回。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/permissions.py::audit_write_scope",
+      "label": "Function",
+      "name": "audit_write_scope",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "audit_write_scope",
+        "doc": "§8.2 diff 越权审计。返回 (是否合规, 违规路径列表)。"
+      },
+      "card_text": "审计 diff 写入范围是否越权，返回是否合规与违规路径列表。",
+      "card_raw": "审计 diff 写入范围是否越权，返回是否合规与违规路径列表。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 31,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "审计 diff 写入范围是否越权，返回是否合规与违规路径列表。",
+          "cleaned": "审计 diff 写入范围是否越权，返回是否合规与违规路径列表。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::FaultInjector.__init__",
+      "label": "Function",
+      "name": "FaultInjector.__init__",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "FaultInjector.__init__",
+        "doc": ""
+      },
+      "card_text": "初始化 FaultInjector 实例，为执行故障注入做准备。",
+      "card_raw": "初始化 FaultInjector 实例，为执行故障注入做准备。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 32,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "初始化 FaultInjector 实例，为执行故障注入做准备。",
+          "cleaned": "初始化 FaultInjector 实例，为执行故障注入做准备。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::FaultInjector.check",
+      "label": "Function",
+      "name": "FaultInjector.check",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "FaultInjector.check",
+        "doc": ""
+      },
+      "card_text": "FaultInjector.check检查故障注入器是否可用，避免无效注入",
+      "card_raw": "FaultInjector.check检查故障注入器是否可用，避免无效注入",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 37,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "FaultInjector.check检查故障注入器是否可用，避免无效注入",
+          "cleaned": "FaultInjector.check检查故障注入器是否可用，避免无效注入",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::clear_fault_injector",
+      "label": "Function",
+      "name": "clear_fault_injector",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "clear_fault_injector",
+        "doc": "显式清除（等价 set_fault_injector(None)）。"
+      },
+      "card_text": "显式清除故障注入器，等同 set_fault_injector(None) 以取",
+      "card_raw": "显式清除故障注入器，等同 set_fault_injector(None) 以取消注入。",
+      "accepted": true,
+      "reason": "ok_truncated",
+      "char_count": 44,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "显式清除故障注入器，等同 set_fault_injector(None) 以取消注入。",
+          "cleaned": "显式清除故障注入器，等同 set_fault_injector(None) 以取消注入。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/systemexec.py::_find_gate_decision",
+      "label": "Function",
+      "name": "_find_gate_decision",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "_find_gate_decision",
+        "doc": "按 corr 定位已存在的 gate_decision 事件（§9.1 恢复算法所需：只查表，禁猜测）。"
+      },
+      "card_text": "按 corr 定位已存在的 gate_decision 事件，供恢复算法只查表不",
+      "card_raw": "按 corr 定位已存在的 gate_decision 事件，供恢复算法只查表不猜测。",
+      "accepted": true,
+      "reason": "ok_truncated",
+      "char_count": 43,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "按 corr 定位已存在的 gate_decision 事件，供恢复算法只查表不猜测。",
+          "cleaned": "按 corr 定位已存在的 gate_decision 事件，供恢复算法只查表不猜测。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/systemexec.py::_find_gate_request",
+      "label": "Function",
+      "name": "_find_gate_request",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "_find_gate_request",
+        "doc": "按 corr 定位最近的 gate_request 事件（§10：corr 关联门禁）。"
+      },
+      "card_text": "按 corr 查找最近的 gate_request 事件，用于门禁关联。",
+      "card_raw": "按 corr 查找最近的 gate_request 事件，用于门禁关联。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 36,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "按 corr 查找最近的 gate_request 事件，用于门禁关联。",
+          "cleaned": "按 corr 查找最近的 gate_request 事件，用于门禁关联。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/systemexec.py::_run_gate_op",
+      "label": "Function",
+      "name": "_run_gate_op",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "_run_gate_op",
+        "doc": "执行单个 gate_op 命令模板（§5.5 系统执行器）。"
+      },
+      "card_text": "执行单个 gate_op 命令模板，供系统执行器完成命令处理。",
+      "card_raw": "执行单个 gate_op 命令模板，供系统执行器完成命令处理。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 31,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "执行单个 gate_op 命令模板，供系统执行器完成命令处理。",
+          "cleaned": "执行单个 gate_op 命令模板，供系统执行器完成命令处理。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/render/__init__.py::render_delta",
+      "label": "Function",
+      "name": "render_delta",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "render_delta",
+        "doc": "§6.5 热续增量视图："
+      },
+      "card_text": "render_delta用于渲染热续时的增量视图。",
+      "card_raw": "render_delta用于渲染热续时的增量视图。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 25,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "render_delta用于渲染热续时的增量视图。",
+          "cleaned": "render_delta用于渲染热续时的增量视图。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/render/__init__.py::render_event_third_person",
+      "label": "Function",
+      "name": "render_event_third_person",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "render_event_third_person",
+        "doc": "焦点窗单事件第三人称渲染（§6.2）："
+      },
+      "card_text": "对焦点窗中的单个事件进行第三人称渲染展示",
+      "card_raw": "对焦点窗中的单个事件进行第三人称渲染展示",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 20,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "对焦点窗中的单个事件进行第三人称渲染展示",
+          "cleaned": "对焦点窗中的单个事件进行第三人称渲染展示",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/render/__init__.py::render_view",
+      "label": "Function",
+      "name": "render_view",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "render_view",
+        "doc": "§6.1-§6.4 四层组装（单线程 mock 语境；热续增量 §6.5 是 M3，本函数只走冷启动全量路径）。"
+      },
+      "card_text": "单线程mock下四层组装视图，仅走冷启动全量路径，不含热续增量。",
+      "card_raw": "单线程mock下四层组装视图，仅走冷启动全量路径，不含热续增量。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 32,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "单线程mock下四层组装视图，仅走冷启动全量路径，不含热续增量。",
+          "cleaned": "单线程mock下四层组装视图，仅走冷启动全量路径，不含热续增量。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::Store._write_board",
+      "label": "Function",
+      "name": "Store._write_board",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "Store._write_board",
+        "doc": ""
+      },
+      "card_text": "将 board 写入 Store，用于保存板数据。",
+      "card_raw": "将 board 写入 Store，用于保存板数据。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 25,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "将 board 写入 Store，用于保存板数据。",
+          "cleaned": "将 board 写入 Store，用于保存板数据。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::_render_board",
+      "label": "Function",
+      "name": "_render_board",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "_render_board",
+        "doc": "board.md 渲染（格式属 spec §17，本实现自定，见 IMPLEMENTATION_NOTES / 最终回复）。"
+      },
+      "card_text": "按实现自定格式渲染 board.md，生成符合 spec §17 的最终回复内容",
+      "card_raw": "按实现自定格式渲染 board.md，生成符合 spec §17 的最终回复内容。",
+      "accepted": true,
+      "reason": "ok_truncated",
+      "char_count": 41,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "按实现自定格式渲染 board.md，生成符合 spec §17 的最终回复内容。",
+          "cleaned": "按实现自定格式渲染 board.md，生成符合 spec §17 的最终回复内容。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::apply_blackboard_ops",
+      "label": "Function",
+      "name": "apply_blackboard_ops",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "apply_blackboard_ops",
+        "doc": "按 §3.3 三种 op 更新 blackboard/state.json，随后重渲染 board.md。"
+      },
+      "card_text": "按三种op更新黑板状态并重渲染board.md",
+      "card_raw": "按三种op更新黑板状态并重渲染board.md",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 23,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "按三种op更新黑板状态并重渲染board.md",
+          "cleaned": "按三种op更新黑板状态并重渲染board.md",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/cli/main.py::_consume_stop_marker",
+      "label": "Function",
+      "name": "_consume_stop_marker",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "_consume_stop_marker",
+        "doc": "若 workspace/orch.stop 存在则删除并返回 True；否则返回 False。"
+      },
+      "card_text": "存在 workspace/orch.stop 停止标记则删除返回真，否则假。",
+      "card_raw": "存在 workspace/orch.stop 停止标记则删除返回真，否则假。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 38,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "存在 workspace/orch.stop 停止标记则删除返回真，否则假。",
+          "cleaned": "存在 workspace/orch.stop 停止标记则删除返回真，否则假。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/cli/main.py::cmd_stop",
+      "label": "Function",
+      "name": "cmd_stop",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "cmd_stop",
+        "doc": "优雅停机（spec §12）：写 workspace 级 `orch.stop` 标志文件。"
+      },
+      "card_text": "写入workspace级orch.stop标志文件以优雅停机",
+      "card_raw": "写入workspace级orch.stop标志文件以优雅停机",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 30,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "写入workspace级orch.stop标志文件以优雅停机",
+          "cleaned": "写入workspace级orch.stop标志文件以优雅停机",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/cli/main.py::_late_after_id",
+      "label": "Function",
+      "name": "_late_after_id",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "_late_after_id",
+        "doc": "③迟到标记（P3，展示层）：最后一条 terminate 的事件号。"
+      },
+      "card_text": "记录最后一条 terminate 的事件号，作为展示层迟到标记。",
+      "card_raw": "记录最后一条 terminate 的事件号，作为展示层迟到标记。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 32,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "记录最后一条 terminate 的事件号，作为展示层迟到标记。",
+          "cleaned": "记录最后一条 terminate 的事件号，作为展示层迟到标记。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/cli/main.py::_render_replay_line",
+      "label": "Function",
+      "name": "_render_replay_line",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "_render_replay_line",
+        "doc": "一条事件 → 第三人称群聊 markdown 行（§16.1：路由只认 to 字段）。"
+      },
+      "card_text": "将一条事件转成第三人称群聊 Markdown 行，按 to 字段路由。",
+      "card_raw": "将一条事件转成第三人称群聊 Markdown 行，按 to 字段路由。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 35,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "将一条事件转成第三人称群聊 Markdown 行，按 to 字段路由。",
+          "cleaned": "将一条事件转成第三人称群聊 Markdown 行，按 to 字段路由。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/cli/main.py::_render_replay_lines",
+      "label": "Function",
+      "name": "_render_replay_lines",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "_render_replay_lines",
+        "doc": "整流渲染：逐行 _render_replay_line + 终止后到达标记（CLI 与 web 共用）。"
+      },
+      "card_text": "统一CLI与web逐行渲染回放行，并在结束后标记到达。",
+      "card_raw": "统一CLI与web逐行渲染回放行，并在结束后标记到达。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 27,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "统一CLI与web逐行渲染回放行，并在结束后标记到达。",
+          "cleaned": "统一CLI与web逐行渲染回放行，并在结束后标记到达。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/adapters/__init__.py::ApiAdapter.__init__",
+      "label": "Function",
+      "name": "ApiAdapter.__init__",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "ApiAdapter.__init__",
+        "doc": ""
+      },
+      "card_text": "ApiAdapter 的初始化方法，用于创建适配器实例并完成初始设置。",
+      "card_raw": "ApiAdapter 的初始化方法，用于创建适配器实例并完成初始设置。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 35,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "ApiAdapter 的初始化方法，用于创建适配器实例并完成初始设置。",
+          "cleaned": "ApiAdapter 的初始化方法，用于创建适配器实例并完成初始设置。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/adapters/__init__.py::ApiAdapter.invoke",
+      "label": "Function",
+      "name": "ApiAdapter.invoke",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "ApiAdapter.invoke",
+        "doc": "单步：发送全量 view['text'] → 假/真 messages → 归一化为作者字段信封。"
+      },
+      "card_text": "单步调用适配，发送全量文本，生成真假消息并归一化为作者字段信封。",
+      "card_raw": "单步调用适配，发送全量文本，生成真假消息并归一化为作者字段信封。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 32,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "单步调用适配，发送全量文本，生成真假消息并归一化为作者字段信封。",
+          "cleaned": "单步调用适配，发送全量文本，生成真假消息并归一化为作者字段信封。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/adapters/__init__.py::CliAdapter.__init__",
+      "label": "Function",
+      "name": "CliAdapter.__init__",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "CliAdapter.__init__",
+        "doc": ""
+      },
+      "card_text": "初始化 CliAdapter 适配器实例，准备后续适配所需的基础状态。",
+      "card_raw": "初始化 CliAdapter 适配器实例，准备后续适配所需的基础状态。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 35,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "初始化 CliAdapter 适配器实例，准备后续适配所需的基础状态。",
+          "cleaned": "初始化 CliAdapter 适配器实例，准备后续适配所需的基础状态。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/adapters/__init__.py::CliAdapter.invoke",
+      "label": "Function",
+      "name": "CliAdapter.invoke",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "CliAdapter.invoke",
+        "doc": "冷启动路径：`start_cmd + view['text']` → 解析最后一个 json 块。"
+      },
+      "card_text": "冷启动调用：拼接 start_cmd 与 view['text']，解析最后 j",
+      "card_raw": "冷启动调用：拼接 start_cmd 与 view['text']，解析最后 json 块。",
+      "accepted": true,
+      "reason": "ok_truncated",
+      "char_count": 46,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "冷启动调用：拼接 start_cmd 与 view['text']，解析最后 json 块。",
+          "cleaned": "冷启动调用：拼接 start_cmd 与 view['text']，解析最后 json 块。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/adapters/__init__.py::FakeApiAdapter.invoke",
+      "label": "Function",
+      "name": "FakeApiAdapter.invoke",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "FakeApiAdapter.invoke",
+        "doc": "§7.3：单步；忽略入参 sess；返回 sess=None（每次全量组装，不复用会话）。"
+      },
+      "card_text": "单步执行 FakeApiAdapter.invoke，忽略 sess，返回 se",
+      "card_raw": "单步执行 FakeApiAdapter.invoke，忽略 sess，返回 sess=None，每次全量组装不复用会话。",
+      "accepted": true,
+      "reason": "ok_truncated",
+      "char_count": 60,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "单步执行 FakeApiAdapter.invoke，忽略 sess，返回 sess=None，每次全量组装不复用会话。",
+          "cleaned": "单步执行 FakeApiAdapter.invoke，忽略 sess，返回 sess=None，每次全量组装不复用会话。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness.run",
+      "label": "Function",
+      "name": "ChaosHarness.run",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "ChaosHarness.run",
+        "doc": "跑 rounds 轮混沌；可选 metrics_store 落 §13 混沌指标（R-T4）。"
+      },
+      "card_text": "执行 rounds 轮混沌，可选用 metrics_store 保存混沌指标。",
+      "card_raw": "执行 rounds 轮混沌，可选用 metrics_store 保存混沌指标。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 39,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "执行 rounds 轮混沌，可选用 metrics_store 保存混沌指标。",
+          "cleaned": "执行 rounds 轮混沌，可选用 metrics_store 保存混沌指标。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::Store.__init__",
+      "label": "Function",
+      "name": "Store.__init__",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "Store.__init__",
+        "doc": ""
+      },
+      "card_text": "Store 的初始化方法，用于创建并设置初始状态。",
+      "card_raw": "Store 的初始化方法，用于创建并设置初始状态。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 25,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "Store 的初始化方法，用于创建并设置初始状态。",
+          "cleaned": "Store 的初始化方法，用于创建并设置初始状态。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::Store.append_event",
+      "label": "Function",
+      "name": "Store.append_event",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "Store.append_event",
+        "doc": "插入 events（id 自增）+ 为每个 to 目标插 dispatches(pending)。"
+      },
+      "card_text": "追加自增编号事件，并为每个接收目标创建待处理分发记录。",
+      "card_raw": "追加自增编号事件，并为每个接收目标创建待处理分发记录。",
+      "accepted": true,
+      "reason": "ok",
+      "char_count": 27,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "追加自增编号事件，并为每个接收目标创建待处理分发记录。",
+          "cleaned": "追加自增编号事件，并为每个接收目标创建待处理分发记录。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::Store.events",
+      "label": "Function",
+      "name": "Store.events",
+      "tier": "neighbor",
+      "input_summary": {
+        "qualname": "Store.events",
+        "doc": "全部事件，id 升序，dict 形态（键用协议名，含 \"from\" 由 sender 映射，§0.1）。"
+      },
+      "card_text": "提供按 id 升序的全部事件字典，键为协议名并含由 sender 映射的 fro",
+      "card_raw": "提供按 id 升序的全部事件字典，键为协议名并含由 sender 映射的 from。",
+      "accepted": true,
+      "reason": "ok_truncated",
+      "char_count": 42,
+      "attempts": [
+        {
+          "try": 1,
+          "raw": "提供按 id 升序的全部事件字典，键为协议名并含由 sender 映射的 from。",
+          "cleaned": "提供按 id 升序的全部事件字典，键为协议名并含由 sender 映射的 from。",
+          "whitelist_ok": true,
+          "offenders": []
+        }
+      ]
+    }
+  ]
+}

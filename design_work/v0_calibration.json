@@ -1,0 +1,429 @@
+{
+  "meta": {
+    "tokenizer": "ngram",
+    "subset": "FZ_dev",
+    "n": 10,
+    "dims": {
+      "rel_margin": [
+        0.1,
+        0.15,
+        0.2,
+        0.25
+      ],
+      "min_score": [
+        0.5,
+        1.0,
+        1.5,
+        2.0
+      ],
+      "single_weak_autopick": [
+        "on",
+        "off"
+      ]
+    },
+    "objective": "max hit@1",
+    "constraint": "over_ask_rate<=0.2",
+    "over_ask_def": "存在Top-2且(s1-s2)/s1<rel_margin",
+    "cards_accepted": 58
+  },
+  "grid": [
+    {
+      "min_score": 0.5,
+      "rel_margin": 0.1,
+      "single_weak_autopick": true,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.3,
+      "feasible": false
+    },
+    {
+      "min_score": 0.5,
+      "rel_margin": 0.1,
+      "single_weak_autopick": false,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.3,
+      "feasible": false
+    },
+    {
+      "min_score": 0.5,
+      "rel_margin": 0.15,
+      "single_weak_autopick": true,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.3,
+      "feasible": false
+    },
+    {
+      "min_score": 0.5,
+      "rel_margin": 0.15,
+      "single_weak_autopick": false,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.3,
+      "feasible": false
+    },
+    {
+      "min_score": 0.5,
+      "rel_margin": 0.2,
+      "single_weak_autopick": true,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.4,
+      "feasible": false
+    },
+    {
+      "min_score": 0.5,
+      "rel_margin": 0.2,
+      "single_weak_autopick": false,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.4,
+      "feasible": false
+    },
+    {
+      "min_score": 0.5,
+      "rel_margin": 0.25,
+      "single_weak_autopick": true,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.5,
+      "feasible": false
+    },
+    {
+      "min_score": 0.5,
+      "rel_margin": 0.25,
+      "single_weak_autopick": false,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.5,
+      "feasible": false
+    },
+    {
+      "min_score": 1.0,
+      "rel_margin": 0.1,
+      "single_weak_autopick": true,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.3,
+      "feasible": false
+    },
+    {
+      "min_score": 1.0,
+      "rel_margin": 0.1,
+      "single_weak_autopick": false,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.3,
+      "feasible": false
+    },
+    {
+      "min_score": 1.0,
+      "rel_margin": 0.15,
+      "single_weak_autopick": true,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.3,
+      "feasible": false
+    },
+    {
+      "min_score": 1.0,
+      "rel_margin": 0.15,
+      "single_weak_autopick": false,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.3,
+      "feasible": false
+    },
+    {
+      "min_score": 1.0,
+      "rel_margin": 0.2,
+      "single_weak_autopick": true,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.4,
+      "feasible": false
+    },
+    {
+      "min_score": 1.0,
+      "rel_margin": 0.2,
+      "single_weak_autopick": false,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.4,
+      "feasible": false
+    },
+    {
+      "min_score": 1.0,
+      "rel_margin": 0.25,
+      "single_weak_autopick": true,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.5,
+      "feasible": false
+    },
+    {
+      "min_score": 1.0,
+      "rel_margin": 0.25,
+      "single_weak_autopick": false,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.5,
+      "feasible": false
+    },
+    {
+      "min_score": 1.5,
+      "rel_margin": 0.1,
+      "single_weak_autopick": true,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.3,
+      "feasible": false
+    },
+    {
+      "min_score": 1.5,
+      "rel_margin": 0.1,
+      "single_weak_autopick": false,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.3,
+      "feasible": false
+    },
+    {
+      "min_score": 1.5,
+      "rel_margin": 0.15,
+      "single_weak_autopick": true,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.3,
+      "feasible": false
+    },
+    {
+      "min_score": 1.5,
+      "rel_margin": 0.15,
+      "single_weak_autopick": false,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.3,
+      "feasible": false
+    },
+    {
+      "min_score": 1.5,
+      "rel_margin": 0.2,
+      "single_weak_autopick": true,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.4,
+      "feasible": false
+    },
+    {
+      "min_score": 1.5,
+      "rel_margin": 0.2,
+      "single_weak_autopick": false,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.4,
+      "feasible": false
+    },
+    {
+      "min_score": 1.5,
+      "rel_margin": 0.25,
+      "single_weak_autopick": true,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.5,
+      "feasible": false
+    },
+    {
+      "min_score": 1.5,
+      "rel_margin": 0.25,
+      "single_weak_autopick": false,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.5,
+      "feasible": false
+    },
+    {
+      "min_score": 2.0,
+      "rel_margin": 0.1,
+      "single_weak_autopick": true,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.3,
+      "feasible": false
+    },
+    {
+      "min_score": 2.0,
+      "rel_margin": 0.1,
+      "single_weak_autopick": false,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.3,
+      "feasible": false
+    },
+    {
+      "min_score": 2.0,
+      "rel_margin": 0.15,
+      "single_weak_autopick": true,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.3,
+      "feasible": false
+    },
+    {
+      "min_score": 2.0,
+      "rel_margin": 0.15,
+      "single_weak_autopick": false,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.3,
+      "feasible": false
+    },
+    {
+      "min_score": 2.0,
+      "rel_margin": 0.2,
+      "single_weak_autopick": true,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.4,
+      "feasible": false
+    },
+    {
+      "min_score": 2.0,
+      "rel_margin": 0.2,
+      "single_weak_autopick": false,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.4,
+      "feasible": false
+    },
+    {
+      "min_score": 2.0,
+      "rel_margin": 0.25,
+      "single_weak_autopick": true,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.5,
+      "feasible": false
+    },
+    {
+      "min_score": 2.0,
+      "rel_margin": 0.25,
+      "single_weak_autopick": false,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "over_ask_rate": 0.5,
+      "feasible": false
+    }
+  ],
+  "n_feasible": 0,
+  "ratified": false,
+  "selected": null,
+  "least_bad_cell": {
+    "min_score": 2.0,
+    "rel_margin": 0.25,
+    "single_weak_autopick": false,
+    "hit@1": 0.0,
+    "hit@3": 0.1,
+    "over_ask_rate": 0.5,
+    "feasible": false
+  },
+  "transition_rule_retired": false,
+  "dn1_diag": {
+    "per_q": [
+      {
+        "id": "FZ-d01",
+        "top1": "视图组装",
+        "idf_max": 4.3749,
+        "score": 4.9078,
+        "is_gold": false,
+        "matched": [
+          "负责"
+        ]
+      },
+      {
+        "id": "FZ-d02",
+        "top1": null
+      },
+      {
+        "id": "FZ-d03",
+        "top1": "视图组装",
+        "idf_max": 5.2222,
+        "score": 3.7764,
+        "is_gold": false,
+        "matched": [
+          "起来"
+        ]
+      },
+      {
+        "id": "FZ-d04",
+        "top1": "8c38a0bd0d9053df0240cf2c",
+        "idf_max": 5.2222,
+        "score": 7.5963,
+        "is_gold": false,
+        "matched": [
+          "台账"
+        ]
+      },
+      {
+        "id": "FZ-d05",
+        "top1": null
+      },
+      {
+        "id": "FZ-d06",
+        "top1": "render_event_third_perso",
+        "idf_max": 5.2222,
+        "score": 5.2929,
+        "is_gold": false,
+        "matched": [
+          "的单"
+        ]
+      },
+      {
+        "id": "FZ-d07",
+        "top1": "Store._write_board",
+        "idf_max": 4.7113,
+        "score": 6.6958,
+        "is_gold": false,
+        "matched": [
+          "保存"
+        ]
+      },
+      {
+        "id": "FZ-d08",
+        "top1": null
+      },
+      {
+        "id": "FZ-d09",
+        "top1": "系统执行器",
+        "idf_max": 3.4876,
+        "score": 6.3098,
+        "is_gold": false,
+        "matched": [
+          "系统"
+        ]
+      },
+      {
+        "id": "FZ-d10",
+        "top1": "_render_replay_lines",
+        "idf_max": 4.7113,
+        "score": 5.3941,
+        "is_gold": false,
+        "matched": [
+          "放行"
+        ]
+      }
+    ],
+    "idf_gold_top1": [],
+    "idf_nongold_top1": [
+      3.4876,
+      4.3749,
+      4.7113,
+      4.7113,
+      5.2222,
+      5.2222,
+      5.2222
+    ],
+    "min_gold_idf": null
+  }
+}

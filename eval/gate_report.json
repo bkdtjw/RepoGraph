@@ -1,0 +1,1032 @@
+{
+  "meta": {
+    "phase": "A (治理与再基线) · 任务 A4 门禁基线",
+    "git": {
+      "head": "8874a8dd04c0ee126cea0434aebb431d7ca418df",
+      "tags_at_head": [
+        "rebaseline-20260723"
+      ],
+      "expected_tag": "rebaseline-20260723",
+      "tag_bound": true
+    },
+    "graph": {
+      "path": "output\\graph.json",
+      "nodes": 510,
+      "edges": 1698
+    },
+    "dataset": {
+      "path": "eval\\dataset.jsonl",
+      "n": 48
+    },
+    "entry": "repograph.retrieve.context.build_repo_context (离线,不经网关/LLM)"
+  },
+  "subset_summary": {
+    "L0": {
+      "n": 10,
+      "pass_rate": 0.8,
+      "pass_n": 8,
+      "fail_ids": [
+        "L0-02",
+        "L0-07"
+      ]
+    },
+    "FZ_dev": {
+      "n": 10,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "hit@1_n": 0,
+      "hit@3_n": 1
+    },
+    "FZ_test": {
+      "n": 10,
+      "hit@1": 0.0,
+      "hit@3": 0.1,
+      "hit@1_n": 0,
+      "hit@3_n": 1
+    },
+    "AMB": {
+      "n": 10,
+      "behavior_consistency_rate": 0.7,
+      "consistent_n": 7,
+      "over_ask_rate": 0.0,
+      "under_ask_rate": 1.0,
+      "consistent_ids": [
+        "AMB-04",
+        "AMB-05",
+        "AMB-06",
+        "AMB-07",
+        "AMB-08",
+        "AMB-09",
+        "AMB-10"
+      ]
+    },
+    "PP": {
+      "n": 8,
+      "correction_rate": 0.0,
+      "premise_leak_rate": 0.0,
+      "premise_flags_capability": false
+    }
+  },
+  "locked_failures": {
+    "B-1": {
+      "desc": "L0-02 口语元问题误路由至 topic",
+      "expected": "red",
+      "actual_mode": "topic",
+      "actual_mode_class": "topic",
+      "is_red": true
+    },
+    "B-2": {
+      "desc": "FZ-dev hit@3 < 0.8",
+      "expected": "red",
+      "fz_dev_hit@3": 0.1,
+      "threshold": 0.8,
+      "is_red": true
+    },
+    "B-3": {
+      "desc": "premise_flags 前提校验能力缺失",
+      "expected": "red",
+      "premise_flags_capability": false,
+      "is_red": true
+    }
+  },
+  "hard_metrics": {
+    "裸拒率": {
+      "threshold": "= 0",
+      "effective": "Phase C1",
+      "measured": 0.0,
+      "measured_n": 0,
+      "status": "PASS"
+    },
+    "预设幻觉率(PP顺预设作答)": {
+      "threshold": "= 0",
+      "effective": "Phase C3",
+      "measured_proxy_leak_rate": 0.0,
+      "status": "PENDING",
+      "note": "需生成层(LLM answer)方能终判；离线注入体仅给泄漏代理；B-3 能力缺失"
+    },
+    "锁定失败 B-1/B-2/B-3": {
+      "threshold": "修复后不得回退",
+      "effective": "各自翻绿起",
+      "status": "RED(baseline)",
+      "b1_red": true,
+      "b2_red": true,
+      "b3_red": true
+    },
+    "主集三层准确率": {
+      "threshold": "较 v0.1 下降 ≤3pt",
+      "effective": "Phase D",
+      "status": "PENDING",
+      "note": "主集 V4 未落地，无对照"
+    },
+    "路由准确率(48题标注)": {
+      "threshold": "≥ 0.9",
+      "effective": "Phase C1",
+      "measured": 0.7083,
+      "status": "PENDING",
+      "would_pass": false,
+      "mismatches": [
+        {
+          "id": "L0-02",
+          "got": "topic",
+          "want": "overview"
+        },
+        {
+          "id": "L0-07",
+          "got": "topic",
+          "want": "overview"
+        },
+        {
+          "id": "FZ-d02",
+          "got": "overview",
+          "want": "topic"
+        },
+        {
+          "id": "FZ-d03",
+          "got": "overview",
+          "want": "topic"
+        },
+        {
+          "id": "FZ-d05",
+          "got": "overview",
+          "want": "topic"
+        },
+        {
+          "id": "FZ-d06",
+          "got": "overview",
+          "want": "topic"
+        },
+        {
+          "id": "FZ-d08",
+          "got": "overview",
+          "want": "topic"
+        },
+        {
+          "id": "PP-02",
+          "got": "topic",
+          "want": "overview"
+        },
+        {
+          "id": "PP-03",
+          "got": "topic",
+          "want": "overview"
+        },
+        {
+          "id": "PP-04",
+          "got": "topic",
+          "want": "overview"
+        },
+        {
+          "id": "PP-05",
+          "got": "topic",
+          "want": "overview"
+        },
+        {
+          "id": "PP-06",
+          "got": "topic",
+          "want": "overview"
+        },
+        {
+          "id": "PP-07",
+          "got": "topic",
+          "want": "overview"
+        },
+        {
+          "id": "PP-08",
+          "got": "topic",
+          "want": "overview"
+        }
+      ]
+    },
+    "过问率": {
+      "threshold": "≤ 0.2",
+      "effective": "Phase C4",
+      "measured": 0.0,
+      "status": "PENDING"
+    },
+    "漏问率": {
+      "threshold": "≤ 0.1",
+      "effective": "Phase C4",
+      "measured": 1.0,
+      "status": "PENDING"
+    }
+  },
+  "per_question": [
+    {
+      "id": "L0-01",
+      "subset": "L0",
+      "question": "你知道我的代码库吗",
+      "mode": "overview",
+      "mode_class": "overview",
+      "n_linked": 0,
+      "bare_refusal": false,
+      "judge": {
+        "pass": true,
+        "mode_ok": true,
+        "facts_hit": 16
+      }
+    },
+    {
+      "id": "L0-02",
+      "subset": "L0",
+      "question": "你晓得我这破仓库是干啥的不",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 1,
+      "bare_refusal": false,
+      "judge": {
+        "pass": false,
+        "mode_ok": false,
+        "facts_hit": 0
+      }
+    },
+    {
+      "id": "L0-03",
+      "subset": "L0",
+      "question": "你能干嘛？对我这项目能做啥",
+      "mode": "overview",
+      "mode_class": "overview",
+      "n_linked": 0,
+      "bare_refusal": false,
+      "judge": {
+        "pass": true,
+        "mode_ok": true,
+        "facts_hit": 16
+      }
+    },
+    {
+      "id": "L0-04",
+      "subset": "L0",
+      "question": "这个项目整体多大规模，有多少东西",
+      "mode": "overview",
+      "mode_class": "overview",
+      "n_linked": 0,
+      "bare_refusal": false,
+      "judge": {
+        "pass": true,
+        "mode_ok": true,
+        "facts_hit": 16
+      }
+    },
+    {
+      "id": "L0-05",
+      "subset": "L0",
+      "question": "你了解我的仓库不，简单讲讲",
+      "mode": "overview",
+      "mode_class": "overview",
+      "n_linked": 0,
+      "bare_refusal": false,
+      "judge": {
+        "pass": true,
+        "mode_ok": true,
+        "facts_hit": 16
+      }
+    },
+    {
+      "id": "L0-06",
+      "subset": "L0",
+      "question": "你对这个带码库熟悉么",
+      "mode": "overview",
+      "mode_class": "overview",
+      "n_linked": 0,
+      "bare_refusal": false,
+      "judge": {
+        "pass": true,
+        "mode_ok": true,
+        "facts_hit": 16
+      }
+    },
+    {
+      "id": "L0-07",
+      "subset": "L0",
+      "question": "你是谁，你能帮我看代码不",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 4,
+      "bare_refusal": false,
+      "judge": {
+        "pass": false,
+        "mode_ok": false,
+        "facts_hit": 0
+      }
+    },
+    {
+      "id": "L0-08",
+      "subset": "L0",
+      "question": "这仓库大概是个什么东西，给个总览",
+      "mode": "overview",
+      "mode_class": "overview",
+      "n_linked": 0,
+      "bare_refusal": false,
+      "judge": {
+        "pass": true,
+        "mode_ok": true,
+        "facts_hit": 16
+      }
+    },
+    {
+      "id": "L0-09",
+      "subset": "L0",
+      "question": "你到底能不能读懂我的代码库呀",
+      "mode": "overview",
+      "mode_class": "overview",
+      "n_linked": 0,
+      "bare_refusal": false,
+      "judge": {
+        "pass": true,
+        "mode_ok": true,
+        "facts_hit": 16
+      }
+    },
+    {
+      "id": "L0-10",
+      "subset": "L0",
+      "question": "帮我认识下这个工程，它做啥的",
+      "mode": "overview",
+      "mode_class": "overview",
+      "n_linked": 0,
+      "bare_refusal": false,
+      "judge": {
+        "pass": true,
+        "mode_ok": true,
+        "facts_hit": 16
+      }
+    },
+    {
+      "id": "FZ-d01",
+      "subset": "FZ_dev",
+      "question": "那个把活儿叫停之后负责收尾扫尾的一摊在哪",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 5,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [
+          "concept::视图组装",
+          "concept::协议层",
+          "concept::apply-gate-decision-仅认-gate-request-corr-的缺口"
+        ],
+        "gold_equiv_size": 6
+      },
+      "gold_entity": "multi-agent-orch::src/orch/scheduler/core.py::_handle_terminate"
+    },
+    {
+      "id": "FZ-d02",
+      "subset": "FZ_dev",
+      "question": "谁在旁边盯着别人干活会不会卡住",
+      "mode": "overview",
+      "mode_class": "overview",
+      "n_linked": 0,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [],
+        "gold_equiv_size": 8
+      },
+      "gold_entity": "concept::看门狗三级"
+    },
+    {
+      "id": "FZ-d03",
+      "subset": "FZ_dev",
+      "question": "程序半路挂了之后怎么自己爬起来接着干",
+      "mode": "overview",
+      "mode_class": "overview",
+      "n_linked": 0,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [],
+        "gold_equiv_size": 4
+      },
+      "gold_entity": "concept::崩溃恢复算法"
+    },
+    {
+      "id": "FZ-d04",
+      "subset": "FZ_dev",
+      "question": "系统自己往台账上补记一笔是哪段逻辑",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 7,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": true,
+        "anchors_top3": [
+          "multi-agent-orch::commit::8c38a0bd0d9053df0240cf2c12e297236a9b1594",
+          "concept::系统执行器",
+          "concept::异构多智能体编排系统"
+        ],
+        "gold_equiv_size": 2
+      },
+      "gold_entity": "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event"
+    },
+    {
+      "id": "FZ-d05",
+      "subset": "FZ_dev",
+      "question": "怎么估摸一段话大概占多少篇幅",
+      "mode": "overview",
+      "mode_class": "overview",
+      "n_linked": 0,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [],
+        "gold_equiv_size": 2
+      },
+      "gold_entity": "multi-agent-orch::src/orch/render/__init__.py::estimate_tokens"
+    },
+    {
+      "id": "FZ-d06",
+      "subset": "FZ_dev",
+      "question": "给每个干活的单独开个小隔间互不打扰",
+      "mode": "overview",
+      "mode_class": "overview",
+      "n_linked": 0,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [],
+        "gold_equiv_size": 3
+      },
+      "gold_entity": "concept::worktree-隔离"
+    },
+    {
+      "id": "FZ-d07",
+      "subset": "FZ_dev",
+      "question": "活干完自动留个存档不用手动保存",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 8,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [
+          "concept::cliadapter自动注入allowedtools白名单",
+          "concept::门禁琥珀banner",
+          "multi-agent-orch::commit::9448898ef9637a7829a51540873fec6140f343c9"
+        ],
+        "gold_equiv_size": 3
+      },
+      "gold_entity": "concept::autocommit"
+    },
+    {
+      "id": "FZ-d08",
+      "subset": "FZ_dev",
+      "question": "管谁能碰哪块、越界了就拦下来那套",
+      "mode": "overview",
+      "mode_class": "overview",
+      "n_linked": 0,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [],
+        "gold_equiv_size": 8
+      },
+      "gold_entity": "concept::权限三件套"
+    },
+    {
+      "id": "FZ-d09",
+      "subset": "FZ_dev",
+      "question": "存心使坏来测系统扛不扛揍",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 6,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [
+          "concept::系统执行器",
+          "concept::异构多智能体编排系统",
+          "multi-agent-orch::commit::eae8ec3f639f3bee3152d5991725a13a383c1ad4"
+        ],
+        "gold_equiv_size": 7
+      },
+      "gold_entity": "concept::故障注入"
+    },
+    {
+      "id": "FZ-d10",
+      "subset": "FZ_dev",
+      "question": "放行还是拦下的那道关卡在哪判",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 1,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [
+          "multi-agent-orch::commit::f646cbe82bb420894a5ad9997b0d97986e86fcb4"
+        ],
+        "gold_equiv_size": 6
+      },
+      "gold_entity": "concept::门禁裁决入口"
+    },
+    {
+      "id": "FZ-t01",
+      "subset": "FZ_test",
+      "question": "把界面那几块拼装出来显示",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 4,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [
+          "concept::用户界面-cli",
+          "concept::用户界面-cli-子集",
+          "multi-agent-orch::src/orch/cli/__init__.py"
+        ],
+        "gold_equiv_size": 5
+      },
+      "gold_entity": "concept::视图组装"
+    },
+    {
+      "id": "FZ-t02",
+      "subset": "FZ_test",
+      "question": "大家共用的留言板重新拼一遍",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 2,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [
+          "concept::迟到在途回复展示标记",
+          "multi-agent-orch::commit::1795d6682259c7de56e0a1baad00f3754fb0907c"
+        ],
+        "gold_equiv_size": 7
+      },
+      "gold_entity": "concept::黑板投影与rebuild"
+    },
+    {
+      "id": "FZ-t03",
+      "subset": "FZ_test",
+      "question": "喊了暂停之后系统怎么响应",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 7,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [
+          "concept::系统执行器",
+          "concept::异构多智能体编排系统",
+          "multi-agent-orch::commit::eae8ec3f639f3bee3152d5991725a13a383c1ad4"
+        ],
+        "gold_equiv_size": 4
+      },
+      "gold_entity": "concept::stop-标志消费"
+    },
+    {
+      "id": "FZ-t04",
+      "subset": "FZ_test",
+      "question": "回话来晚了怎么在界面上打个记号",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 4,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [
+          "concept::用户界面-cli",
+          "concept::用户界面-cli-子集",
+          "multi-agent-orch::src/orch/cli/__init__.py"
+        ],
+        "gold_equiv_size": 7
+      },
+      "gold_entity": "concept::迟到在途回复展示标记"
+    },
+    {
+      "id": "FZ-t05",
+      "subset": "FZ_test",
+      "question": "把各种杂牌后端捏成统一一个样子调用",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 8,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": true,
+        "anchors_top3": [
+          "concept::适配层统一-invoke-接口",
+          "multi-agent-orch::src/orch/adapters/__init__.py",
+          "concept::核心环每轮主动调用看门狗"
+        ],
+        "gold_equiv_size": 12
+      },
+      "gold_entity": "concept::适配层"
+    },
+    {
+      "id": "FZ-t06",
+      "subset": "FZ_test",
+      "question": "只留本人填的内容，机器补的字段一律不认",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 7,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [
+          "concept::信封作者字段-json-schema",
+          "multi-agent-orch::src/orch/protocol/schema.py",
+          "concept::classify增trigger-ids焦点全文"
+        ],
+        "gold_equiv_size": 1
+      },
+      "gold_entity": "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields"
+    },
+    {
+      "id": "FZ-t07",
+      "subset": "FZ_test",
+      "question": "把老长一段正文压成一行短的",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 5,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [
+          "concept::approve-reject错误一行人话",
+          "multi-agent-orch::commit::612cc9023a4eaddea1129eb3d7fb2cfcd56bd2e9",
+          "multi-agent-orch::commit::712578a7c73d3cfaf3b60b737ec801d28c626298"
+        ],
+        "gold_equiv_size": 3
+      },
+      "gold_entity": "multi-agent-orch::src/orch/render/__init__.py::_summarize"
+    },
+    {
+      "id": "FZ-t08",
+      "subset": "FZ_test",
+      "question": "把干活的目录路径算出来",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 8,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [
+          "concept::恢复路径同target-pending合并",
+          "multi-agent-orch::commit::610b412788ce79e3a60ad803b399b7d743df6676",
+          "concept::审计不再-fail-open-c-4"
+        ],
+        "gold_equiv_size": 1
+      },
+      "gold_entity": "multi-agent-orch::src/orch/cli/main.py::_resolve_workspace"
+    },
+    {
+      "id": "FZ-t09",
+      "subset": "FZ_test",
+      "question": "那个要反复跑很多遍必须全绿才算过的压测",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 4,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [
+          "multi-agent-orch::commit::88ed2d74055b9e06f2eeec0f1e1fa4255724bded",
+          "concept::无adapters配置显式警告fake",
+          "multi-agent-orch::commit::f646cbe82bb420894a5ad9997b0d97986e86fcb4"
+        ],
+        "gold_equiv_size": 3
+      },
+      "gold_entity": "concept::混沌-50-轮-100-硬门槛"
+    },
+    {
+      "id": "FZ-t10",
+      "subset": "FZ_test",
+      "question": "存事件和进度落盘的那一层",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 8,
+      "bare_refusal": false,
+      "judge": {
+        "hit@1": false,
+        "hit@3": false,
+        "anchors_top3": [
+          "concept::run过程日志",
+          "concept::ledger-落盘",
+          "multi-agent-orch::commit::8c38a0bd0d9053df0240cf2c12e297236a9b1594"
+        ],
+        "gold_equiv_size": 10
+      },
+      "gold_entity": "concept::状态层"
+    },
+    {
+      "id": "AMB-01",
+      "subset": "AMB",
+      "question": "invoke 这个方法在哪定义的",
+      "mode": "symbol",
+      "mode_class": "symbol",
+      "n_linked": 5,
+      "bare_refusal": false,
+      "judge": {
+        "pass": false,
+        "predicted": "should_autopick",
+        "over_ask": false,
+        "under_ask": true,
+        "anchored": true,
+        "has_nd_field": false
+      },
+      "gold_behavior": "should_disambiguate"
+    },
+    {
+      "id": "AMB-02",
+      "subset": "AMB",
+      "question": "帮我看下 invoke 的实现，别看测试桩",
+      "mode": "symbol",
+      "mode_class": "symbol",
+      "n_linked": 5,
+      "bare_refusal": false,
+      "judge": {
+        "pass": false,
+        "predicted": "should_autopick",
+        "over_ask": false,
+        "under_ask": true,
+        "anchored": true,
+        "has_nd_field": false
+      },
+      "gold_behavior": "should_disambiguate"
+    },
+    {
+      "id": "AMB-03",
+      "subset": "AMB",
+      "question": "__init__ 是在哪初始化的",
+      "mode": "symbol",
+      "mode_class": "symbol",
+      "n_linked": 5,
+      "bare_refusal": false,
+      "judge": {
+        "pass": false,
+        "predicted": "should_autopick",
+        "over_ask": false,
+        "under_ask": true,
+        "anchored": true,
+        "has_nd_field": false
+      },
+      "gold_behavior": "should_disambiguate"
+    },
+    {
+      "id": "AMB-04",
+      "subset": "AMB",
+      "question": "run 这个函数干嘛的",
+      "mode": "symbol",
+      "mode_class": "symbol",
+      "n_linked": 1,
+      "bare_refusal": false,
+      "judge": {
+        "pass": true,
+        "predicted": "should_autopick",
+        "over_ask": false,
+        "under_ask": false,
+        "anchored": true,
+        "has_nd_field": false
+      },
+      "gold_behavior": "should_autopick"
+    },
+    {
+      "id": "AMB-05",
+      "subset": "AMB",
+      "question": "recover 在哪",
+      "mode": "symbol",
+      "mode_class": "symbol",
+      "n_linked": 2,
+      "bare_refusal": false,
+      "judge": {
+        "pass": true,
+        "predicted": "should_autopick",
+        "over_ask": false,
+        "under_ask": false,
+        "anchored": true,
+        "has_nd_field": false
+      },
+      "gold_behavior": "should_autopick"
+    },
+    {
+      "id": "AMB-06",
+      "subset": "AMB",
+      "question": "main 是哪个",
+      "mode": "symbol",
+      "mode_class": "symbol",
+      "n_linked": 2,
+      "bare_refusal": false,
+      "judge": {
+        "pass": true,
+        "predicted": "should_autopick",
+        "over_ask": false,
+        "under_ask": false,
+        "anchored": true,
+        "has_nd_field": false
+      },
+      "gold_behavior": "should_autopick"
+    },
+    {
+      "id": "AMB-07",
+      "subset": "AMB",
+      "question": "_dispatch 指的是啥",
+      "mode": "symbol",
+      "mode_class": "symbol",
+      "n_linked": 2,
+      "bare_refusal": false,
+      "judge": {
+        "pass": true,
+        "predicted": "should_autopick",
+        "over_ask": false,
+        "under_ask": false,
+        "anchored": true,
+        "has_nd_field": false
+      },
+      "gold_behavior": "should_autopick"
+    },
+    {
+      "id": "AMB-08",
+      "subset": "AMB",
+      "question": "_handle_terminate 具体做什么",
+      "mode": "symbol",
+      "mode_class": "symbol",
+      "n_linked": 1,
+      "bare_refusal": false,
+      "judge": {
+        "pass": true,
+        "predicted": "should_autopick",
+        "over_ask": false,
+        "under_ask": false,
+        "anchored": true,
+        "has_nd_field": false
+      },
+      "gold_behavior": "should_autopick"
+    },
+    {
+      "id": "AMB-09",
+      "subset": "AMB",
+      "question": "check_watchdogs 怎么工作的",
+      "mode": "symbol",
+      "mode_class": "symbol",
+      "n_linked": 1,
+      "bare_refusal": false,
+      "judge": {
+        "pass": true,
+        "predicted": "should_autopick",
+        "over_ask": false,
+        "under_ask": false,
+        "anchored": true,
+        "has_nd_field": false
+      },
+      "gold_behavior": "should_autopick"
+    },
+    {
+      "id": "AMB-10",
+      "subset": "AMB",
+      "question": "apply_gate_decision 在哪",
+      "mode": "symbol",
+      "mode_class": "symbol",
+      "n_linked": 1,
+      "bare_refusal": false,
+      "judge": {
+        "pass": true,
+        "predicted": "should_autopick",
+        "over_ask": false,
+        "under_ask": false,
+        "anchored": true,
+        "has_nd_field": false
+      },
+      "gold_behavior": "should_autopick"
+    },
+    {
+      "id": "PP-01",
+      "subset": "PP",
+      "question": "为什么这项目用 Redis 做分布式锁？",
+      "mode": "overview",
+      "mode_class": "overview",
+      "n_linked": 0,
+      "bare_refusal": false,
+      "judge": {
+        "has_premise_flags_field": false,
+        "premise_leak": false,
+        "suspect_corrected": false,
+        "mode": "overview"
+      }
+    },
+    {
+      "id": "PP-02",
+      "subset": "PP",
+      "question": "你们的 FastAPI 路由是怎么组织的？",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 4,
+      "bare_refusal": false,
+      "judge": {
+        "has_premise_flags_field": false,
+        "premise_leak": false,
+        "suspect_corrected": false,
+        "mode": "topic"
+      }
+    },
+    {
+      "id": "PP-03",
+      "subset": "PP",
+      "question": "事件为什么选 PostgreSQL 存储？",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 8,
+      "bare_refusal": false,
+      "judge": {
+        "has_premise_flags_field": false,
+        "premise_leak": false,
+        "suspect_corrected": false,
+        "mode": "topic"
+      }
+    },
+    {
+      "id": "PP-04",
+      "subset": "PP",
+      "question": "这套多智能体是怎么用 Docker/K8s 编排部署的？",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 4,
+      "bare_refusal": false,
+      "judge": {
+        "has_premise_flags_field": false,
+        "premise_leak": false,
+        "suspect_corrected": false,
+        "mode": "topic"
+      }
+    },
+    {
+      "id": "PP-05",
+      "subset": "PP",
+      "question": "任务队列用的是 Celery 吧，怎么配的？",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 1,
+      "bare_refusal": false,
+      "judge": {
+        "has_premise_flags_field": false,
+        "premise_leak": false,
+        "suspect_corrected": false,
+        "mode": "topic"
+      }
+    },
+    {
+      "id": "PP-06",
+      "subset": "PP",
+      "question": "前端 React 组件是怎么拆的？",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 6,
+      "bare_refusal": false,
+      "judge": {
+        "has_premise_flags_field": false,
+        "premise_leak": false,
+        "suspect_corrected": false,
+        "mode": "topic"
+      }
+    },
+    {
+      "id": "PP-07",
+      "subset": "PP",
+      "question": "看门狗的五级升级机制怎么设计的？",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 8,
+      "bare_refusal": false,
+      "judge": {
+        "has_premise_flags_field": false,
+        "premise_leak": false,
+        "suspect_corrected": false,
+        "mode": "topic"
+      }
+    },
+    {
+      "id": "PP-08",
+      "subset": "PP",
+      "question": "混沌测试要跑满 100 轮才算过对吧？",
+      "mode": "topic",
+      "mode_class": "topic",
+      "n_linked": 8,
+      "bare_refusal": false,
+      "judge": {
+        "has_premise_flags_field": false,
+        "premise_leak": false,
+        "suspect_corrected": false,
+        "mode": "topic"
+      }
+    }
+  ]
+}

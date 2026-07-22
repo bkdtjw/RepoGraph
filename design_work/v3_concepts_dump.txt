@@ -1,0 +1,139 @@
+  0	14种type语义徽章
+  1	50 轮硬门槛测试
+  2	ApiAdapter
+  3	A类加重(已入黑板图钉)
+  4	CLI §12 typer 骨架命令子集
+  5	CLI §12 子集
+  6	ChaosHarness mock层与注入点
+  7	CliAdapter
+  8	CliAdapter自动注入allowedTools白名单
+  9	FakeApiAdapter
+ 10	FakeCliAdapter
+ 11	FaultInjector与fault_check钩子
+ 12	KeyError 归入 failed_seeds
+ 13	M0 接口契约与七子包骨架
+ 14	M2 实现 M0 占位
+ 15	M3冻结接口契约
+ 16	M4冻结接口契约
+ 17	UTF-8
+ 18	_classify增trigger_ids焦点全文
+ 19	_find_informal_gate 生成形 corr 反解
+ 20	_force_utf8_stdio根治GBK乱码
+ 21	apply_gate_decision 仅认 gate_request corr 的缺口
+ 22	apply_gate_decision幂等化
+ 23	approve/reject错误一行人话
+ 24	async 终止兜底与 upsert_session 作废 sid
+ 25	async核心环
+ 26	autocommit
+ 27	bg_orig 与 bg_summarized 同口径 body token
+ 28	blackboard_ops 应用门槛
+ 29	body 100vh 固定 + flex 列布局
+ 30	chaos解耦tests
+ 31	chat-stream flex 撑满剩余高度
+ 32	config 真实装配
+ 33	corr 缺省生成与 informal gate 恢复
+ 34	events端点 artifacts/bb_ops 投影
+ 35	events端点投影补全
+ 36	gate_decision
+ 37	kimi 真实后端接入
+ 38	last_ok_commit 生产回路
+ 39	ledger 落盘
+ 40	metrics与replay CLI第三人称群聊
+ 41	mock 适配器
+ 42	orch bench resume CLI
+ 43	orch run 常驻命令
+ 44	orch 全局入口脚本
+ 45	render_delta 热续增量
+ 46	render_delta/async/multi_thread/bench能力
+ 47	render四层视图组装
+ 48	replay/metrics thread 位置参数与 approve/reject corr 缺省定位
+ 49	resume聚合写域并行与多线程bench
+ 50	run过程日志
+ 51	spec §10 corr 缺省由编排器生成
+ 52	spec 之外的补充交付
+ 53	stdlib网关15端点与orch serve
+ 54	stop 标志消费
+ 55	stop 语义链条
+ 56	stream-json 解包
+ 57	target_repo 时 ensure_worktrees 与审计接线
+ 58	web run 端点真实后端装配
+ 59	worktree 隔离
+ 60	worktree 隔离装配
+ 61	§13采集点补全
+ 62	§4.4事务边界
+ 63	§5.4终止保留既有pending
+ 64	§6.3 分层配比强制
+ 65	§8.2首轮审计兜底
+ 66	§9.1 恢复
+ 67	不对称四层视图渲染
+ 68	依赖选型jsonschema/typer
+ 69	保留策略
+ 70	信封作者字段 JSON Schema
+ 71	停机-重启-approve-terminate控制流
+ 72	停机重启
+ 73	协议层
+ 74	协议层schema与发送者bb_ops约束
+ 75	发送者约束
+ 76	发送者约束调度层降级
+ 77	启动时对线程机械执行崩溃恢复
+ 78	回复链 re/corr chips
+ 79	多工作区单控制台
+ 80	多线程 workspace 运行
+ 81	多线程workspace
+ 82	存储层六表DDL
+ 83	安全markdown渲染器四道纵深防御
+ 84	审计 G 解耦
+ 85	审计不再 fail open C-4
+ 86	崩溃恢复算法
+ 87	异构多智能体编排系统
+ 88	异步作业
+ 89	异步版核心环
+ 90	恢复路径同target pending合并
+ 91	控制台应用式固定布局
+ 92	故障注入
+ 93	无adapters配置显式警告Fake
+ 94	期望事件序列常量
+ 95	权限三件套
+ 96	架构指标真实测量
+ 97	核心循环（单线程串行版）
+ 98	核心环每轮主动调用看门狗
+ 99	注入面§4.4全5间隙
+100	派发行只读观察
+101	测试先行
+102	混沌 50 轮 100% 硬门槛
+103	混沌 harness
+104	热续接入调度层三门控
+105	焦点窗只渲B类与裁决知情张力
+106	状态层
+107	玻璃感 Web 控制台
+108	玻璃感 Web 控制台网关
+109	用户界面 CLI
+110	用户界面 CLI 子集
+111	看门狗三级
+112	看门狗升级水位去重
+113	真实后端骨架
+114	系统执行器
+115	线程视图三栏各自内部滚动
+116	终止完善
+117	终止清单
+118	背景压缩比采 bg_orig 原文 body
+119	视图渲染属调度层且与厂商无关
+120	视图组装
+121	触发批次事件一律全文入焦点窗
+122	调度层
+123	调度核心环
+124	越权审计
+125	跨卡边界缺口冻结进契约 §8
+126	过滤工具条
+127	迟到在途回复展示标记
+128	适配层
+129	适配层统一 invoke 接口
+130	重调携带错误说明
+131	长作业真异步
+132	门禁琥珀banner
+133	门禁裁决入口
+134	顶栏等五区常驻视口
+135	验证钩子
+136	验证钩子模块
+137	黑板投影与rebuild
+138	黑板栏三节

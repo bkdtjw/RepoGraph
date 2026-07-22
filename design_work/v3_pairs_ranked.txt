@@ -1,0 +1,84 @@
+# 全对 bigram Jaccard >=0.15，共 83 对（概念总数 139）
+0.846	多线程 workspace 运行	||	多线程workspace
+0.818	worktree 隔离	||	worktree 隔离装配
+0.800	玻璃感 Web 控制台	||	玻璃感 Web 控制台网关
+0.750	用户界面 CLI	||	用户界面 CLI 子集
+0.700	ApiAdapter	||	CliAdapter
+0.692	CliAdapter	||	FakeCliAdapter
+0.667	FakeApiAdapter	||	FakeCliAdapter
+0.667	ApiAdapter	||	FakeApiAdapter
+0.600	验证钩子	||	验证钩子模块
+0.571	apply_gate_decision幂等化	||	gate_decision
+0.556	M3冻结接口契约	||	M4冻结接口契约
+0.500	CliAdapter	||	FakeApiAdapter
+0.500	ApiAdapter	||	FakeCliAdapter
+0.474	apply_gate_decision 仅认 gate_request corr 的缺口	||	apply_gate_decision幂等化
+0.444	发送者约束	||	发送者约束调度层降级
+0.429	FakeApiAdapter	||	无adapters配置显式警告Fake
+0.409	FakeCliAdapter	||	无adapters配置显式警告Fake
+0.394	_find_informal_gate 生成形 corr 反解	||	corr 缺省生成与 informal gate 恢复
+0.360	依赖选型jsonschema/typer	||	信封作者字段 JSON Schema
+0.353	CLI §12 typer 骨架命令子集	||	CLI §12 子集
+0.343	apply_gate_decision 仅认 gate_request corr 的缺口	||	gate_decision
+0.333	异步作业	||	长作业真异步
+0.333	orch bench resume CLI	||	resume聚合写域并行与多线程bench
+0.321	CliAdapter	||	CliAdapter自动注入allowedTools白名单
+0.300	ApiAdapter	||	无adapters配置显式警告Fake
+0.296	events端点 artifacts/bb_ops 投影	||	events端点投影补全
+0.286	异步版核心环	||	调度核心环
+0.286	CliAdapter	||	无adapters配置显式警告Fake
+0.286	ChaosHarness mock层与注入点	||	混沌 harness
+0.286	50 轮硬门槛测试	||	混沌 50 轮 100% 硬门槛
+0.281	CliAdapter自动注入allowedTools白名单	||	FakeCliAdapter
+0.273	stop 标志消费	||	stop 语义链条
+0.273	render四层视图组装	||	视图组装
+0.273	kimi 真实后端接入	||	真实后端骨架
+0.270	render_delta 热续增量	||	render_delta/async/multi_thread/bench能力
+0.260	approve/reject错误一行人话	||	replay/metrics thread 位置参数与 approve/reject corr 缺省定位
+0.250	render_delta 热续增量	||	render四层视图组装
+0.250	CLI §12 子集	||	用户界面 CLI 子集
+0.241	ApiAdapter	||	CliAdapter自动注入allowedTools白名单
+0.238	autocommit	||	last_ok_commit 生产回路
+0.237	bg_orig 与 bg_summarized 同口径 body token	||	背景压缩比采 bg_orig 原文 body
+0.222	热续接入调度层三门控	||	调度层
+0.222	发送者约束调度层降级	||	调度层
+0.222	async核心环	||	调度核心环
+0.219	target_repo 时 ensure_worktrees 与审计接线	||	worktree 隔离
+0.214	§4.4事务边界	||	注入面§4.4全5间隙
+0.212	CliAdapter自动注入allowedTools白名单	||	FakeApiAdapter
+0.207	§5.4终止保留既有pending	||	恢复路径同target pending合并
+0.206	target_repo 时 ensure_worktrees 与审计接线	||	worktree 隔离装配
+0.200	调度层	||	调度核心环
+0.200	终止完善	||	终止清单
+0.200	看门狗三级	||	看门狗升级水位去重
+0.200	启动时对线程机械执行崩溃恢复	||	崩溃恢复算法
+0.200	web run 端点真实后端装配	||	真实后端骨架
+0.200	metrics与replay CLI第三人称群聊	||	replay/metrics thread 位置参数与 approve/reject corr 缺省定位
+0.200	chat-stream flex 撑满剩余高度	||	stream-json 解包
+0.200	async核心环	||	异步版核心环
+0.200	M0 接口契约与七子包骨架	||	M4冻结接口契约
+0.200	M0 接口契约与七子包骨架	||	M3冻结接口契约
+0.200	ChaosHarness mock层与注入点	||	chaos解耦tests
+0.188	render四层视图组装	||	不对称四层视图渲染
+0.188	orch run 常驻命令	||	orch 全局入口脚本
+0.182	orch bench resume CLI	||	orch run 常驻命令
+0.182	corr 缺省生成与 informal gate 恢复	||	spec §10 corr 缺省由编排器生成
+0.182	CLI §12 子集	||	用户界面 CLI
+0.176	worktree 隔离	||	多线程workspace
+0.176	approve/reject错误一行人话	||	停机-重启-approve-terminate控制流
+0.167	适配层	||	适配层统一 invoke 接口
+0.167	审计 G 解耦	||	越权审计
+0.167	信封作者字段 JSON Schema	||	协议层schema与发送者bb_ops约束
+0.167	不对称四层视图渲染	||	视图渲染属调度层且与厂商无关
+0.158	worktree 隔离装配	||	多线程workspace
+0.158	worktree 隔离	||	多线程 workspace 运行
+0.158	kimi 真实后端接入	||	web run 端点真实后端装配
+0.154	视图渲染属调度层且与厂商无关	||	调度层
+0.154	核心环每轮主动调用看门狗	||	调度核心环
+0.154	核心环每轮主动调用看门狗	||	看门狗三级
+0.154	多工作区单控制台	||	玻璃感 Web 控制台
+0.154	orch bench resume CLI	||	回复链 re/corr chips
+0.154	chaos解耦tests	||	chat-stream flex 撑满剩余高度
+0.154	CliAdapter	||	用户界面 CLI
+0.150	orch 全局入口脚本	||	回复链 re/corr chips
+0.150	CliAdapter自动注入allowedTools白名单	||	无adapters配置显式警告Fake

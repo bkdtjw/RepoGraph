@@ -1,0 +1,169 @@
+{
+  "concepts": 139,
+  "all_pairs": 9591,
+  "gold_positives": 15,
+  "gold_negatives": 5,
+  "embedding_endpoint": "404 (无 /v1/embeddings 与 /embeddings；grok 402 断供) → 索引期 embedding blocking 在 as-built 不可运行",
+  "baseline_exact_norm_key_recall": 0.0,
+  "lexical_bigram_jaccard_sweep": [
+    {
+      "tau": 0.15,
+      "pos_recall": 0.933,
+      "pos_hit": 14,
+      "neg_admitted": 5,
+      "candidate_pairs": 83,
+      "candidate_frac": 0.0087
+    },
+    {
+      "tau": 0.2,
+      "pos_recall": 0.867,
+      "pos_hit": 13,
+      "neg_admitted": 5,
+      "candidate_pairs": 60,
+      "candidate_frac": 0.0063
+    },
+    {
+      "tau": 0.25,
+      "pos_recall": 0.733,
+      "pos_hit": 11,
+      "neg_admitted": 5,
+      "candidate_pairs": 38,
+      "candidate_frac": 0.004
+    },
+    {
+      "tau": 0.3,
+      "pos_recall": 0.467,
+      "pos_hit": 7,
+      "neg_admitted": 5,
+      "candidate_pairs": 25,
+      "candidate_frac": 0.0026
+    },
+    {
+      "tau": 0.35,
+      "pos_recall": 0.4,
+      "pos_hit": 6,
+      "neg_admitted": 5,
+      "candidate_pairs": 20,
+      "candidate_frac": 0.0021
+    }
+  ],
+  "positive_detail": [
+    {
+      "a": "多线程 workspace 运行",
+      "b": "多线程workspace",
+      "jaccard": 0.846,
+      "exact_key": false
+    },
+    {
+      "a": "worktree 隔离",
+      "b": "worktree 隔离装配",
+      "jaccard": 0.818,
+      "exact_key": false
+    },
+    {
+      "a": "玻璃感 Web 控制台",
+      "b": "玻璃感 Web 控制台网关",
+      "jaccard": 0.8,
+      "exact_key": false
+    },
+    {
+      "a": "用户界面 CLI",
+      "b": "用户界面 CLI 子集",
+      "jaccard": 0.75,
+      "exact_key": false
+    },
+    {
+      "a": "验证钩子",
+      "b": "验证钩子模块",
+      "jaccard": 0.6,
+      "exact_key": false
+    },
+    {
+      "a": "CLI §12 typer 骨架命令子集",
+      "b": "CLI §12 子集",
+      "jaccard": 0.353,
+      "exact_key": false
+    },
+    {
+      "a": "events端点 artifacts/bb_ops 投影",
+      "b": "events端点投影补全",
+      "jaccard": 0.296,
+      "exact_key": false
+    },
+    {
+      "a": "ChaosHarness mock层与注入点",
+      "b": "混沌 harness",
+      "jaccard": 0.286,
+      "exact_key": false
+    },
+    {
+      "a": "50 轮硬门槛测试",
+      "b": "混沌 50 轮 100% 硬门槛",
+      "jaccard": 0.286,
+      "exact_key": false
+    },
+    {
+      "a": "render四层视图组装",
+      "b": "视图组装",
+      "jaccard": 0.273,
+      "exact_key": false
+    },
+    {
+      "a": "启动时对线程机械执行崩溃恢复",
+      "b": "崩溃恢复算法",
+      "jaccard": 0.2,
+      "exact_key": false
+    },
+    {
+      "a": "async核心环",
+      "b": "异步版核心环",
+      "jaccard": 0.2,
+      "exact_key": false
+    },
+    {
+      "a": "适配层",
+      "b": "适配层统一 invoke 接口",
+      "jaccard": 0.167,
+      "exact_key": false
+    },
+    {
+      "a": "异步作业",
+      "b": "长作业真异步",
+      "jaccard": 0.333,
+      "exact_key": false
+    },
+    {
+      "a": "停机重启",
+      "b": "停机-重启-approve-terminate控制流",
+      "jaccard": 0.143,
+      "exact_key": false
+    }
+  ],
+  "negative_detail": [
+    {
+      "a": "ApiAdapter",
+      "b": "CliAdapter",
+      "jaccard": 0.7
+    },
+    {
+      "a": "CliAdapter",
+      "b": "FakeCliAdapter",
+      "jaccard": 0.692
+    },
+    {
+      "a": "ApiAdapter",
+      "b": "FakeApiAdapter",
+      "jaccard": 0.667
+    },
+    {
+      "a": "M3冻结接口契约",
+      "b": "M4冻结接口契约",
+      "jaccard": 0.556
+    },
+    {
+      "a": "FakeApiAdapter",
+      "b": "FakeCliAdapter",
+      "jaccard": 0.667
+    }
+  ]
+}

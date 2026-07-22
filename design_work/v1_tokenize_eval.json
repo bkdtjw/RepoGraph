@@ -1,0 +1,1316 @@
+{
+  "meta": {
+    "min_score": 1.0,
+    "top_k": 8,
+    "cards_accepted": 58,
+    "cards_meta": {
+      "model": "qwen3.8-max-preview",
+      "base": "https://token-plan.cn-beijing.maas.aliyuncs.com/apps/anthropic",
+      "blocked": false,
+      "n_targets": 58,
+      "n_accepted": 58,
+      "n_discarded": 0,
+      "n_netfail": 0,
+      "whitelist_rule": "输出英文标识符须为输入子串(忽略大小写)，违规重试1次后弃用",
+      "max_card_chars": 40,
+      "backfilled": 1
+    },
+    "corpus": {
+      "base_docs": 236,
+      "aug_docs": 277,
+      "appended": 17,
+      "new_docs": 41
+    },
+    "jieba": true,
+    "fidelity_base_eq_real": true,
+    "fidelity_diffs": [],
+    "route_guard_link_hits": []
+  },
+  "results": {
+    "FZ_dev": {
+      "base": {
+        "n": 10,
+        "hit@1": 0.0,
+        "hit@3": 0.1,
+        "hit@1_n": 0,
+        "hit@3_n": 1,
+        "per_q": [
+          {
+            "id": "FZ-d01",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::视图组装",
+              "concept::协议层",
+              "concept::apply-gate-decision-仅认-gate-request-corr-的缺口"
+            ],
+            "top3_detail": [
+              [
+                "视图组装",
+                4.9417
+              ],
+              [
+                "协议层",
+                4.6725
+              ],
+              [
+                "apply-gate-decision-仅认-g",
+                4.4056
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d02",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [],
+            "top3_detail": []
+          },
+          {
+            "id": "FZ-d03",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [],
+            "top3_detail": []
+          },
+          {
+            "id": "FZ-d04",
+            "hit@1": false,
+            "hit@3": true,
+            "anchors_top3": [
+              "multi-agent-orch::commit::8c38a0bd0d9053df0240cf2c12e297236a9b1594",
+              "concept::系统执行器",
+              "concept::异构多智能体编排系统"
+            ],
+            "top3_detail": [
+              [
+                "8c38a0bd0d9053df0240cf2c",
+                7.3454
+              ],
+              [
+                "系统执行器",
+                6.4891
+              ],
+              [
+                "异构多智能体编排系统",
+                5.0505
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d05",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [],
+            "top3_detail": []
+          },
+          {
+            "id": "FZ-d06",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [],
+            "top3_detail": []
+          },
+          {
+            "id": "FZ-d07",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::cliadapter自动注入allowedtools白名单",
+              "concept::门禁琥珀banner",
+              "multi-agent-orch::commit::9448898ef9637a7829a51540873fec6140f343c9"
+            ],
+            "top3_detail": [
+              [
+                "cliadapter自动注入allowedtoo",
+                5.4707
+              ],
+              [
+                "门禁琥珀banner",
+                5.2435
+              ],
+              [
+                "9448898ef9637a7829a51540",
+                4.2261
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d08",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [],
+            "top3_detail": []
+          },
+          {
+            "id": "FZ-d09",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::系统执行器",
+              "concept::异构多智能体编排系统",
+              "multi-agent-orch::commit::eae8ec3f639f3bee3152d5991725a13a383c1ad4"
+            ],
+            "top3_detail": [
+              [
+                "系统执行器",
+                6.4891
+              ],
+              [
+                "异构多智能体编排系统",
+                5.0505
+              ],
+              [
+                "eae8ec3f639f3bee3152d599",
+                4.8706
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d10",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "multi-agent-orch::commit::f646cbe82bb420894a5ad9997b0d97986e86fcb4"
+            ],
+            "top3_detail": [
+              [
+                "f646cbe82bb420894a5ad999",
+                1.8335
+              ]
+            ]
+          }
+        ]
+      },
+      "a_ngram": {
+        "n": 10,
+        "hit@1": 0.0,
+        "hit@3": 0.1,
+        "hit@1_n": 0,
+        "hit@3_n": 1,
+        "per_q": [
+          {
+            "id": "FZ-d01",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::视图组装",
+              "concept::协议层",
+              "concept::apply-gate-decision-仅认-gate-request-corr-的缺口"
+            ],
+            "top3_detail": [
+              [
+                "视图组装",
+                4.9078
+              ],
+              [
+                "协议层",
+                4.8735
+              ],
+              [
+                "apply-gate-decision-仅认-g",
+                4.5872
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d02",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [],
+            "top3_detail": []
+          },
+          {
+            "id": "FZ-d03",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::视图组装"
+            ],
+            "top3_detail": [
+              [
+                "视图组装",
+                3.7764
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d04",
+            "hit@1": false,
+            "hit@3": true,
+            "anchors_top3": [
+              "multi-agent-orch::commit::8c38a0bd0d9053df0240cf2c12e297236a9b1594",
+              "concept::系统执行器",
+              "concept::异构多智能体编排系统"
+            ],
+            "top3_detail": [
+              [
+                "8c38a0bd0d9053df0240cf2c",
+                7.5963
+              ],
+              [
+                "系统执行器",
+                6.3098
+              ],
+              [
+                "异构多智能体编排系统",
+                4.9208
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d05",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [],
+            "top3_detail": []
+          },
+          {
+            "id": "FZ-d06",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "multi-agent-orch::src/orch/render/__init__.py::render_event_third_person",
+              "multi-agent-orch::src/orch/store/__init__.py::Store.append_event"
+            ],
+            "top3_detail": [
+              [
+                "render_event_third_perso",
+                5.2929
+              ],
+              [
+                "Store.append_event",
+                4.9293
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d07",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "multi-agent-orch::src/orch/store/__init__.py::Store._write_board",
+              "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness.run",
+              "concept::cliadapter自动注入allowedtools白名单"
+            ],
+            "top3_detail": [
+              [
+                "Store._write_board",
+                6.6958
+              ],
+              [
+                "ChaosHarness.run",
+                6.4726
+              ],
+              [
+                "cliadapter自动注入allowedtoo",
+                5.2534
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d08",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [],
+            "top3_detail": []
+          },
+          {
+            "id": "FZ-d09",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::系统执行器",
+              "concept::异构多智能体编排系统",
+              "multi-agent-orch::commit::eae8ec3f639f3bee3152d5991725a13a383c1ad4"
+            ],
+            "top3_detail": [
+              [
+                "系统执行器",
+                6.3098
+              ],
+              [
+                "异构多智能体编排系统",
+                4.9208
+              ],
+              [
+                "eae8ec3f639f3bee3152d599",
+                4.7387
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d10",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "multi-agent-orch::src/orch/cli/main.py::_render_replay_lines",
+              "multi-agent-orch::commit::f646cbe82bb420894a5ad9997b0d97986e86fcb4"
+            ],
+            "top3_detail": [
+              [
+                "_render_replay_lines",
+                5.3941
+              ],
+              [
+                "f646cbe82bb420894a5ad999",
+                1.7238
+              ]
+            ]
+          }
+        ]
+      },
+      "b_jieba": {
+        "n": 10,
+        "hit@1": 0.0,
+        "hit@3": 0.1,
+        "hit@1_n": 0,
+        "hit@3_n": 1,
+        "per_q": [
+          {
+            "id": "FZ-d01",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::视图组装",
+              "concept::apply-gate-decision-仅认-gate-request-corr-的缺口",
+              "concept::迟到在途回复展示标记"
+            ],
+            "top3_detail": [
+              [
+                "视图组装",
+                12.5133
+              ],
+              [
+                "apply-gate-decision-仅认-g",
+                6.0966
+              ],
+              [
+                "迟到在途回复展示标记",
+                5.7423
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d02",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::迟到在途回复展示标记",
+              "multi-agent-orch::src/orch/cli/main.py::_render_replay_lines",
+              "concept::重调携带错误说明"
+            ],
+            "top3_detail": [
+              [
+                "迟到在途回复展示标记",
+                4.1016
+              ],
+              [
+                "_render_replay_lines",
+                3.8128
+              ],
+              [
+                "重调携带错误说明",
+                3.5527
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d03",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::run过程日志",
+              "multi-agent-orch::src/orch/scheduler/core.py::run_thread",
+              "concept::corr-缺省生成与-informal-gate-恢复"
+            ],
+            "top3_detail": [
+              [
+                "run过程日志",
+                5.8097
+              ],
+              [
+                "run_thread",
+                4.3886
+              ],
+              [
+                "corr-缺省生成与-informal-gate",
+                4.1122
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d04",
+            "hit@1": false,
+            "hit@3": true,
+            "anchors_top3": [
+              "multi-agent-orch::commit::8c38a0bd0d9053df0240cf2c12e297236a9b1594",
+              "concept::系统执行器",
+              "concept::玻璃感-web-控制台网关"
+            ],
+            "top3_detail": [
+              [
+                "8c38a0bd0d9053df0240cf2c",
+                7.5387
+              ],
+              [
+                "系统执行器",
+                6.9938
+              ],
+              [
+                "玻璃感-web-控制台网关",
+                5.695
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d05",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [],
+            "top3_detail": []
+          },
+          {
+            "id": "FZ-d06",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "multi-agent-orch::src/orch/store/__init__.py::Store.append_event",
+              "concept::迟到在途回复展示标记",
+              "concept::spec-之外的补充交付"
+            ],
+            "top3_detail": [
+              [
+                "Store.append_event",
+                6.4072
+              ],
+              [
+                "迟到在途回复展示标记",
+                3.9281
+              ],
+              [
+                "spec-之外的补充交付",
+                2.8776
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d07",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "multi-agent-orch::src/orch/store/__init__.py::Store._write_board",
+              "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness.run",
+              "concept::cliadapter自动注入allowedtools白名单"
+            ],
+            "top3_detail": [
+              [
+                "Store._write_board",
+                6.6068
+              ],
+              [
+                "ChaosHarness.run",
+                6.0849
+              ],
+              [
+                "cliadapter自动注入allowedtoo",
+                5.4649
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d08",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "multi-agent-orch::commit::177bf55cf23951f2ea4ec8247547c19f4828aef1"
+            ],
+            "top3_detail": [
+              [
+                "177bf55cf23951f2ea4ec824",
+                2.7549
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d09",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::不对称四层视图渲染",
+              "concept::approve-reject错误一行人话",
+              "multi-agent-orch::src/orch/render/__init__.py"
+            ],
+            "top3_detail": [
+              [
+                "不对称四层视图渲染",
+                5.4849
+              ],
+              [
+                "approve-reject错误一行人话",
+                3.8715
+              ],
+              [
+                "src/orch/render/__init__",
+                3.6245
+              ]
+            ]
+          },
+          {
+            "id": "FZ-d10",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "multi-agent-orch::src/orch/cli/main.py::_render_replay_lines",
+              "concept::迟到在途回复展示标记",
+              "concept::故障注入"
+            ],
+            "top3_detail": [
+              [
+                "_render_replay_lines",
+                9.4522
+              ],
+              [
+                "迟到在途回复展示标记",
+                5.7423
+              ],
+              [
+                "故障注入",
+                4.7809
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    "FZ_test": {
+      "base": {
+        "n": 10,
+        "hit@1": 0.0,
+        "hit@3": 0.1,
+        "hit@1_n": 0,
+        "hit@3_n": 1,
+        "per_q": [
+          {
+            "id": "FZ-t01",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::用户界面-cli",
+              "concept::用户界面-cli-子集",
+              "multi-agent-orch::src/orch/cli/__init__.py"
+            ],
+            "top3_detail": [
+              [
+                "用户界面-cli",
+                7.1587
+              ],
+              [
+                "用户界面-cli-子集",
+                6.953
+              ],
+              [
+                "src/orch/cli/__init__.py",
+                6.4401
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t02",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::迟到在途回复展示标记",
+              "multi-agent-orch::commit::1795d6682259c7de56e0a1baad00f3754fb0907c"
+            ],
+            "top3_detail": [
+              [
+                "迟到在途回复展示标记",
+                4.0718
+              ],
+              [
+                "1795d6682259c7de56e0a1ba",
+                1.518
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t03",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::系统执行器",
+              "concept::异构多智能体编排系统",
+              "multi-agent-orch::commit::eae8ec3f639f3bee3152d5991725a13a383c1ad4"
+            ],
+            "top3_detail": [
+              [
+                "系统执行器",
+                6.4891
+              ],
+              [
+                "异构多智能体编排系统",
+                5.0505
+              ],
+              [
+                "eae8ec3f639f3bee3152d599",
+                4.8706
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t04",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::用户界面-cli",
+              "concept::用户界面-cli-子集",
+              "multi-agent-orch::src/orch/cli/__init__.py"
+            ],
+            "top3_detail": [
+              [
+                "用户界面-cli",
+                7.1587
+              ],
+              [
+                "用户界面-cli-子集",
+                6.953
+              ],
+              [
+                "src/orch/cli/__init__.py",
+                6.4401
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t05",
+            "hit@1": false,
+            "hit@3": true,
+            "anchors_top3": [
+              "concept::适配层统一-invoke-接口",
+              "multi-agent-orch::src/orch/adapters/__init__.py",
+              "concept::核心环每轮主动调用看门狗"
+            ],
+            "top3_detail": [
+              [
+                "适配层统一-invoke-接口",
+                11.2881
+              ],
+              [
+                "src/orch/adapters/__init",
+                10.7618
+              ],
+              [
+                "核心环每轮主动调用看门狗",
+                6.7006
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t06",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::信封作者字段-json-schema",
+              "multi-agent-orch::src/orch/protocol/schema.py",
+              "concept::classify增trigger-ids焦点全文"
+            ],
+            "top3_detail": [
+              [
+                "信封作者字段-json-schema",
+                7.056
+              ],
+              [
+                "src/orch/protocol/schema",
+                6.1896
+              ],
+              [
+                "classify增trigger-ids焦点全文",
+                4.9731
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t07",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::approve-reject错误一行人话",
+              "multi-agent-orch::commit::612cc9023a4eaddea1129eb3d7fb2cfcd56bd2e9",
+              "multi-agent-orch::commit::712578a7c73d3cfaf3b60b737ec801d28c626298"
+            ],
+            "top3_detail": [
+              [
+                "approve-reject错误一行人话",
+                6.5162
+              ],
+              [
+                "612cc9023a4eaddea1129eb3",
+                5.2264
+              ],
+              [
+                "712578a7c73d3cfaf3b60b73",
+                3.2055
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t08",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::恢复路径同target-pending合并",
+              "multi-agent-orch::commit::610b412788ce79e3a60ad803b399b7d743df6676",
+              "concept::审计不再-fail-open-c-4"
+            ],
+            "top3_detail": [
+              [
+                "恢复路径同target-pending合并",
+                5.3641
+              ],
+              [
+                "610b412788ce79e3a60ad803",
+                4.2211
+              ],
+              [
+                "审计不再-fail-open-c-4",
+                3.8771
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t09",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "multi-agent-orch::commit::88ed2d74055b9e06f2eeec0f1e1fa4255724bded",
+              "concept::无adapters配置显式警告fake",
+              "multi-agent-orch::commit::f646cbe82bb420894a5ad9997b0d97986e86fcb4"
+            ],
+            "top3_detail": [
+              [
+                "88ed2d74055b9e06f2eeec0f",
+                5.7206
+              ],
+              [
+                "无adapters配置显式警告fake",
+                4.1445
+              ],
+              [
+                "f646cbe82bb420894a5ad999",
+                1.8335
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t10",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::run过程日志",
+              "concept::ledger-落盘",
+              "multi-agent-orch::commit::8c38a0bd0d9053df0240cf2c12e297236a9b1594"
+            ],
+            "top3_detail": [
+              [
+                "run过程日志",
+                10.4245
+              ],
+              [
+                "ledger-落盘",
+                7.3661
+              ],
+              [
+                "8c38a0bd0d9053df0240cf2c",
+                6.116
+              ]
+            ]
+          }
+        ]
+      },
+      "a_ngram": {
+        "n": 10,
+        "hit@1": 0.2,
+        "hit@3": 0.4,
+        "hit@1_n": 2,
+        "hit@3_n": 4,
+        "per_q": [
+          {
+            "id": "FZ-t01",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::用户界面-cli",
+              "concept::用户界面-cli-子集",
+              "multi-agent-orch::src/orch/cli/__init__.py"
+            ],
+            "top3_detail": [
+              [
+                "用户界面-cli",
+                7.4645
+              ],
+              [
+                "用户界面-cli-子集",
+                7.2522
+              ],
+              [
+                "src/orch/cli/__init__.py",
+                6.7084
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t02",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::迟到在途回复展示标记",
+              "multi-agent-orch::commit::1795d6682259c7de56e0a1baad00f3754fb0907c"
+            ],
+            "top3_detail": [
+              [
+                "迟到在途回复展示标记",
+                3.5155
+              ],
+              [
+                "1795d6682259c7de56e0a1ba",
+                1.5876
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t03",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::系统执行器",
+              "concept::异构多智能体编排系统",
+              "multi-agent-orch::commit::eae8ec3f639f3bee3152d5991725a13a383c1ad4"
+            ],
+            "top3_detail": [
+              [
+                "系统执行器",
+                6.3098
+              ],
+              [
+                "异构多智能体编排系统",
+                4.9208
+              ],
+              [
+                "eae8ec3f639f3bee3152d599",
+                4.7387
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t04",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::用户界面-cli",
+              "concept::用户界面-cli-子集",
+              "multi-agent-orch::src/orch/cli/__init__.py"
+            ],
+            "top3_detail": [
+              [
+                "用户界面-cli",
+                7.4645
+              ],
+              [
+                "用户界面-cli-子集",
+                7.2522
+              ],
+              [
+                "src/orch/cli/__init__.py",
+                6.7084
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t05",
+            "hit@1": false,
+            "hit@3": true,
+            "anchors_top3": [
+              "concept::适配层统一-invoke-接口",
+              "multi-agent-orch::src/orch/adapters/__init__.py",
+              "concept::核心环每轮主动调用看门狗"
+            ],
+            "top3_detail": [
+              [
+                "适配层统一-invoke-接口",
+                14.2199
+              ],
+              [
+                "src/orch/adapters/__init",
+                10.7636
+              ],
+              [
+                "核心环每轮主动调用看门狗",
+                5.7996
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t06",
+            "hit@1": false,
+            "hit@3": true,
+            "anchors_top3": [
+              "concept::信封作者字段-json-schema",
+              "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields",
+              "multi-agent-orch::src/orch/protocol/schema.py"
+            ],
+            "top3_detail": [
+              [
+                "信封作者字段-json-schema",
+                6.3065
+              ],
+              [
+                "_strip_to_author_fields",
+                5.9364
+              ],
+              [
+                "src/orch/protocol/schema",
+                5.5284
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t07",
+            "hit@1": true,
+            "hit@3": true,
+            "anchors_top3": [
+              "multi-agent-orch::src/orch/render/__init__.py::_summarize",
+              "concept::approve-reject错误一行人话",
+              "multi-agent-orch::commit::612cc9023a4eaddea1129eb3d7fb2cfcd56bd2e9"
+            ],
+            "top3_detail": [
+              [
+                "_summarize",
+                16.8512
+              ],
+              [
+                "approve-reject错误一行人话",
+                6.4699
+              ],
+              [
+                "612cc9023a4eaddea1129eb3",
+                4.8969
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t08",
+            "hit@1": true,
+            "hit@3": true,
+            "anchors_top3": [
+              "multi-agent-orch::src/orch/cli/main.py::_resolve_workspace",
+              "concept::恢复路径同target-pending合并",
+              "multi-agent-orch::commit::610b412788ce79e3a60ad803b399b7d743df6676"
+            ],
+            "top3_detail": [
+              [
+                "_resolve_workspace",
+                6.943
+              ],
+              [
+                "恢复路径同target-pending合并",
+                5.3539
+              ],
+              [
+                "610b412788ce79e3a60ad803",
+                4.2147
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t09",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "multi-agent-orch::commit::88ed2d74055b9e06f2eeec0f1e1fa4255724bded",
+              "concept::无adapters配置显式警告fake",
+              "multi-agent-orch::commit::f646cbe82bb420894a5ad9997b0d97986e86fcb4"
+            ],
+            "top3_detail": [
+              [
+                "88ed2d74055b9e06f2eeec0f",
+                5.9444
+              ],
+              [
+                "无adapters配置显式警告fake",
+                4.305
+              ],
+              [
+                "f646cbe82bb420894a5ad999",
+                1.9107
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t10",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::run过程日志",
+              "concept::ledger-落盘",
+              "multi-agent-orch::commit::8c38a0bd0d9053df0240cf2c12e297236a9b1594"
+            ],
+            "top3_detail": [
+              [
+                "run过程日志",
+                10.9009
+              ],
+              [
+                "ledger-落盘",
+                7.7006
+              ],
+              [
+                "8c38a0bd0d9053df0240cf2c",
+                6.3638
+              ]
+            ]
+          }
+        ]
+      },
+      "b_jieba": {
+        "n": 10,
+        "hit@1": 0.3,
+        "hit@3": 0.5,
+        "hit@1_n": 3,
+        "hit@3_n": 5,
+        "per_q": [
+          {
+            "id": "FZ-t01",
+            "hit@1": true,
+            "hit@3": true,
+            "anchors_top3": [
+              "concept::视图组装"
+            ],
+            "top3_detail": [
+              [
+                "视图组装",
+                4.928
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t02",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::迟到在途回复展示标记",
+              "concept::spec-之外的补充交付",
+              "multi-agent-orch::src/orch/store/__init__.py::Store.events"
+            ],
+            "top3_detail": [
+              [
+                "迟到在途回复展示标记",
+                5.1527
+              ],
+              [
+                "spec-之外的补充交付",
+                2.8776
+              ],
+              [
+                "Store.events",
+                2.5605
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t03",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::系统执行器",
+              "concept::异构多智能体编排系统",
+              "multi-agent-orch::src/orch/scheduler/systemexec.py"
+            ],
+            "top3_detail": [
+              [
+                "系统执行器",
+                6.9938
+              ],
+              [
+                "异构多智能体编排系统",
+                5.5053
+              ],
+              [
+                "src/orch/scheduler/syste",
+                4.8907
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t04",
+            "hit@1": false,
+            "hit@3": true,
+            "anchors_top3": [
+              "multi-agent-orch::src/orch/scheduler/watchdog.py::_loop_limit",
+              "concept::迟到在途回复展示标记",
+              "multi-agent-orch::src/orch/cli/main.py::_render_replay_lines"
+            ],
+            "top3_detail": [
+              [
+                "_loop_limit",
+                5.5054
+              ],
+              [
+                "迟到在途回复展示标记",
+                4.1016
+              ],
+              [
+                "_render_replay_lines",
+                3.8128
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t05",
+            "hit@1": false,
+            "hit@3": true,
+            "anchors_top3": [
+              "concept::适配层统一-invoke-接口",
+              "multi-agent-orch::src/orch/adapters/__init__.py",
+              "concept::真实后端骨架"
+            ],
+            "top3_detail": [
+              [
+                "适配层统一-invoke-接口",
+                18.5436
+              ],
+              [
+                "src/orch/adapters/__init",
+                13.0048
+              ],
+              [
+                "真实后端骨架",
+                9.9449
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t06",
+            "hit@1": true,
+            "hit@3": true,
+            "anchors_top3": [
+              "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields",
+              "concept::信封作者字段-json-schema",
+              "concept::events端点投影补全"
+            ],
+            "top3_detail": [
+              [
+                "_strip_to_author_fields",
+                12.7938
+              ],
+              [
+                "信封作者字段-json-schema",
+                12.4307
+              ],
+              [
+                "events端点投影补全",
+                11.6151
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t07",
+            "hit@1": true,
+            "hit@3": true,
+            "anchors_top3": [
+              "multi-agent-orch::src/orch/render/__init__.py::_summarize",
+              "concept::视图组装",
+              "concept::approve-reject错误一行人话"
+            ],
+            "top3_detail": [
+              [
+                "_summarize",
+                9.8541
+              ],
+              [
+                "视图组装",
+                6.5191
+              ],
+              [
+                "approve-reject错误一行人话",
+                5.8772
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t08",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::恢复路径同target-pending合并",
+              "concept::视图组装",
+              "concept::故障注入"
+            ],
+            "top3_detail": [
+              [
+                "恢复路径同target-pending合并",
+                6.9571
+              ],
+              [
+                "视图组装",
+                6.5191
+              ],
+              [
+                "故障注入",
+                6.0269
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t09",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::无adapters配置显式警告fake",
+              "multi-agent-orch::commit::a0cbffb91021d440697b529cdbad4f83747c23a5",
+              "multi-agent-orch::commit::f2ad7e17bc07084a1e175b69cfa4005dee234e5a"
+            ],
+            "top3_detail": [
+              [
+                "无adapters配置显式警告fake",
+                5.6495
+              ],
+              [
+                "a0cbffb91021d440697b529c",
+                5.1891
+              ],
+              [
+                "f2ad7e17bc07084a1e175b69",
+                5.0593
+              ]
+            ]
+          },
+          {
+            "id": "FZ-t10",
+            "hit@1": false,
+            "hit@3": false,
+            "anchors_top3": [
+              "concept::run过程日志",
+              "concept::ledger-落盘",
+              "multi-agent-orch::commit::8c38a0bd0d9053df0240cf2c12e297236a9b1594"
+            ],
+            "top3_detail": [
+              [
+                "run过程日志",
+                9.5173
+              ],
+              [
+                "ledger-落盘",
+                7.5473
+              ],
+              [
+                "8c38a0bd0d9053df0240cf2c",
+                6.3155
+              ]
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

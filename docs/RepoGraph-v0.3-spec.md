@@ -1,5 +1,9 @@
 # RepoGraph 模糊语义处理 · 落地设计
 
+> **v0.3 spec · FROZEN 2026-07-22 · 唯一实施事实源（R1）**
+> 执行计划 = `docs/RepoGraph-v0.3-执行计划书.md`；as-built 附件 = `docs/v0.3-asbuilt.md`；决策台账 = `DECISIONS.md`。
+> 本文件（原 `RepoGraph-模糊语义处理-落地设计.md`，v0.2-impl）自 2026-07-22 冻结为 **v0.3 spec 母本**（路径 `docs/RepoGraph-v0.3-spec.md`）。Phase B 前置验证（V0–V4）裁定见文末 **§B Phase B 验证裁定（冻结增量）**；分带阈值以 §B / `eval/calibration.md` 校准结论为准（见 §4.6 指向注）。凡本 spec 决策表、`DECISIONS.md`、`docs/v0.3-asbuilt.md` 三源对同一机制表述冲突，**以验证实测为准（R1 单一事实源）**。
+
 **副标题**：v0.2 落地版——基于补充稿与现有四层瀑布实现的融合设计
 **版本**：v0.2-impl（落地版，取代 `RepoGraph-模糊语义处理设计.md` 的实施部分，保留其机制定义与骨架）
 **日期**：2026-07-22
@@ -190,6 +194,8 @@ entity_local:
 
 **不处理这条，原稿阈值会被当余弦直接套到整数/BM25 分上，全盘失效。**
 
+> **【FROZEN · V0 校准指向注（2026-07-22，与本节冲突处以此为准）】**：本节列出的具体分带阈值中，**topic 侧相对边际参数经 Phase B·V0 校准仍未产出可批准值**——FZ-dev 32 单元网格 hit@1 恒 0、hit@3 恒 0.1、消歧触发率 0.3–0.5 全 >0.2 上限 → **零可行单元**（详见 `eval/calibration.md`、`design_work/v0_calibration.json`）。故裁定：① **过渡规则「仅方法档 ≥80 自动锚定」继续生效、不退休**（D-N1）；② D-N1「自动锚定要求 ≥1 高 IDF 内容词」须叠加**中文停用/功能/疑问词黑名单过滤**方生效——V0 实测高 IDF 的 n-gram 多为「的单/起来/台账/放行」等非内容词碎片，落地设计 §4.4 停用词过滤**列为前置**；③ AMB 侧整数分差 `δ_score=20` 为方法档硬锚，不受 topic 校准影响、维持。C2 中文卡片入库后**强制复跑本校准**再冻结数字（本文件当前不冻结任何 topic 分带阈值）。本节其余分带**语义**（方法档为主 + 档内相对边际 + 绝对证据下限）不变。参见文末 §B。
+
 ### 4.7 文件级改动清单（本轮只设计，不改码）
 
 **新增文件**：
@@ -325,6 +331,41 @@ FZ-dev 10 题网格搜 `(topic 相对边际, 短名档强候选判定, min_score
 | F7 | 阈值在小校准集上过拟合 | 继承（**维度变更**） | 校准维度按 §4.6 换为「方法档+BM25 边际」；校准/测试严格分离，网格全表公开，声称范围限「本仓库语料」 |
 | **F8（新增）** | **structural 路由降级损失**：模板/text2cypher 层未建，结构化计数题（「列出所有端点」）降级到 topic，精度损失 | 新增 | 能定量的计数题**先走 `build_overview` 确定性字段**（不进 topic），仅无法精确计数者降级 topic 且事件保 `route_label=structural`+`degraded=true`；**已知折中并披露**：structural 无索引期答案素材（局部让渡 P1）、降级路径与路由标签**分离**回显（守 P2 可评测）；text2cypher 列入 v0.3，不阻断 v0.2 |
 | **F9（新增）** | **无向量层的召回上界**：长尾中文口语在 BM25+改写后仍可能 miss（FZ 天然难集，Concept 别名近乎全空） | 新增 | §4.2 双语卡片入 BM25 语料 + `zh_aliases` 是主要补偿；FZ hit@k 如实报告 v0.1→v0.2 增量，不承诺向量级召回 |
+
+---
+
+## §B Phase B 验证裁定（冻结增量，2026-07-22）
+
+> 本节为 v0.3 spec 冻结时并入的 Phase B 前置验证（V0–V4）实测收敛，是对上文机制的**数字/存活性核实**。每条附 D-编号（详见 `DECISIONS.md`）与可复现产物；绑定基线 tag `rebaseline-20260723`、`output/graph.json` 510 节点。与上文表述冲突处，**以本节实测为准（R1）**。
+
+### §B.0 V0 分带校准 —— 未产出可批准参数，过渡规则续用（承 D-N1）
+- **结论（真实）**：FZ-dev 10 题、32 单元网格（`rel_margin∈{0.10,0.15,0.20,0.25}` × `min_score∈{0.5,1.0,1.5,2.0}` × `autopick∈{on,off}`）**零可行单元**——hit@1 恒 **0**、hit@3 恒 **0.1**、消歧触发率 **0.3–0.5** 全 >0.2 上限；`min_score`/`autopick` 完全惰性，仅 `rel_margin` 影响过问率。
+- **裁定**：**不冻结任何 topic 分带阈值**（`ratified=false`）；过渡规则「**仅方法档 ≥80 自动锚定**」继续生效；D-N1「≥1 高 IDF 内容词」修订为**必须叠加中文停用/功能/疑问词过滤**（V0 实测高 IDF n-gram 多为「的单/起来/台账/放行」等非内容词碎片，落地设计 §4.4 列前置）。根因=召回被 V1 卡片天花板卡住 → 归 C2「先修卡片再校准」，C2 上线后强制复跑。
+- **产物/引用**：`eval/calibration.md`、`design_work/v0_calibration.{py,json}`；§4.6 指向注；D-N1。
+
+### §B.1 V1 中文分词 —— n-gram 守 stdlib（D-P1），D-11 转「重议中」
+- **裁定**：分词选 **n-gram（`topic.zh_terms`）守 stdlib**，jieba 不破例（依赖损失=无）。FZ-dev（裁定集）ngram=jieba（hit@3 均 0.1、hit@1 均 0.0，满足 `a≥90%b`）；jieba 仅 FZ-test 领先 1 题（噪声级）且与 ngram 互有胜负。
+- **D-11 重议警报**：FZ-dev 卡片**零净提升**（base=a=b=0.1）→ 警报触发、D-11 转「**重议中**」；但 FZ-test 证明机制有效（hit@3 0.1→0.5、hit@1 0→0.3，函数卡片直接召回 t06/t07），**未证伪**，重议方向=修卡片质量（归 C2），非砍除。
+- **产物/引用**：`design_work/v1_tokenize_report.md`、`v1_tokenize_eval.json`、`v1_cards.json`；D-P1、D-11、D-16。
+
+### §B.2 V3 概念对齐 blocking —— 词面 Jaccard 守 stdlib（D-P2）
+- **裁定**：blocking 选 **(a) 词面 bigram Jaccard**（`norm_key` 归一 + 字符 bigram Jaccard ≥ τ，τ=0.15–0.20），matching 层（LLM 裁决）不变。
+- **依据（真实）**：(b) 索引期 API embedding blocking **as-built 不可运行**（网关 `/v1/embeddings`、`/embeddings` 实测 **404**，grok **402**）；生产精确 `norm_key` blocking 对 15 对真实近义概念召回 **0/15**，词面 Jaccard τ=0.15 召回 **14/15(0.933)**、候选成本 0.87%（83/9591 全对）；本语料真同义对 14/15 表面相似，embedding 优势区近空。依赖损失=无。
+- **落地**：`extract/semantic.py:344 _norm_key` 的「精确相等」升级为「Jaccard≥0.15 入候选」，Phase C 同时补 matching 裁决层方可安全采纳。
+- **产物/引用**：`design_work/v3-blocking-report.md`、`v3_blocking_eval.{py,json}`；D-P2。（本轮 V3 由 Phase B 收口 agent 补跑，前序无产物。）
+
+### §B.3 V4 主评测集 —— 走补建分支（D-P3）
+- **裁定**：90 题 L1/L2/L3 主集**不存在**（实测 `eval/` 原无、唯一 `.jsonl` 为对齐审计产物、非评测集）→ 走计划书 **V4 补建分支**：Phase D 前补建，规模可裁至 **60 题（L1 20/L2 30/L3 10）**，出题纪律沿用 v0.1 §9.1（冻结一半防偏置），工期 +2 天。
+- **产物/引用**：`docs/v0.3-asbuilt.md` §5；D-P3、F12。
+
+### §B.4 V2 改写地位 —— S2 为 C3 类主召回机制、C2 首项新建（D-N2）
+- **核实（真实）**：全仓 grep 确认 **S2 改写扩展不存在**（`src/repograph/retrieve` 与 `claude-ui/server.py` 均无 `_rg_llm_rewrite`/`symbol_guesses`/`premises` 抽取；`server.py:1020` 的「改写」是无关注释）。
+- **裁定**：按 **D-N2**，S2 改写升格为 **C3 类主召回机制**（向量层砍除后同义改述的唯一补偿），**Phase C2 首项从零新建**（非恢复），禁止顺手砍除。
+- **产物/引用**：`docs/v0.3-asbuilt.md` §4；D-N2、D-18。
+
+### §B.5 语义通道 as-built —— 阿里网关 HTTP（D-N4）
+- **as-built（真实）**：运行时 L2 语义走网关 flash（`server._rg_llm_select_concepts`，`model_haiku`，已在，grok 断供零影响）；索引期语义原走 grok CLI，2026-07-22 **402 断供**后切**阿里网关 HTTP 直连**（计划 `extract/llm_client.py`，`qwen3.8-max-preview`，Phase C 建；密钥仅入请求头，一律 sk-****）。计划书 §0.2「语义生成走 grok API」表述据此过时，**as-built 以网关为准**。
+- **产物/引用**：文档头「通道变更」注记、§4.7；`docs/v0.3-asbuilt.md` §2；D-N4。
 
 ---
 

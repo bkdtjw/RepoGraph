@@ -1,0 +1,665 @@
+{
+  "source_graph": "output\\graph.json",
+  "gold_ids": [
+    "multi-agent-orch::src/orch/scheduler/core.py::_handle_terminate",
+    "concept::看门狗三级",
+    "concept::崩溃恢复算法",
+    "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event",
+    "multi-agent-orch::src/orch/render/__init__.py::estimate_tokens",
+    "concept::worktree-隔离",
+    "concept::autocommit",
+    "concept::权限三件套",
+    "concept::越权审计",
+    "concept::故障注入",
+    "concept::门禁裁决入口",
+    "concept::视图组装",
+    "concept::黑板投影与rebuild",
+    "concept::stop-标志消费",
+    "concept::迟到在途回复展示标记",
+    "concept::适配层",
+    "concept::适配层统一-invoke-接口",
+    "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields",
+    "multi-agent-orch::src/orch/render/__init__.py::_summarize",
+    "multi-agent-orch::src/orch/cli/main.py::_resolve_workspace",
+    "concept::混沌-50-轮-100-硬门槛",
+    "concept::50-轮硬门槛测试",
+    "concept::状态层"
+  ],
+  "missing_gold_or_alt": [],
+  "gold_equiv": {
+    "multi-agent-orch::src/orch/scheduler/core.py::_handle_terminate": [
+      "concept::5-4终止保留既有pending",
+      "concept::async-终止兜底与-upsert-session-作废-sid",
+      "concept::停机-重启-approve-terminate控制流",
+      "concept::终止完善",
+      "concept::终止清单",
+      "multi-agent-orch::src/orch/scheduler/core.py::_handle_terminate"
+    ],
+    "concept::看门狗三级": [
+      "concept::看门狗三级",
+      "multi-agent-orch::commit::6a9a32f7c8c597ade8699d59fbb766c939d81a91",
+      "multi-agent-orch::src/orch/scheduler/watchdog.py",
+      "multi-agent-orch::src/orch/scheduler/watchdog.py::_defect_pair_counts",
+      "multi-agent-orch::src/orch/scheduler/watchdog.py::_loop_limit",
+      "multi-agent-orch::src/orch/scheduler/watchdog.py::_max_rounds",
+      "multi-agent-orch::src/orch/scheduler/watchdog.py::_raise_gate",
+      "multi-agent-orch::src/orch/scheduler/watchdog.py::check_watchdogs"
+    ],
+    "concept::崩溃恢复算法": [
+      "concept::崩溃恢复算法",
+      "multi-agent-orch::src/orch/scheduler/recover.py",
+      "multi-agent-orch::src/orch/scheduler/recover.py::_blackboard_intact",
+      "multi-agent-orch::src/orch/scheduler/recover.py::recover"
+    ],
+    "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event": [
+      "concept::系统执行器",
+      "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event"
+    ],
+    "multi-agent-orch::src/orch/render/__init__.py::estimate_tokens": [
+      "concept::render四层视图组装",
+      "multi-agent-orch::src/orch/render/__init__.py::estimate_tokens"
+    ],
+    "concept::worktree-隔离": [
+      "concept::worktree-隔离",
+      "multi-agent-orch::src/orch/scheduler/permissions.py",
+      "multi-agent-orch::src/orch/scheduler/permissions.py::ensure_worktrees"
+    ],
+    "concept::autocommit": [
+      "concept::autocommit",
+      "multi-agent-orch::src/orch/scheduler/permissions.py",
+      "multi-agent-orch::src/orch/scheduler/permissions.py::autocommit"
+    ],
+    "concept::权限三件套": [
+      "concept::权限三件套",
+      "multi-agent-orch::commit::5c6bb736c8b009d244b343cb0ee310e65c17c1f7",
+      "multi-agent-orch::commit::c792c69e6047be138a917b0f76be0ea8bef4b0aa",
+      "multi-agent-orch::src/orch/scheduler/core.py::run_thread",
+      "multi-agent-orch::src/orch/scheduler/permissions.py",
+      "multi-agent-orch::src/orch/scheduler/permissions.py::audit_write_scope",
+      "multi-agent-orch::src/orch/scheduler/permissions.py::autocommit",
+      "multi-agent-orch::src/orch/scheduler/permissions.py::ensure_worktrees"
+    ],
+    "concept::越权审计": [
+      "concept::越权审计",
+      "multi-agent-orch::src/orch/scheduler/permissions.py",
+      "multi-agent-orch::src/orch/scheduler/permissions.py::audit_write_scope"
+    ],
+    "concept::故障注入": [
+      "concept::故障注入",
+      "multi-agent-orch::commit::69a4a589f43ee205a84e7b2e058c6d003639bbf9",
+      "multi-agent-orch::src/orch/store/__init__.py::FaultInjector.__init__",
+      "multi-agent-orch::src/orch/store/__init__.py::FaultInjector.check",
+      "multi-agent-orch::src/orch/store/__init__.py::clear_fault_injector",
+      "multi-agent-orch::src/orch/store/__init__.py::fault_check",
+      "multi-agent-orch::src/orch/store/__init__.py::set_fault_injector"
+    ],
+    "concept::门禁裁决入口": [
+      "concept::门禁裁决入口",
+      "multi-agent-orch::src/orch/scheduler/systemexec.py",
+      "multi-agent-orch::src/orch/scheduler/systemexec.py::_find_gate_decision",
+      "multi-agent-orch::src/orch/scheduler/systemexec.py::_find_gate_request",
+      "multi-agent-orch::src/orch/scheduler/systemexec.py::_run_gate_op",
+      "multi-agent-orch::src/orch/scheduler/systemexec.py::apply_gate_decision"
+    ],
+    "concept::视图组装": [
+      "concept::视图组装",
+      "multi-agent-orch::src/orch/render/__init__.py",
+      "multi-agent-orch::src/orch/render/__init__.py::render_delta",
+      "multi-agent-orch::src/orch/render/__init__.py::render_event_third_person",
+      "multi-agent-orch::src/orch/render/__init__.py::render_view"
+    ],
+    "concept::黑板投影与rebuild": [
+      "concept::黑板投影与rebuild",
+      "multi-agent-orch::commit::4ecabcb3b0baae62b81f819628a36932905a7d67",
+      "multi-agent-orch::src/orch/store/__init__.py::Store._write_board",
+      "multi-agent-orch::src/orch/store/__init__.py::_render_board",
+      "multi-agent-orch::src/orch/store/__init__.py::apply_blackboard_ops",
+      "multi-agent-orch::src/orch/store/__init__.py::board_state",
+      "multi-agent-orch::src/orch/store/__init__.py::rebuild_blackboard"
+    ],
+    "concept::stop-标志消费": [
+      "concept::stop-标志消费",
+      "multi-agent-orch::commit::ca6e02fcc8566aa484e3cd2e6a7e329c46c98a73",
+      "multi-agent-orch::src/orch/cli/main.py::_consume_stop_marker",
+      "multi-agent-orch::src/orch/cli/main.py::cmd_stop"
+    ],
+    "concept::迟到在途回复展示标记": [
+      "concept::迟到在途回复展示标记",
+      "multi-agent-orch::commit::1795d6682259c7de56e0a1baad00f3754fb0907c",
+      "multi-agent-orch::src/orch/cli/main.py::_late_after_id",
+      "multi-agent-orch::src/orch/cli/main.py::_render_replay_line",
+      "multi-agent-orch::src/orch/cli/main.py::_render_replay_lines",
+      "multi-agent-orch::src/orch/cli/main.py::cmd_replay",
+      "multi-agent-orch::src/orch/web/server.py::_ep_thread_replay"
+    ],
+    "concept::适配层": [
+      "concept::适配层",
+      "multi-agent-orch::src/orch/adapters/__init__.py",
+      "multi-agent-orch::src/orch/adapters/__init__.py::ApiAdapter.__init__",
+      "multi-agent-orch::src/orch/adapters/__init__.py::ApiAdapter.invoke",
+      "multi-agent-orch::src/orch/adapters/__init__.py::CliAdapter.__init__",
+      "multi-agent-orch::src/orch/adapters/__init__.py::CliAdapter.invoke",
+      "multi-agent-orch::src/orch/adapters/__init__.py::FakeApiAdapter.__init__",
+      "multi-agent-orch::src/orch/adapters/__init__.py::FakeApiAdapter.invoke",
+      "multi-agent-orch::src/orch/adapters/__init__.py::FakeCliAdapter.__init__",
+      "multi-agent-orch::src/orch/adapters/__init__.py::FakeCliAdapter.invoke",
+      "multi-agent-orch::src/orch/adapters/__init__.py::MockAdapter.__init__",
+      "multi-agent-orch::src/orch/adapters/__init__.py::MockAdapter.invoke"
+    ],
+    "concept::适配层统一-invoke-接口": [
+      "concept::适配层统一-invoke-接口",
+      "multi-agent-orch::src/orch/adapters/__init__.py",
+      "multi-agent-orch::src/orch/adapters/__init__.py::ApiAdapter.invoke",
+      "multi-agent-orch::src/orch/adapters/__init__.py::CliAdapter.invoke",
+      "multi-agent-orch::src/orch/adapters/__init__.py::FakeApiAdapter.invoke",
+      "multi-agent-orch::src/orch/adapters/__init__.py::FakeCliAdapter.invoke",
+      "multi-agent-orch::src/orch/adapters/__init__.py::MockAdapter.invoke"
+    ],
+    "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields": [
+      "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields"
+    ],
+    "multi-agent-orch::src/orch/render/__init__.py::_summarize": [
+      "concept::bg-orig-与-bg-summarized-同口径-body-token",
+      "concept::背景压缩比采-bg-orig-原文-body",
+      "multi-agent-orch::src/orch/render/__init__.py::_summarize"
+    ],
+    "multi-agent-orch::src/orch/cli/main.py::_resolve_workspace": [
+      "multi-agent-orch::src/orch/cli/main.py::_resolve_workspace"
+    ],
+    "concept::混沌-50-轮-100-硬门槛": [
+      "concept::混沌-50-轮-100-硬门槛",
+      "multi-agent-orch::commit::3a6235e8ebbba31b92c1c0747196eb615f97f4e6",
+      "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness.run"
+    ],
+    "concept::50-轮硬门槛测试": [
+      "concept::50-轮硬门槛测试",
+      "multi-agent-orch::commit::d1d11a16ce30db7219465a02cdedb9af0bcb26a4"
+    ],
+    "concept::状态层": [
+      "concept::状态层",
+      "multi-agent-orch::src/orch/store/__init__.py",
+      "multi-agent-orch::src/orch/store/__init__.py::Store.__init__",
+      "multi-agent-orch::src/orch/store/__init__.py::Store.append_event",
+      "multi-agent-orch::src/orch/store/__init__.py::Store.events",
+      "multi-agent-orch::src/orch/store/__init__.py::Store.pending_dispatches",
+      "multi-agent-orch::src/orch/store/__init__.py::Store.upsert_session",
+      "multi-agent-orch::src/orch/store/__init__.py::apply_blackboard_ops",
+      "multi-agent-orch::src/orch/store/__init__.py::board_state",
+      "multi-agent-orch::src/orch/store/__init__.py::rebuild_blackboard"
+    ]
+  },
+  "targets": [
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/core.py::_handle_terminate",
+      "label": "Function",
+      "name": "_handle_terminate",
+      "tier": "gold",
+      "input_qualname": "_handle_terminate",
+      "input_doc": "§5.4 终止清单：汇总产物 → system 总结事件 → status=terminated → 拒绝新派发。"
+    },
+    {
+      "id": "concept::看门狗三级",
+      "label": "Concept",
+      "name": "看门狗三级",
+      "tier": "gold",
+      "input_qualname": "看门狗三级",
+      "input_doc": "§5.3 看门狗分为三级。"
+    },
+    {
+      "id": "concept::崩溃恢复算法",
+      "label": "Concept",
+      "name": "崩溃恢复算法",
+      "tier": "gold",
+      "input_qualname": "崩溃恢复算法",
+      "input_doc": "§9.1 崩溃恢复算法，启动时对线程机械执行。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event",
+      "label": "Function",
+      "name": "append_system_event",
+      "tier": "gold",
+      "input_qualname": "append_system_event",
+      "input_doc": "编排器权威追加一条 system 事件（sender='system'，§3.1/§3.2/§16.11）。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/render/__init__.py::estimate_tokens",
+      "label": "Function",
+      "name": "estimate_tokens",
+      "tier": "gold",
+      "input_qualname": "estimate_tokens",
+      "input_doc": "字符系数近似（§17）。空串 → 0；单调不减；CJK 计更重。"
+    },
+    {
+      "id": "concept::worktree-隔离",
+      "label": "Concept",
+      "name": "worktree 隔离",
+      "tier": "gold",
+      "input_qualname": "worktree 隔离",
+      "input_doc": "权限三件套之一：worktree 隔离。"
+    },
+    {
+      "id": "concept::autocommit",
+      "label": "Concept",
+      "name": "autocommit",
+      "tier": "gold",
+      "input_qualname": "autocommit",
+      "input_doc": "权限三件套之一：autocommit。"
+    },
+    {
+      "id": "concept::权限三件套",
+      "label": "Concept",
+      "name": "权限三件套",
+      "tier": "gold",
+      "input_qualname": "权限三件套",
+      "input_doc": "权限由 ensure_worktrees、audit_write_scope、autocommit 三件套构成并接入 core。"
+    },
+    {
+      "id": "concept::越权审计",
+      "label": "Concept",
+      "name": "越权审计",
+      "tier": "gold",
+      "input_qualname": "越权审计",
+      "input_doc": "权限三件套之一：越权审计。"
+    },
+    {
+      "id": "concept::故障注入",
+      "label": "Concept",
+      "name": "故障注入",
+      "tier": "gold",
+      "input_qualname": "故障注入",
+      "input_doc": "面向存储/事务路径的故障注入能力。"
+    },
+    {
+      "id": "concept::门禁裁决入口",
+      "label": "Concept",
+      "name": "门禁裁决入口",
+      "tier": "gold",
+      "input_qualname": "门禁裁决入口",
+      "input_doc": "门禁裁决的入口能力。"
+    },
+    {
+      "id": "concept::视图组装",
+      "label": "Concept",
+      "name": "视图组装",
+      "tier": "gold",
+      "input_qualname": "视图组装",
+      "input_doc": "渲染模块负责视图组装（spec §6）。"
+    },
+    {
+      "id": "concept::黑板投影与rebuild",
+      "label": "Concept",
+      "name": "黑板投影与rebuild",
+      "tier": "gold",
+      "input_qualname": "黑板投影与rebuild",
+      "input_doc": "黑板状态通过投影与 rebuild 机制维护。"
+    },
+    {
+      "id": "concept::stop-标志消费",
+      "label": "Concept",
+      "name": "stop 标志消费",
+      "tier": "gold",
+      "input_qualname": "stop 标志消费",
+      "input_doc": "消费 stop 标志以闭合停机语义链条。"
+    },
+    {
+      "id": "concept::迟到在途回复展示标记",
+      "label": "Concept",
+      "name": "迟到在途回复展示标记",
+      "tier": "gold",
+      "input_qualname": "迟到在途回复展示标记",
+      "input_doc": "终止后到达的在途回复在 CLI/web replay 共用 _render_replay_lines 加 ⏱ 行标，控制台卡片加 late-pin 徽章；纯展示层，日志为真相不动。"
+    },
+    {
+      "id": "concept::适配层",
+      "label": "Concept",
+      "name": "适配层",
+      "tier": "gold",
+      "input_qualname": "适配层",
+      "input_doc": "模块文档将本层命名为适配层。"
+    },
+    {
+      "id": "concept::适配层统一-invoke-接口",
+      "label": "Concept",
+      "name": "适配层统一 invoke 接口",
+      "tier": "gold",
+      "input_qualname": "适配层统一 invoke 接口",
+      "input_doc": "适配层以统一的 invoke 接口对接各类后端。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields",
+      "label": "Function",
+      "name": "_strip_to_author_fields",
+      "tier": "gold",
+      "input_qualname": "_strip_to_author_fields",
+      "input_doc": "§3.1/§7.6：只保留作者字段。系统字段由编排器权威赋值，禁止后端自报（§16.11）。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/render/__init__.py::_summarize",
+      "label": "Function",
+      "name": "_summarize",
+      "tier": "gold",
+      "input_qualname": "_summarize",
+      "input_doc": "正文摘要：折叠换行为单空格 + 截断（背景一行 / 焦点摘要复用）。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/cli/main.py::_resolve_workspace",
+      "label": "Function",
+      "name": "_resolve_workspace",
+      "tier": "gold",
+      "input_qualname": "_resolve_workspace",
+      "input_doc": "把 --workspace 转为 Path；未提供则用当前目录。"
+    },
+    {
+      "id": "concept::混沌-50-轮-100-硬门槛",
+      "label": "Concept",
+      "name": "混沌 50 轮 100% 硬门槛",
+      "tier": "gold",
+      "input_qualname": "混沌 50 轮 100% 硬门槛",
+      "input_doc": "M4 验收含 --chaos-50，50 轮 100% 通过为 spec §15 硬门槛。"
+    },
+    {
+      "id": "concept::50-轮硬门槛测试",
+      "label": "Concept",
+      "name": "50 轮硬门槛测试",
+      "tier": "gold",
+      "input_qualname": "50 轮硬门槛测试",
+      "input_doc": "M4 引入 50 轮硬门槛测试，通过 --chaos-50 作为 pytest 可选开关。"
+    },
+    {
+      "id": "concept::状态层",
+      "label": "Concept",
+      "name": "状态层",
+      "tier": "gold",
+      "input_qualname": "状态层",
+      "input_doc": "状态层负责事件日志、派发表、黑板、会话表等持久化。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/watchdog.py::_defect_pair_counts",
+      "label": "Function",
+      "name": "_defect_pair_counts",
+      "tier": "neighbor",
+      "input_qualname": "_defect_pair_counts",
+      "input_doc": "从日志现数：同一有序对 (from→to) 的 **defect** 事件数（§5.3 互@环路）。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/watchdog.py::_loop_limit",
+      "label": "Function",
+      "name": "_loop_limit",
+      "tier": "neighbor",
+      "input_qualname": "_loop_limit",
+      "input_doc": ""
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/watchdog.py::_max_rounds",
+      "label": "Function",
+      "name": "_max_rounds",
+      "tier": "neighbor",
+      "input_qualname": "_max_rounds",
+      "input_doc": ""
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/recover.py::_blackboard_intact",
+      "label": "Function",
+      "name": "_blackboard_intact",
+      "tier": "neighbor",
+      "input_qualname": "_blackboard_intact",
+      "input_doc": "黑板 state.json 是否存在且为合法 JSON（§9.1：缺失或损坏即需 rebuild）。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/recover.py::recover",
+      "label": "Function",
+      "name": "recover",
+      "tier": "neighbor",
+      "input_qualname": "recover",
+      "input_doc": "§9.1 恢复算法。对单线程机械执行，禁止猜测，只查表与数日志。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/permissions.py::ensure_worktrees",
+      "label": "Function",
+      "name": "ensure_worktrees",
+      "tier": "neighbor",
+      "input_qualname": "ensure_worktrees",
+      "input_doc": "为 config.roles 中每个 write_scope 非空的角色建 worktree（§8.1）。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/permissions.py::autocommit",
+      "label": "Function",
+      "name": "autocommit",
+      "tier": "neighbor",
+      "input_qualname": "autocommit",
+      "input_doc": "§4.5：有改动 `git add -A && git commit -m \"wip:{role}@E{event_id}\"` → 返回 sha。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/core.py::run_thread",
+      "label": "Function",
+      "name": "run_thread",
+      "tier": "neighbor",
+      "input_qualname": "run_thread",
+      "input_doc": "§5.1 核心循环单线程串行版。跑到 thread status ∈ {suspended, terminated} 返回。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/permissions.py::audit_write_scope",
+      "label": "Function",
+      "name": "audit_write_scope",
+      "tier": "neighbor",
+      "input_qualname": "audit_write_scope",
+      "input_doc": "§8.2 diff 越权审计。返回 (是否合规, 违规路径列表)。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::FaultInjector.__init__",
+      "label": "Function",
+      "name": "FaultInjector.__init__",
+      "tier": "neighbor",
+      "input_qualname": "FaultInjector.__init__",
+      "input_doc": ""
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::FaultInjector.check",
+      "label": "Function",
+      "name": "FaultInjector.check",
+      "tier": "neighbor",
+      "input_qualname": "FaultInjector.check",
+      "input_doc": ""
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::clear_fault_injector",
+      "label": "Function",
+      "name": "clear_fault_injector",
+      "tier": "neighbor",
+      "input_qualname": "clear_fault_injector",
+      "input_doc": "显式清除（等价 set_fault_injector(None)）。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/systemexec.py::_find_gate_decision",
+      "label": "Function",
+      "name": "_find_gate_decision",
+      "tier": "neighbor",
+      "input_qualname": "_find_gate_decision",
+      "input_doc": "按 corr 定位已存在的 gate_decision 事件（§9.1 恢复算法所需：只查表，禁猜测）。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/systemexec.py::_find_gate_request",
+      "label": "Function",
+      "name": "_find_gate_request",
+      "tier": "neighbor",
+      "input_qualname": "_find_gate_request",
+      "input_doc": "按 corr 定位最近的 gate_request 事件（§10：corr 关联门禁）。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/scheduler/systemexec.py::_run_gate_op",
+      "label": "Function",
+      "name": "_run_gate_op",
+      "tier": "neighbor",
+      "input_qualname": "_run_gate_op",
+      "input_doc": "执行单个 gate_op 命令模板（§5.5 系统执行器）。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/render/__init__.py::render_delta",
+      "label": "Function",
+      "name": "render_delta",
+      "tier": "neighbor",
+      "input_qualname": "render_delta",
+      "input_doc": "§6.5 热续增量视图："
+    },
+    {
+      "id": "multi-agent-orch::src/orch/render/__init__.py::render_event_third_person",
+      "label": "Function",
+      "name": "render_event_third_person",
+      "tier": "neighbor",
+      "input_qualname": "render_event_third_person",
+      "input_doc": "焦点窗单事件第三人称渲染（§6.2）："
+    },
+    {
+      "id": "multi-agent-orch::src/orch/render/__init__.py::render_view",
+      "label": "Function",
+      "name": "render_view",
+      "tier": "neighbor",
+      "input_qualname": "render_view",
+      "input_doc": "§6.1-§6.4 四层组装（单线程 mock 语境；热续增量 §6.5 是 M3，本函数只走冷启动全量路径）。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::Store._write_board",
+      "label": "Function",
+      "name": "Store._write_board",
+      "tier": "neighbor",
+      "input_qualname": "Store._write_board",
+      "input_doc": ""
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::_render_board",
+      "label": "Function",
+      "name": "_render_board",
+      "tier": "neighbor",
+      "input_qualname": "_render_board",
+      "input_doc": "board.md 渲染（格式属 spec §17，本实现自定，见 IMPLEMENTATION_NOTES / 最终回复）。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::apply_blackboard_ops",
+      "label": "Function",
+      "name": "apply_blackboard_ops",
+      "tier": "neighbor",
+      "input_qualname": "apply_blackboard_ops",
+      "input_doc": "按 §3.3 三种 op 更新 blackboard/state.json，随后重渲染 board.md。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/cli/main.py::_consume_stop_marker",
+      "label": "Function",
+      "name": "_consume_stop_marker",
+      "tier": "neighbor",
+      "input_qualname": "_consume_stop_marker",
+      "input_doc": "若 workspace/orch.stop 存在则删除并返回 True；否则返回 False。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/cli/main.py::cmd_stop",
+      "label": "Function",
+      "name": "cmd_stop",
+      "tier": "neighbor",
+      "input_qualname": "cmd_stop",
+      "input_doc": "优雅停机（spec §12）：写 workspace 级 `orch.stop` 标志文件。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/cli/main.py::_late_after_id",
+      "label": "Function",
+      "name": "_late_after_id",
+      "tier": "neighbor",
+      "input_qualname": "_late_after_id",
+      "input_doc": "③迟到标记（P3，展示层）：最后一条 terminate 的事件号。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/cli/main.py::_render_replay_line",
+      "label": "Function",
+      "name": "_render_replay_line",
+      "tier": "neighbor",
+      "input_qualname": "_render_replay_line",
+      "input_doc": "一条事件 → 第三人称群聊 markdown 行（§16.1：路由只认 to 字段）。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/cli/main.py::_render_replay_lines",
+      "label": "Function",
+      "name": "_render_replay_lines",
+      "tier": "neighbor",
+      "input_qualname": "_render_replay_lines",
+      "input_doc": "整流渲染：逐行 _render_replay_line + 终止后到达标记（CLI 与 web 共用）。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/adapters/__init__.py::ApiAdapter.__init__",
+      "label": "Function",
+      "name": "ApiAdapter.__init__",
+      "tier": "neighbor",
+      "input_qualname": "ApiAdapter.__init__",
+      "input_doc": ""
+    },
+    {
+      "id": "multi-agent-orch::src/orch/adapters/__init__.py::ApiAdapter.invoke",
+      "label": "Function",
+      "name": "ApiAdapter.invoke",
+      "tier": "neighbor",
+      "input_qualname": "ApiAdapter.invoke",
+      "input_doc": "单步：发送全量 view['text'] → 假/真 messages → 归一化为作者字段信封。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/adapters/__init__.py::CliAdapter.__init__",
+      "label": "Function",
+      "name": "CliAdapter.__init__",
+      "tier": "neighbor",
+      "input_qualname": "CliAdapter.__init__",
+      "input_doc": ""
+    },
+    {
+      "id": "multi-agent-orch::src/orch/adapters/__init__.py::CliAdapter.invoke",
+      "label": "Function",
+      "name": "CliAdapter.invoke",
+      "tier": "neighbor",
+      "input_qualname": "CliAdapter.invoke",
+      "input_doc": "冷启动路径：`start_cmd + view['text']` → 解析最后一个 json 块。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/adapters/__init__.py::FakeApiAdapter.invoke",
+      "label": "Function",
+      "name": "FakeApiAdapter.invoke",
+      "tier": "neighbor",
+      "input_qualname": "FakeApiAdapter.invoke",
+      "input_doc": "§7.3：单步；忽略入参 sess；返回 sess=None（每次全量组装，不复用会话）。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness.run",
+      "label": "Function",
+      "name": "ChaosHarness.run",
+      "tier": "neighbor",
+      "input_qualname": "ChaosHarness.run",
+      "input_doc": "跑 rounds 轮混沌；可选 metrics_store 落 §13 混沌指标（R-T4）。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::Store.__init__",
+      "label": "Function",
+      "name": "Store.__init__",
+      "tier": "neighbor",
+      "input_qualname": "Store.__init__",
+      "input_doc": ""
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::Store.append_event",
+      "label": "Function",
+      "name": "Store.append_event",
+      "tier": "neighbor",
+      "input_qualname": "Store.append_event",
+      "input_doc": "插入 events（id 自增）+ 为每个 to 目标插 dispatches(pending)。"
+    },
+    {
+      "id": "multi-agent-orch::src/orch/store/__init__.py::Store.events",
+      "label": "Function",
+      "name": "Store.events",
+      "tier": "neighbor",
+      "input_qualname": "Store.events",
+      "input_doc": "全部事件，id 升序，dict 形态（键用协议名，含 \"from\" 由 sender 映射，§0.1）。"
+    }
+  ],
+  "counts": {
+    "gold": 23,
+    "targets_total": 58,
+    "by_label": {
+      "Function": 41,
+      "Concept": 17
+    }
+  }
+}

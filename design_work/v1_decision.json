@@ -1,0 +1,11 @@
+{
+  "verdict_id": "D-P1",
+  "winning_tokenizer": "ngram",
+  "rationale": "FZ-dev 决策集上 a(ngram)=b(jieba)=base=0.1（并列，满足 a>=90%*b → 选 ngram 守 stdlib）；FZ-test 上 jieba 仅以 1 题之差领先(hit@3 0.5 vs 0.4)，n=10 属噪声，未达破例 bar。stdlib 约束不因 1 题证据破除。",
+  "d11_reconsider_alarm": true,
+  "d11_note": "FZ-dev 卡片零净提升（唯一命中 d04 为既有概念命中，非卡片驱动）→ 触发'两案均无提升'。但 D-11 未被证伪：FZ-test 卡片将 hit@3 0.1→0.5、hit@1 0→0.3，机制在有词面桥接的题上有效。dev 平坦根因=卡片输入(实体自述)在反幻觉约束下无法桥接极端口语，属 C2'先修卡片质量'范畴，非杀 D-11。",
+  "numbers": {
+    "FZ_dev":  {"base_hit3": 0.1, "a_ngram_hit3": 0.1, "b_jieba_hit3": 0.1, "base_hit1": 0.0, "a_hit1": 0.0, "b_hit1": 0.0},
+    "FZ_test": {"base_hit3": 0.1, "a_ngram_hit3": 0.4, "b_jieba_hit3": 0.5, "base_hit1": 0.0, "a_hit1": 0.2, "b_hit1": 0.3}
+  }
+}
