@@ -83,8 +83,13 @@ def judge_l0(resp: dict) -> dict:
     text = (resp.get("answer") or "") + "\n" + (resp.get("context_text") or "")
     hits = sum(1 for s in L0_FACTS_STR if s in text)
     hits += sum(1 for n in L0_FACTS_NUM if re.search(r"(?<!\d)" + n + r"(?!\d)", text))
-    ok_mode = mode_class(resp.get("mode")) == "overview"
-    return {"pass": ok_mode and hits >= 3, "mode_ok": ok_mode, "facts_hit": hits}
+    # v0.3 字段适配：优先读实现新增的 route_label（meta/global 即 overview 类，spec §5.1），
+    # 回落 mode_class（v1 兼容）。二者等价（meta→mode 'meta'→overview 类），不放宽阈值。
+    route_label = resp.get("route_label")
+    ok_mode = (route_label in ("meta", "global")
+               or mode_class(resp.get("mode")) == "overview")
+    return {"pass": ok_mode and hits >= 3, "mode_ok": ok_mode, "facts_hit": hits,
+            "route_label": route_label}
 
 
 def gold_equiv_ids(gold_id: str, edges: list) -> set:
@@ -228,6 +233,10 @@ def main() -> int:
         rec = {
             "id": row["id"], "subset": subset, "question": q,
             "mode": ctx.get("mode"), "mode_class": mode_class(ctx.get("mode")),
+            # v0.3 字段适配：透传实现新增的 route_label / route_source（观测 + L0 判定用）
+            "route_label": ctx.get("route_label"),
+            "route_source": ctx.get("route_source"),
+            "degraded": ctx.get("degraded", False),
             "n_linked": len(ctx.get("linked") or []),
             "bare_refusal": is_bare_refusal(ctx),
         }
@@ -291,7 +300,11 @@ def main() -> int:
                "premise_flags_capability": pp_has_pf},
     }
 
-    # ---- 路由准确率（48 题标注 gold_mode_class）----
+    # ---- 路由准确率（48 题标注 gold_mode_class；判定基准 = mode_class）----
+    # 说明：数据集 gold 为 3 分类 gold_mode_class（overview/topic/symbol，冻结不可改），
+    # 故硬指标沿用 mode_class(mode) vs gold_mode_class（threshold 0.9 不动）。route_label 是
+    # S1 五分类的更精确回显，随每题记录并附于失配明细供观测；真正的 route_label 五分类精确
+    # 匹配（spec §6.2）需 gold_route_label（冻结数据集暂无），列为后续增补，不在此放宽阈值。
     route_ok = 0
     route_detail = []
     for r, row in zip(per_q, rows):
@@ -299,7 +312,8 @@ def main() -> int:
         ok = (r["mode_class"] == gold_mc)
         route_ok += int(ok)
         if not ok:
-            route_detail.append({"id": r["id"], "got": r["mode_class"], "want": gold_mc})
+            route_detail.append({"id": r["id"], "got": r["mode_class"],
+                                 "want": gold_mc, "route_label": r.get("route_label")})
     route_acc = rate(route_ok, len(per_q))
 
     # ---- 锁定失败 B-1 / B-2 / B-3 ----

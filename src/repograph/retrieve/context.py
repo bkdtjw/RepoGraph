@@ -23,6 +23,8 @@ from typing import Optional
 from ..models import GraphStore, dotted_from_relpath
 from .impact import impact_analysis
 from .topic import topic_recall
+from .router import normalize, is_code_token, route, default_suggestions
+from .repo_card import build_meta_context
 
 # ---------------------------------------------------------------------------
 # 打分（对应契约优先级：精确 qualname > 后缀 > 短名 > 概念名 > 模块）
@@ -189,6 +191,26 @@ def _short_path(module_id: str) -> str:
 # build_repo_context —— 命中实体 + 影响面 + 提交 + 概念
 # ---------------------------------------------------------------------------
 
+def _finalize(ctx: dict, route_label: str, route_source: str,
+              mode: Optional[str] = None, degraded: Optional[bool] = None,
+              suggestions: Optional[list] = None) -> dict:
+    """给上下文 dict 挂 schema v2 的路由回显字段（纯增字段，v1 消费方兼容）。
+
+    ``route_label`` = S1 五分类（§6.2 路由准确率判定基准）；``route_source`` =
+    ``rule:<id>`` / ``fallback:default``；``mode`` 传入则覆盖（global 路由把 overview
+    改回显为 global）；``degraded``/``suggestions`` 按需附（S6 回退阶梯 / oos）。
+    """
+    ctx["route_label"] = route_label
+    ctx["route_source"] = route_source
+    if mode is not None:
+        ctx["mode"] = mode
+    if degraded is not None:
+        ctx["degraded"] = degraded
+    if suggestions is not None:
+        ctx["suggestions"] = suggestions
+    return ctx
+
+
 def build_repo_context(
     store: GraphStore,
     question: str,
@@ -196,41 +218,91 @@ def build_repo_context(
     impact_depth: int = 2,
     allow_overview: bool = True,
 ) -> dict:
-    """四层瀑布装配上下文——消灭"我不了解你的代码库"（契约 A 主入口）。
+    """S1 五路路由器 + 四档瀑布装配上下文（契约 A 主入口，v0.3 Phase C1）。
 
-    确定性、不碰网关。按优先级逐层下落，任一层命中即返回：
+    时序（落地设计 §4.2，消除 route↔linker 先后歧义）：``normalize`` → ``link_entities``
+    + ``is_code_token``（+ 无链接时 ``topic_recall``，供 oos 组合谓词与 topic 档复用）→
+    ``route()`` 分诊到 5 标签 → 分派（确定性、不碰网关）：
 
-    - **L0 符号**：``link_entities`` 词面命中真实符号 → ``_build_symbol_context``
-      （影响面 + 提交 + 概念），``mode='symbol'``。含具体符号名的问题走这里。
-    - **元问题**：无符号命中但问题是"了解/介绍/整体/架构/这项目"等元问题
-      → ``build_overview``，``mode='overview'``（避免被弱主题词误导）。
-    - **L1 主题**：``topic_recall`` BM25-lite 召回概念/提交/模块，命中概念沿
-      IMPLEMENTS/DESCRIBES 反向展开到真实函数与提交 → ``mode='topic'``。
-    - **L3 概览兜底**：主题也空且 ``allow_overview`` → ``build_overview``；
-      否则 ``mode='none'``（``allow_overview=False`` 供后端在自己的 L2 LLM 链接
-      失败后再决定是否兜底）。
+    - **meta**         → 注入 repo_card（``build_meta_context``），``mode='meta'``；
+    - **global**       → ``build_overview`` 顶层概览，``mode='global'``；
+    - **entity_local** → 现四档瀑布（L0 符号→L1 主题→L2 LLM→L3 概览），``mode∈{symbol,topic,llm,overview}``；
+    - **structural**   → 能定量者走 ``build_overview`` 字段，``route_label=structural`` + ``degraded``；
+    - **out_of_scope** → 界外声明 + ≥1 建议问法 + ``degraded``，``mode='out_of_scope'``（P4 不裸拒）。
 
-    统一返回 ``{mode, linked, context_text, stats}``。``stats`` 恒含
-    ``{symbols, topics, impact_callers, commits, concepts}`` 五键（按 mode 填有意义者）。
+    统一返回 ``{mode, linked, context_text, stats, route_label, route_source[, degraded, suggestions]}``。
+    ``stats`` 恒含 ``{symbols, topics, impact_callers, commits, concepts}`` 五键。规则全不中 →
+    entity_local 兜底（离线确定性；网关侧 ``semantic_mode=='llm'`` 的 LLM 兜底分类非本函数职责）。
+
+    向后兼容：``mode`` 语义按 spec §5.1 扩展 meta/global；旧 ``_is_meta_question`` 由 meta
+    路由取代（函数保留不删）；symbol/topic/llm/overview/none 行为不变。
     """
-    # L0：符号优先（现有确定性逻辑，行为不变，仅 mode 由 'graph' 改为 'symbol'）
-    linked = link_entities(store, question, top_k=5)
+    norm_q = normalize(question)
+    linked = link_entities(store, norm_q, top_k=5)
+    has_ct = is_code_token(norm_q)
+    # topic_recall 仅在无链接时需要（symbol 档不经 topic；oos 组合谓词要求 no_linker_hit），
+    # 且结果回灌 entity_local 的 topic 档避免二次计算。
+    topic_hits = [] if linked else topic_recall(store, norm_q, top_k=8)
+
+    label, rule_id = route(norm_q, linked, topic_hits, has_ct)
+    src = f"rule:{rule_id}" if rule_id else "fallback:default"
+
+    if label == "meta":
+        return _finalize(build_meta_context(store), "meta", src)
+    if label == "global":
+        # 展示 mode 保持 overview（spec §5.1：build_overview 恒返回 overview，global 的事件
+        # mode 改写在网关侧据 route_label 完成）；route_label='global' 承载精确五分类。
+        return _finalize(build_overview(store), "global", src)
+    if label == "structural":
+        # 能确定性计数者走 build_overview 字段（模块/函数/概念总数等）；route_label 独立
+        # 回显不被 overview 吞没（保 P2 可评测），degraded 标注模板层未建（落地设计 §4.2/F8）。
+        return _finalize(build_overview(store), "structural", src,
+                         degraded=True, suggestions=default_suggestions())
+    if label == "out_of_scope":
+        return _build_oos_context(store, src)
+
+    # entity_local（entity-1 规则或兜底）——现四档瀑布，行为不变
+    return _entity_local_waterfall(
+        store, norm_q, linked, topic_hits, budget_chars, impact_depth,
+        allow_overview, src)
+
+
+def _entity_local_waterfall(
+    store: GraphStore, question: str, linked: list[dict], topic_hits: list,
+    budget_chars: int, impact_depth: int, allow_overview: bool, src: str,
+) -> dict:
+    """entity_local 路由之下的现四档瀑布（L0 符号→L1 主题→L3 概览兜底），行为不变。
+
+    S6 回退阶梯形式化（落地设计 §5.8 / D-05）：符号空且主题空 → ``build_overview``
+    + ``degraded`` + 建议问法（低置信度）；``allow_overview=False`` 时回落 ``mode='none'``
+    交后端 L2 决策（保持 v0.1 契约）。裸拒率 0 由 overview 恒兜底达成（P4）。
+    """
+    # L0 符号
     if linked:
-        return _build_symbol_context(store, linked, budget_chars, impact_depth)
-
-    # 元问题：无符号时优先给整体概览，而非被"代码/项目"等弱词面拽进某个概念
-    if allow_overview and _is_meta_question(question):
-        return build_overview(store)
-
-    # L1：主题词面召回 → 概念展开
-    topic = _build_topic_context(store, question, budget_chars)
+        return _finalize(_build_symbol_context(store, linked, budget_chars, impact_depth),
+                         "entity_local", src)
+    # L1 主题（复用已算的 topic_hits，避免二次召回）
+    topic = _build_topic_context(store, question, budget_chars, recall=topic_hits)
     if topic is not None:
-        return topic
-
-    # L3：概览兜底（永不失联）；allow_overview=False 时回落 none 交由后端 L2 决策
+        return _finalize(topic, "entity_local", src)
+    # L3 概览兜底（永不失联）+ S6 建议问法；allow_overview=False 回落 none
     if allow_overview:
-        return build_overview(store)
-    return {"mode": "none", "linked": [], "context_text": "", "stats": _stats()}
+        return _finalize(build_overview(store), "entity_local", src,
+                         degraded=True, suggestions=default_suggestions())
+    return _finalize({"mode": "none", "linked": [], "context_text": "", "stats": _stats()},
+                     "entity_local", src, degraded=True)
+
+
+def _build_oos_context(store: GraphStore, src: str) -> dict:
+    """out_of_scope 路由：界外声明 + ≥1 本仓库可答建议问法 + degraded（P4 绝不裸拒）。"""
+    text = (
+        "【超出仓库范围】（来源: 路由判定 out_of_scope）\n"
+        "这个问题看起来不指向本代码库的具体内容。本系统基于代码知识图谱 RepoGraph，"
+        "擅长回答与本仓库结构 / 实现 / 历史相关的问题。"
+    )
+    return _finalize(
+        {"mode": "out_of_scope", "linked": [], "context_text": text, "stats": _stats()},
+        "out_of_scope", src, degraded=True, suggestions=default_suggestions())
 
 
 def _build_symbol_context(
@@ -602,10 +674,16 @@ def _assemble_concept_context(
 # ---------------------------------------------------------------------------
 
 def _build_topic_context(
-    store: GraphStore, question: str, budget_chars: int
+    store: GraphStore, question: str, budget_chars: int,
+    recall: Optional[list] = None,
 ) -> Optional[dict]:
-    """无符号命中时的主题召回路径。返回 ``mode='topic'`` 的上下文；召回空返回 ``None``。"""
-    recall = topic_recall(store, question, top_k=8)
+    """无符号命中时的主题召回路径。返回 ``mode='topic'`` 的上下文；召回空返回 ``None``。
+
+    ``recall`` 传入则复用（``build_repo_context`` 已在 route 前算过，避免二次召回）；
+    传入空列表等价于「召回为空」→ 返回 ``None``（与现建空召回同义）。
+    """
+    if recall is None:
+        recall = topic_recall(store, question, top_k=8)
     if not recall:
         return None
 

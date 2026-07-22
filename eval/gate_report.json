@@ -2,10 +2,8 @@
   "meta": {
     "phase": "A (治理与再基线) · 任务 A4 门禁基线",
     "git": {
-      "head": "c0f3b7ab4e0597cd69eb1c4484bc40fdcd8c7f13",
-      "tags_at_head": [
-        "phase-b-frozen-20260722"
-      ],
+      "head": "8e24afa704eb84194bcd624c9cd76dafc24a2c72",
+      "tags_at_head": [],
       "expected_tag": "rebaseline-20260723",
       "tag_bound": false
     },
@@ -23,12 +21,9 @@
   "subset_summary": {
     "L0": {
       "n": 10,
-      "pass_rate": 0.8,
-      "pass_n": 8,
-      "fail_ids": [
-        "L0-02",
-        "L0-07"
-      ]
+      "pass_rate": 1.0,
+      "pass_n": 10,
+      "fail_ids": []
     },
     "FZ_dev": {
       "n": 10,
@@ -71,10 +66,10 @@
     "B-1": {
       "desc": "L0-02 口语元问题未整题通过（误路由至 topic / 事实命中<3）",
       "expected": "red",
-      "actual_mode": "topic",
-      "actual_mode_class": "topic",
-      "l0_02_judge_pass": false,
-      "is_red": true
+      "actual_mode": "overview",
+      "actual_mode_class": "overview",
+      "l0_02_judge_pass": true,
+      "is_red": false
     },
     "B-2": {
       "desc": "FZ-dev hit@3 < 0.8",
@@ -109,7 +104,7 @@
       "threshold": "修复后不得回退",
       "effective": "各自翻绿起",
       "status": "RED(baseline)",
-      "b1_red": true,
+      "b1_red": false,
       "b2_red": true,
       "b3_red": true
     },
@@ -122,79 +117,81 @@
     "路由准确率(48题标注)": {
       "threshold": "≥ 0.9",
       "effective": "Phase C1",
-      "measured": 0.7083,
+      "measured": 0.75,
       "status": "PENDING",
       "would_pass": false,
       "mismatches": [
         {
-          "id": "L0-02",
-          "got": "topic",
-          "want": "overview"
-        },
-        {
-          "id": "L0-07",
-          "got": "topic",
-          "want": "overview"
-        },
-        {
           "id": "FZ-d02",
           "got": "overview",
-          "want": "topic"
+          "want": "topic",
+          "route_label": "entity_local"
         },
         {
           "id": "FZ-d03",
           "got": "overview",
-          "want": "topic"
+          "want": "topic",
+          "route_label": "entity_local"
         },
         {
           "id": "FZ-d05",
           "got": "overview",
-          "want": "topic"
+          "want": "topic",
+          "route_label": "global"
         },
         {
           "id": "FZ-d06",
           "got": "overview",
-          "want": "topic"
+          "want": "topic",
+          "route_label": "entity_local"
         },
         {
           "id": "FZ-d08",
           "got": "overview",
-          "want": "topic"
+          "want": "topic",
+          "route_label": "entity_local"
         },
         {
           "id": "PP-02",
           "got": "topic",
-          "want": "overview"
+          "want": "overview",
+          "route_label": "entity_local"
         },
         {
           "id": "PP-03",
           "got": "topic",
-          "want": "overview"
+          "want": "overview",
+          "route_label": "entity_local"
         },
         {
           "id": "PP-04",
           "got": "topic",
-          "want": "overview"
+          "want": "overview",
+          "route_label": "entity_local"
         },
         {
           "id": "PP-05",
           "got": "topic",
-          "want": "overview"
+          "want": "overview",
+          "route_label": "entity_local"
         },
         {
           "id": "PP-06",
           "got": "topic",
-          "want": "overview"
+          "want": "overview",
+          "route_label": "entity_local"
         },
         {
           "id": "PP-07",
           "got": "topic",
-          "want": "overview"
+          "want": "overview",
+          "route_label": "entity_local"
         },
         {
           "id": "PP-08",
           "got": "topic",
-          "want": "overview"
+          "want": "overview",
+          "route_label": "entity_local"
         }
       ]
     },
@@ -218,26 +215,34 @@
       "question": "你知道我的代码库吗",
       "mode": "overview",
       "mode_class": "overview",
+      "route_label": "meta",
+      "route_source": "rule:meta-1",
+      "degraded": false,
       "n_linked": 0,
       "bare_refusal": false,
       "judge": {
         "pass": true,
         "mode_ok": true,
-        "facts_hit": 16
+        "facts_hit": 16,
+        "route_label": "meta"
       }
     },
     {
       "id": "L0-02",
       "subset": "L0",
       "question": "你晓得我这破仓库是干啥的不",
-      "mode": "topic",
-      "mode_class": "topic",
-      "n_linked": 1,
+      "mode": "overview",
+      "mode_class": "overview",
+      "route_label": "meta",
+      "route_source": "rule:meta-1",
+      "degraded": false,
+      "n_linked": 0,
       "bare_refusal": false,
       "judge": {
-        "pass": false,
-        "mode_ok": false,
-        "facts_hit": 0
+        "pass": true,
+        "mode_ok": true,
+        "facts_hit": 16,
+        "route_label": "meta"
       }
     },
     {
@@ -246,12 +251,16 @@
       "question": "你能干嘛？对我这项目能做啥",
       "mode": "overview",
       "mode_class": "overview",
+      "route_label": "meta",
+      "route_source": "rule:meta-2",
+      "degraded": false,
       "n_linked": 0,
       "bare_refusal": false,
       "judge": {
         "pass": true,
         "mode_ok": true,
-        "facts_hit": 16
+        "facts_hit": 16,
+        "route_label": "meta"
       }
     },
     {
@@ -260,12 +269,16 @@
       "question": "这个项目整体多大规模，有多少东西",
       "mode": "overview",
       "mode_class": "overview",
+      "route_label": "global",
+      "route_source": "rule:global-1",
+      "degraded": false,
       "n_linked": 0,
       "bare_refusal": false,
       "judge": {
         "pass": true,
         "mode_ok": true,
-        "facts_hit": 16
+        "facts_hit": 16,
+        "route_label": "global"
       }
     },
     {
@@ -274,12 +287,16 @@
       "question": "你了解我的仓库不，简单讲讲",
       "mode": "overview",
       "mode_class": "overview",
+      "route_label": "meta",
+      "route_source": "rule:meta-1",
+      "degraded": false,
       "n_linked": 0,
       "bare_refusal": false,
       "judge": {
         "pass": true,
         "mode_ok": true,
-        "facts_hit": 16
+        "facts_hit": 16,
+        "route_label": "meta"
       }
     },
     {
@@ -288,26 +305,34 @@
       "question": "你对这个带码库熟悉么",
       "mode": "overview",
       "mode_class": "overview",
+      "route_label": "meta",
+      "route_source": "rule:meta-1",
+      "degraded": false,
       "n_linked": 0,
       "bare_refusal": false,
       "judge": {
         "pass": true,
         "mode_ok": true,
-        "facts_hit": 16
+        "facts_hit": 16,
+        "route_label": "meta"
       }
     },
     {
       "id": "L0-07",
       "subset": "L0",
       "question": "你是谁，你能帮我看代码不",
-      "mode": "topic",
-      "mode_class": "topic",
-      "n_linked": 4,
+      "mode": "overview",
+      "mode_class": "overview",
+      "route_label": "meta",
+      "route_source": "rule:meta-2",
+      "degraded": false,
+      "n_linked": 0,
       "bare_refusal": false,
       "judge": {
-        "pass": false,
-        "mode_ok": false,
-        "facts_hit": 0
+        "pass": true,
+        "mode_ok": true,
+        "facts_hit": 16,
+        "route_label": "meta"
       }
     },
     {
@@ -316,12 +341,16 @@
       "question": "这仓库大概是个什么东西，给个总览",
       "mode": "overview",
       "mode_class": "overview",
+      "route_label": "global",
+      "route_source": "rule:global-1",
+      "degraded": false,
       "n_linked": 0,
       "bare_refusal": false,
       "judge": {
         "pass": true,
         "mode_ok": true,
-        "facts_hit": 16
+        "facts_hit": 16,
+        "route_label": "global"
       }
     },
     {
@@ -330,12 +359,16 @@
       "question": "你到底能不能读懂我的代码库呀",
       "mode": "overview",
       "mode_class": "overview",
+      "route_label": "meta",
+      "route_source": "rule:meta-1",
+      "degraded": false,
       "n_linked": 0,
       "bare_refusal": false,
       "judge": {
         "pass": true,
         "mode_ok": true,
-        "facts_hit": 16
+        "facts_hit": 16,
+        "route_label": "meta"
       }
     },
     {
@@ -344,12 +377,16 @@
       "question": "帮我认识下这个工程，它做啥的",
       "mode": "overview",
       "mode_class": "overview",
+      "route_label": "meta",
+      "route_source": "rule:meta-1",
+      "degraded": false,
       "n_linked": 0,
       "bare_refusal": false,
       "judge": {
         "pass": true,
         "mode_ok": true,
-        "facts_hit": 16
+        "facts_hit": 16,
+        "route_label": "meta"
       }
     },
     {
@@ -358,6 +395,9 @@
       "question": "那个把活儿叫停之后负责收尾扫尾的一摊在哪",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 5,
       "bare_refusal": false,
       "judge": {
@@ -378,6 +418,9 @@
       "question": "谁在旁边盯着别人干活会不会卡住",
       "mode": "overview",
       "mode_class": "overview",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": true,
       "n_linked": 0,
       "bare_refusal": false,
       "judge": {
@@ -394,6 +437,9 @@
       "question": "程序半路挂了之后怎么自己爬起来接着干",
       "mode": "overview",
       "mode_class": "overview",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": true,
       "n_linked": 0,
       "bare_refusal": false,
       "judge": {
@@ -410,6 +456,9 @@
       "question": "系统自己往台账上补记一笔是哪段逻辑",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 7,
       "bare_refusal": false,
       "judge": {
@@ -430,6 +479,9 @@
       "question": "怎么估摸一段话大概占多少篇幅",
       "mode": "overview",
       "mode_class": "overview",
+      "route_label": "global",
+      "route_source": "rule:global-1",
+      "degraded": false,
       "n_linked": 0,
       "bare_refusal": false,
       "judge": {
@@ -446,6 +498,9 @@
       "question": "给每个干活的单独开个小隔间互不打扰",
       "mode": "overview",
       "mode_class": "overview",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": true,
       "n_linked": 0,
       "bare_refusal": false,
       "judge": {
@@ -462,6 +517,9 @@
       "question": "活干完自动留个存档不用手动保存",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 8,
       "bare_refusal": false,
       "judge": {
@@ -482,6 +540,9 @@
       "question": "管谁能碰哪块、越界了就拦下来那套",
       "mode": "overview",
       "mode_class": "overview",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": true,
       "n_linked": 0,
       "bare_refusal": false,
       "judge": {
@@ -498,6 +559,9 @@
       "question": "存心使坏来测系统扛不扛揍",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 6,
       "bare_refusal": false,
       "judge": {
@@ -518,6 +582,9 @@
       "question": "放行还是拦下的那道关卡在哪判",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 1,
       "bare_refusal": false,
       "judge": {
@@ -536,6 +603,9 @@
       "question": "把界面那几块拼装出来显示",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 4,
       "bare_refusal": false,
       "judge": {
@@ -556,6 +626,9 @@
       "question": "大家共用的留言板重新拼一遍",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 2,
       "bare_refusal": false,
       "judge": {
@@ -575,6 +648,9 @@
       "question": "喊了暂停之后系统怎么响应",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 7,
       "bare_refusal": false,
       "judge": {
@@ -595,6 +671,9 @@
       "question": "回话来晚了怎么在界面上打个记号",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 4,
       "bare_refusal": false,
       "judge": {
@@ -615,6 +694,9 @@
       "question": "把各种杂牌后端捏成统一一个样子调用",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 8,
       "bare_refusal": false,
       "judge": {
@@ -635,6 +717,9 @@
       "question": "只留本人填的内容，机器补的字段一律不认",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 7,
       "bare_refusal": false,
       "judge": {
@@ -655,6 +740,9 @@
       "question": "把老长一段正文压成一行短的",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 5,
       "bare_refusal": false,
       "judge": {
@@ -675,6 +763,9 @@
       "question": "把干活的目录路径算出来",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 8,
       "bare_refusal": false,
       "judge": {
@@ -695,6 +786,9 @@
       "question": "那个要反复跑很多遍必须全绿才算过的压测",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 4,
       "bare_refusal": false,
       "judge": {
@@ -715,6 +809,9 @@
       "question": "存事件和进度落盘的那一层",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 8,
       "bare_refusal": false,
       "judge": {
@@ -735,6 +832,9 @@
       "question": "invoke 这个方法在哪定义的",
       "mode": "symbol",
       "mode_class": "symbol",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 5,
       "bare_refusal": false,
       "judge": {
@@ -753,6 +853,9 @@
       "question": "帮我看下 invoke 的实现，别看测试桩",
       "mode": "symbol",
       "mode_class": "symbol",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 5,
       "bare_refusal": false,
       "judge": {
@@ -771,6 +874,9 @@
       "question": "__init__ 是在哪初始化的",
       "mode": "symbol",
       "mode_class": "symbol",
+      "route_label": "entity_local",
+      "route_source": "rule:entity-1",
+      "degraded": false,
       "n_linked": 5,
       "bare_refusal": false,
       "judge": {
@@ -789,6 +895,9 @@
       "question": "run 这个函数干嘛的",
       "mode": "symbol",
       "mode_class": "symbol",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 1,
       "bare_refusal": false,
       "judge": {
@@ -807,6 +916,9 @@
       "question": "recover 在哪",
       "mode": "symbol",
       "mode_class": "symbol",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 2,
       "bare_refusal": false,
       "judge": {
@@ -825,6 +937,9 @@
       "question": "main 是哪个",
       "mode": "symbol",
       "mode_class": "symbol",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 2,
       "bare_refusal": false,
       "judge": {
@@ -843,6 +958,9 @@
       "question": "_dispatch 指的是啥",
       "mode": "symbol",
       "mode_class": "symbol",
+      "route_label": "entity_local",
+      "route_source": "rule:entity-1",
+      "degraded": false,
       "n_linked": 2,
       "bare_refusal": false,
       "judge": {
@@ -861,6 +979,9 @@
       "question": "_handle_terminate 具体做什么",
       "mode": "symbol",
       "mode_class": "symbol",
+      "route_label": "entity_local",
+      "route_source": "rule:entity-1",
+      "degraded": false,
       "n_linked": 1,
       "bare_refusal": false,
       "judge": {
@@ -879,6 +1000,9 @@
       "question": "check_watchdogs 怎么工作的",
       "mode": "symbol",
       "mode_class": "symbol",
+      "route_label": "entity_local",
+      "route_source": "rule:entity-1",
+      "degraded": false,
       "n_linked": 1,
       "bare_refusal": false,
       "judge": {
@@ -897,6 +1021,9 @@
       "question": "apply_gate_decision 在哪",
       "mode": "symbol",
       "mode_class": "symbol",
+      "route_label": "entity_local",
+      "route_source": "rule:entity-1",
+      "degraded": false,
       "n_linked": 1,
       "bare_refusal": false,
       "judge": {
@@ -915,6 +1042,9 @@
       "question": "为什么这项目用 Redis 做分布式锁？",
       "mode": "overview",
       "mode_class": "overview",
+      "route_label": "global",
+      "route_source": "rule:global-1",
+      "degraded": false,
       "n_linked": 0,
       "bare_refusal": false,
       "judge": {
@@ -930,6 +1060,9 @@
       "question": "你们的 FastAPI 路由是怎么组织的？",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "rule:entity-1",
+      "degraded": false,
       "n_linked": 4,
       "bare_refusal": false,
       "judge": {
@@ -945,6 +1078,9 @@
       "question": "事件为什么选 PostgreSQL 存储？",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "rule:entity-1",
+      "degraded": false,
       "n_linked": 8,
       "bare_refusal": false,
       "judge": {
@@ -960,6 +1096,9 @@
       "question": "这套多智能体是怎么用 Docker/K8s 编排部署的？",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "rule:entity-1",
+      "degraded": false,
       "n_linked": 4,
       "bare_refusal": false,
       "judge": {
@@ -975,6 +1114,9 @@
       "question": "任务队列用的是 Celery 吧，怎么配的？",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 1,
       "bare_refusal": false,
       "judge": {
@@ -990,6 +1132,9 @@
       "question": "前端 React 组件是怎么拆的？",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 6,
       "bare_refusal": false,
       "judge": {
@@ -1005,6 +1150,9 @@
       "question": "看门狗的五级升级机制怎么设计的？",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 8,
       "bare_refusal": false,
       "judge": {
@@ -1020,6 +1168,9 @@
       "question": "混沌测试要跑满 100 轮才算过对吧？",
       "mode": "topic",
       "mode_class": "topic",
+      "route_label": "entity_local",
+      "route_source": "fallback:default",
+      "degraded": false,
       "n_linked": 8,
       "bare_refusal": false,
       "judge": {

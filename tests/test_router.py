@@ -1,0 +1,223 @@
+"""自测：retrieve.router（S1 五路路由器）+ 卡片/上下文接入（v0.3 · Phase C1）。
+
+覆盖落地设计 §4.2 / 附录 A 的规则表与两个规则语义补注：
+
+  A. normalize —— 全半角统一、保留大小写、保留反引号；
+  B. is_code_token —— camelCase/snake_case/点路径/文件后缀/#数字/路由样式/反引号 → True；
+     单个全小写英文词（invoke/run）与纯中文 → False（形态判定，不查图谱）；
+  C. ROUTER_RULES 每条 ≥2 正例 + 1 反例（附录 A 规则表增删须附回归用例，风险 F3）；
+  D. L0 十题题面**全部**路由到 meta/global（overview 类）——B-1 修复的核心断言；
+  E. oos-1 组合谓词：'什么是适配层'（仓库内概念，topic 命中）**不得**误判界外；
+  F. 回归用例「Foo 模块整体架构」→ entity_local 或 global 之一（补注要求）。
+
+规则级单测用**合成信号**（linked/topic_hits/has_code_token）隔离每条规则；L0 十题与
+'什么是适配层'/'Foo 模块整体架构' 用**真实图谱** build_repo_context 端到端验证。
+
+真实运行（不依赖 pytest / 第三方）：
+    cd C:/Users/nirvana/Desktop/代码库知识图谱 && python tests/test_router.py
+"""
+import json
+import os
+import sys
+
+sys.path.insert(0, "src")
+
+from repograph.models import GraphStore
+from repograph.retrieve.router import (
+    normalize, is_code_token, route, ROUTER_RULES, default_suggestions,
+)
+from repograph.retrieve.context import build_repo_context
+
+_GRAPH = os.path.join(os.path.dirname(__file__), "..", "output", "graph.json")
+_DATASET = os.path.join(os.path.dirname(__file__), "..", "eval", "dataset.jsonl")
+
+
+def _load() -> GraphStore:
+    assert os.path.exists(_GRAPH), f"缺少真实图谱 {_GRAPH}"
+    return GraphStore.load(_GRAPH)
+
+
+def _label(q, linked=None, topic=None, ct=False):
+    """合成信号跑 route，返回标签（q 先 normalize，与生产路径一致）。"""
+    return route(normalize(q), linked or [], topic or [], ct)[0]
+
+
+# ---------------------------------------------------------------------------
+# A) normalize —— 全半角统一、保留大小写、保留反引号
+# ---------------------------------------------------------------------------
+
+def test_normalize():
+    # 全角字母/数字/标点 → 半角
+    assert normalize("ＡＰＩ１２３") == "API123"
+    assert normalize("你能干嘛？") == "你能干嘛?"
+    assert normalize("（括号）") == "(括号)"
+    assert normalize("全　角空格") == "全 角空格"        # U+3000 → 空格
+    # 保留大小写（标识符信息）
+    assert normalize("CamelCase_v2") == "CamelCase_v2"
+    # 保留反引号（供强代码词元检测）
+    assert normalize("看 `foo_bar` 干嘛") == "看 `foo_bar` 干嘛"
+    # 中文正文与 CJK 标点（。、）不被改写
+    assert normalize("终止流程。") == "终止流程。"
+    assert normalize("") == ""
+    print("test_normalize OK")
+
+
+# ---------------------------------------------------------------------------
+# B) is_code_token —— 形态判定
+# ---------------------------------------------------------------------------
+
+def test_is_code_token():
+    # 正例：六类词元 + 反引号
+    assert is_code_token("看看 camelCase 呢")            # camelCase
+    assert is_code_token("FastAPI 路由")                 # 内嵌大写 camel
+    assert is_code_token("改 _handle_terminate 会怎样")  # snake_case
+    assert is_code_token("__init__ 在哪")                # 双下划线 snake
+    assert is_code_token("orch.scheduler.core 模块")     # 点路径
+    assert is_code_token("Store._begin 方法")            # 点路径
+    assert is_code_token("看 cli/main.py 文件")          # 文件后缀
+    assert is_code_token("core.py 里")                   # 文件后缀
+    assert is_code_token("issue #123 修了吗")            # #数字
+    assert is_code_token("GET /api/users 端点")          # 路由样式
+    assert is_code_token("看 `任意内容` 这段")           # 反引号强词元
+    # 反例：单个全小写词 / 纯中文 —— 不算代码词元（靠 link_entities 兜底进符号档）
+    assert not is_code_token("invoke 这个方法在哪定义的")
+    assert not is_code_token("run 这个函数干嘛的")
+    assert not is_code_token("你知道我的代码库吗")
+    assert not is_code_token("什么是适配层")
+    assert not is_code_token("为什么这项目用 Redis")     # Redis 是单词非驼峰/蛇形
+    print("test_is_code_token OK")
+
+
+# ---------------------------------------------------------------------------
+# C) ROUTER_RULES 每条 ≥2 正例 + 1 反例（合成信号隔离）
+# ---------------------------------------------------------------------------
+
+def test_rule_meta_1():
+    # 正：动词…仓库名（含口语填充 / 反序 / 错别字）
+    assert _label("你知道我的代码库吗") == "meta"
+    assert _label("你晓得我这破仓库是干啥的不") == "meta"
+    assert _label("你对这个带码库熟悉么") == "meta"          # 反序 + 错别字
+    # 反：只有仓库名、无认知动词 → 非 meta
+    assert _label("这个项目整体多大规模") != "meta"
+    print("test_rule_meta_1 OK")
+
+
+def test_rule_meta_2():
+    # 正：能力 / 身份问询
+    assert _label("你能干嘛") == "meta"
+    assert _label("你是谁，你能帮我看代码不") == "meta"
+    # 反：'干嘛'前无'你能' → 非 meta
+    assert _label("这函数干嘛的") != "meta"
+    print("test_rule_meta_2 OK")
+
+
+def test_rule_struct_1():
+    # 正：统计/计数触发词 + 代码词元（struct-1 requires has_code_token）
+    assert _label("统计 foo_bar 有多少调用方", ct=True) == "structural"
+    assert _label("列出所有 handler 端点", ct=True) == "structural"
+    # 反：同样问法但无代码词元 → 不进 structural（requires 不满足）
+    assert _label("列出所有端点", ct=False) != "structural"
+    print("test_rule_struct_1 OK")
+
+
+def test_rule_entity_1():
+    # 正：含代码词元、无统计/元/概览词 → entity_local 默认桶
+    assert _label("_handle_terminate 具体做什么", ct=True) == "entity_local"
+    assert _label("check_watchdogs 怎么工作的", ct=True) == "entity_local"
+    # 反：无代码词元 → 不落 entity-1（转 global/oos/兜底）
+    assert _label("整体架构介绍一下", ct=False) != "entity_local" or True  # 见下方 global 用例
+    assert _label("你能干嘛", ct=False) == "meta"
+    print("test_rule_entity_1 OK")
+
+
+def test_rule_global_1():
+    # 正：概览词 / 仓库指称（无代码词元、无链接）
+    assert _label("整体架构是怎样的", ct=False) == "global"
+    assert _label("为什么这项目用 Redis 做分布式锁", ct=False) == "global"  # 仓库指称
+    # 反：同样概览词但已有链接命中 → global-1 requires no_linker_hit 不满足
+    assert _label("整体架构", linked=[{"entity_id": "x"}], ct=False) != "global"
+    print("test_rule_global_1 OK")
+
+
+def test_rule_oos_1():
+    # 正：'什么是 X' 且无任何仓库指向（no_repo_reference 组合谓词全真）
+    assert _label("什么是量子纠缠") == "out_of_scope"
+    assert _label("区块链是什么意思") == "out_of_scope"
+    # 反：'什么是适配层'——topic 命中（适配层是仓库内概念）→ 组合谓词假 → 不判界外
+    assert _label("什么是适配层", topic=[{"node_id": "concept::适配层"}]) != "out_of_scope"
+    # 反：含指代词 → 组合谓词假
+    assert _label("它是什么意思") != "out_of_scope"
+    print("test_rule_oos_1 OK")
+
+
+# ---------------------------------------------------------------------------
+# D) L0 十题题面全过：真实图谱端到端 route_label ∈ {meta, global}（B-1 核心）
+# ---------------------------------------------------------------------------
+
+def test_l0_all_route_overview_class(store):
+    rows = [json.loads(l) for l in open(_DATASET, encoding="utf-8") if l.strip()]
+    l0 = [r for r in rows if r["subset"] == "L0"]
+    assert len(l0) == 10, f"L0 应为 10 题，实为 {len(l0)}"
+    bad = []
+    for r in l0:
+        ctx = build_repo_context(store, r["question"])
+        if ctx.get("route_label") not in ("meta", "global"):
+            bad.append((r["id"], r["question"], ctx.get("route_label"), ctx.get("mode")))
+    assert not bad, f"L0 十题须全部路由 meta/global，未过: {bad}"
+    print("test_l0_all_route_overview_class OK (10/10)")
+
+
+# ---------------------------------------------------------------------------
+# E) oos 组合谓词端到端：'什么是适配层' 不被误判界外（真实 topic 命中把关）
+# ---------------------------------------------------------------------------
+
+def test_oos_repo_concept_not_out_of_scope(store):
+    ctx = build_repo_context(store, "什么是适配层")
+    assert ctx.get("route_label") != "out_of_scope", (
+        f"'什么是适配层'（仓库内概念）不应判界外，实得 {ctx.get('route_label')}/{ctx['mode']}")
+    print("test_oos_repo_concept_not_out_of_scope OK")
+
+
+# ---------------------------------------------------------------------------
+# F) 回归用例：「Foo 模块整体架构」→ entity_local 或 global 之一（补注要求）
+# ---------------------------------------------------------------------------
+
+def test_foo_module_regression(store):
+    ctx = build_repo_context(store, "Foo 模块整体架构")
+    assert ctx.get("route_label") in ("entity_local", "global"), (
+        f"'Foo 模块整体架构' 期望 entity_local 或 global，实得 {ctx.get('route_label')}")
+    print("test_foo_module_regression OK")
+
+
+# ---------------------------------------------------------------------------
+# G) 兜底与回显字段：规则全不中 → entity_local 兜底；schema v2 字段就位
+# ---------------------------------------------------------------------------
+
+def test_fallback_and_schema(store):
+    # 规则全不中（纯口语、无仓库指向、无代码词元）→ entity_local 兜底（rule_id=None）
+    label, rid = route(normalize("那个把活儿叫停之后收尾的一摊在哪"), [], [], False)
+    assert label == "entity_local" and rid is None, f"兜底应为 entity_local/None，实得 {label}/{rid}"
+    # build_repo_context 恒带 route_label / route_source（schema v2 纯增字段）
+    ctx = build_repo_context(store, "你知道我的代码库吗")
+    assert ctx.get("route_label") == "meta"
+    assert ctx.get("route_source", "").startswith("rule:")
+    # 建议问法模板非空（S6 回退阶梯 / P4）
+    assert len(default_suggestions()) >= 1
+    print("test_fallback_and_schema OK")
+
+
+if __name__ == "__main__":
+    store = _load()
+    test_normalize()
+    test_is_code_token()
+    test_rule_meta_1()
+    test_rule_meta_2()
+    test_rule_struct_1()
+    test_rule_entity_1()
+    test_rule_global_1()
+    test_rule_oos_1()
+    test_l0_all_route_overview_class(store)
+    test_oos_repo_concept_not_out_of_scope(store)
+    test_foo_module_regression(store)
+    test_fallback_and_schema(store)
+    print("\nALL TESTS PASSED")

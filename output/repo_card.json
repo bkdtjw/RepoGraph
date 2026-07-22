@@ -1,0 +1,118 @@
+{
+ "repo": "multi-agent-orch",
+ "stats": {
+  "modules": 22,
+  "classes": 15,
+  "functions": 259,
+  "commits": 75,
+  "concepts": 139
+ },
+ "top_modules": [
+  {
+   "path": "src/orch/cli/main.py",
+   "loc": 1241,
+   "doc": "用户界面 CLI（spec §12 子集，M2-T4 + M3-T4）。"
+  },
+  {
+   "path": "src/orch/scheduler/core.py",
+   "loc": 981,
+   "doc": "§5.1 核心循环（单线程串行版）+ §8.3 验证钩子 + §5.4 终止清单。"
+  },
+  {
+   "path": "src/orch/render/__init__.py",
+   "loc": 777,
+   "doc": "视图组装（spec §6）——不对称四层视图渲染，属**调度层**职责、与厂商无关。"
+  },
+  {
+   "path": "src/orch/store/__init__.py",
+   "loc": 724,
+   "doc": "状态层：事件日志 / 派发表 / 黑板 / 会话表等持久化（spec §4）。"
+  },
+  {
+   "path": "src/orch/scheduler/async_core.py",
+   "loc": 613,
+   "doc": "§5.1 异步版核心环 + §5.2 长作业真异步 + §9.3 多线程 workspace 运行（M3-T3）。"
+  },
+  {
+   "path": "src/orch/web/server.py",
+   "loc": 612,
+   "doc": "玻璃感 Web 控制台网关（spec 之外的补充工具）。"
+  },
+  {
+   "path": "src/orch/adapters/__init__.py",
+   "loc": 589,
+   "doc": "适配层：统一 invoke 接口与后端（spec §7）。"
+  },
+  {
+   "path": "src/orch/chaos/__init__.py",
+   "loc": 509,
+   "doc": "§9.4 混沌 harness（mock 层）——M4-T3 owner / R-T1 注入面补全。"
+  }
+ ],
+ "hot_functions": [
+  {
+   "qualname": "_dispatch_group",
+   "modifies": 15
+  },
+  {
+   "qualname": "_dispatch_group_async",
+   "modifies": 8
+  },
+  {
+   "qualname": "render_view",
+   "modifies": 6
+  },
+  {
+   "qualname": "_handle_terminate",
+   "modifies": 6
+  },
+  {
+   "qualname": "run_thread",
+   "modifies": 6
+  }
+ ],
+ "core_concepts": [
+  {
+   "name": "用户界面 CLI 子集",
+   "impl": 17,
+   "desc": "main 模块实现用户界面 CLI 的 spec §12 子集。"
+  },
+  {
+   "name": "CLI §12 typer 骨架命令子集",
+   "impl": 11,
+   "desc": "CLI 按 §12 子集实现 typer 骨架，覆盖 new/send/chat/status/approve/reject/stop/attach/threads/reopen。"
+  },
+  {
+   "name": "适配层",
+   "impl": 11,
+   "desc": "模块文档将本层命名为适配层。"
+  },
+  {
+   "name": "render四层视图组装",
+   "impl": 10,
+   "desc": "render 按 §6 组装四层视图，涵盖五段、第三人称、保留策略与预算。"
+  },
+  {
+   "name": "stdlib网关15端点与orch serve",
+   "impl": 10,
+   "desc": "Web 控制台采用 stdlib 网关 15 端点真连、原生玻璃前端与 orch serve，零新增依赖。"
+  },
+  {
+   "name": "混沌 harness",
+   "impl": 9,
+   "desc": "§9.4 所描述的混沌 harness（mock 层）。"
+  },
+  {
+   "name": "状态层",
+   "impl": 9,
+   "desc": "状态层负责事件日志、派发表、黑板、会话表等持久化。"
+  },
+  {
+   "name": "不对称四层视图渲染",
+   "impl": 8,
+   "desc": "视图采用不对称四层渲染方式。"
+  }
+ ],
+ "entrypoints": [],
+ "summary": "multi-agent-orch 规模模块 22、类 15、函数 259、提交 75、概念 139。顶层模块覆盖用户界面 CLI 子集、CLI §12 typer 骨架命令子集、核心循环与异步版核心环、render四层视图组装与不对称四层视图渲染、状态层、适配层、玻璃感 Web 控制台网关、混沌 harness。状态层持久化事件日志、派发表、黑板、会话表；适配层统一 invoke 接口与后端。热点函数有 _dispatch_group、_dispatch_group_async、render_view。"
+}

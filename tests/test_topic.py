@@ -143,18 +143,25 @@ def test_waterfall_topic(store):
 # ---------------------------------------------------------------------------
 
 def test_waterfall_overview(store):
-    for q in ["了解这个代码库吗", "介绍一下整个项目架构"]:
+    # v0.3 Phase C1：S1 五路路由器把元问题**精确分诊**——"了解这个代码库吗"→ route_label=meta
+    # （注入 repo_card），"介绍一下整个项目架构"→ route_label=global（build_overview）。二者
+    # 展示 mode 仍为 'overview'（spec §5.1：build_repo_context 恒返回 overview 类展示 mode，
+    # meta/global 事件 mode 改写在网关侧据 route_label 完成），且仍逐字承载真实概览事实
+    # （259/22/顶层模块路径/仓库名）。故断言：mode 仍 overview + route_label 精确 + 事实仍在。
+    expected_route = {"了解这个代码库吗": "meta", "介绍一下整个项目架构": "global"}
+    for q, want in expected_route.items():
         ctx = build_repo_context(store, q)
-        assert ctx["mode"] == "overview", f"{q!r} 应走概览兜底，实为 {ctx['mode']}"
+        assert ctx["mode"] == "overview", f"{q!r} 展示 mode 应为 overview，实为 {ctx['mode']}"
+        assert ctx["route_label"] == want, f"{q!r} route_label 应为 {want}，实为 {ctx.get('route_label')}"
         text = ctx["context_text"]
-        assert text, "overview 兜底必须有真实概览文本"
-        # 真实节点统计：259 个函数、22 个模块
-        assert "259" in text and "22" in text, "概览须含真实节点统计"
+        assert text, f"{want} 路由必须有真实概览/卡片文本"
+        # 真实节点统计：259 个函数、22 个模块（meta 卡片与 global 概览均含规模事实行）
+        assert "259" in text and "22" in text, "上下文须含真实节点统计"
         # 真实顶层模块名（loc 最大者）与仓库名
-        assert "src/orch/cli/main.py" in text, "概览须含真实顶层模块路径"
+        assert "src/orch/cli/main.py" in text, "上下文须含真实顶层模块路径"
         assert "multi-agent-orch" in text
         assert ctx["linked"] == []
-    # build_overview 直接调用自洽：统计数字来自真实图谱
+    # build_overview 直接调用自洽：统计数字来自真实图谱（本函数契约不变，仍 mode='overview'）
     ov = build_overview(store)
     assert ov["mode"] == "overview" and ov["linked"] == []
     assert ov["stats"]["concepts"] == 139
