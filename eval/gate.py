@@ -116,27 +116,30 @@ def judge_fz(resp: dict, gold_id: str, edges: list) -> dict:
 
 
 def judge_amb(resp: dict, gold_behavior: str) -> dict:
-    """当前实现无 needs_disambiguation 字段 → 一律按「预测自选」评行为一致率。
+    """AMB 行为一致率 + 过问/漏问（spec §6.1）。字段适配 needs_disambiguation（Phase C4）。
 
-    - predicted = should_autopick（系统无消歧能力，只会取 top 锚定或回落）
-    - should_autopick 一致 ⇔ 确实锚定了实体（linked 非空 且 mode 为 symbol 类）
-    - should_disambiguate 一致 ⇔ 系统消歧（当前恒 False → 必不一致 = 漏问）
-    过问率/漏问率随附产出（Phase C4 前不作硬门禁）。
+    预测（据实现回显，非重言）：
+    - predicted = should_disambiguate ⇔ 回显 needs_disambiguation=True；否则 should_autopick。
+    - should_autopick 一致 ⇔ predicted 自选 **且**确实锚定实体（linked 非空 且 mode 为 symbol 类）。
+    - should_disambiguate 一致 ⇔ predicted 消歧。
+    过问率（spec §6.1）= 预测消歧 ∧ gold 自选；漏问率 = 预测自选 ∧ gold 消歧。
+    ——注：字段缺失（能力未落地）时 predicted 恒为自选，此时 disamb 题必判漏问（能力基线红），
+    能力落地（needs_disambiguation 出现）后据实翻转；**阈值不变**（过问≤0.2 / 漏问≤0.1）。
     """
     has_nd_field = "needs_disambiguation" in resp
     nd = bool(resp.get("needs_disambiguation")) if has_nd_field else False
     anc = anchors_of(resp)
     anchored = bool(anc) and mode_class(resp.get("mode")) == "symbol"
-    # 字段缺失时确定性预测=自选（当前实现无消歧能力）；一旦 needs_disambiguation
-    # 字段出现（Phase C4）则据实翻转，使 should_disambiguate 题在能力落地后可翻绿。
     predicted = "should_disambiguate" if (has_nd_field and nd) else "should_autopick"
     if gold_behavior == "should_disambiguate":
-        consistent = (predicted == "should_disambiguate")  # 恒 False
+        consistent = (predicted == "should_disambiguate")
+        # 漏问 = 该消歧但系统自选了（= predicted 自选 = 不一致）；能力落地后可从红翻绿。
         return {"pass": consistent, "predicted": predicted,
-                "over_ask": False, "under_ask": True, "anchored": anchored,
+                "over_ask": False, "under_ask": (not consistent), "anchored": anchored,
                 "has_nd_field": has_nd_field}
     else:  # should_autopick
         consistent = (predicted == "should_autopick") and anchored
+        # 过问 = 该自选但系统消歧了（= nd 为真）。
         return {"pass": consistent, "predicted": predicted,
                 "over_ask": bool(nd), "under_ask": False, "anchored": anchored,
                 "has_nd_field": has_nd_field}

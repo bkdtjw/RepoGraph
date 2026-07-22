@@ -9,7 +9,8 @@
    "package": "",
    "loc": 11,
    "docstring": "orch —— 异构多智能体编排系统（实现 orchestrator-spec.md）。",
-   "external_imports": []
+   "external_imports": [],
+   "module_pagerank": 0.02464102
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py",
@@ -28,7 +29,8 @@
     "__future__",
     "pathlib",
     "typing"
-   ]
+   ],
+   "module_pagerank": 0.03676673
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py::Caps",
@@ -151,7 +153,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 26,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py::MockAdapter.invoke",
@@ -167,7 +179,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "按 (role, 本批触发号) 返回预置作者字段信封，并追加一行 ledger。"
+   "docstring": "按 (role, 本批触发号) 返回预置作者字段信封，并追加一行 ledger。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 44,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py::_extract_last_json_block",
@@ -191,7 +213,17 @@
     "去掉json围栏",
     "读最后一个json"
    ],
-   "zh_desc": "从 stdout 提取最后一个 json 块原文并去掉围栏。"
+   "zh_desc": "从 stdout 提取最后一个 json 块原文并去掉围栏。",
+   "fan_in": 2,
+   "pagerank": 0.00334469,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 20,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py::_extract_sid",
@@ -214,7 +246,17 @@
     "冷启动取会话号",
     "解析会话标识"
    ],
-   "zh_desc": "冷启动时提取 M2 session_id"
+   "zh_desc": "冷启动时提取 M2 session_id",
+   "fan_in": 2,
+   "pagerank": 0.00334469,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 50,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 7
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py::_unwrap_agent_output",
@@ -230,7 +272,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "按 config.wire_format 从子进程 stdout 解出 (agent 回复文本, session_id)。"
+   "docstring": "按 config.wire_format 从子进程 stdout 解出 (agent 回复文本, session_id)。",
+   "fan_in": 1,
+   "pagerank": 0.00283058,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 46,
+   "heat": 3,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 17
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields",
@@ -254,7 +306,17 @@
     "剥出作者内容",
     "防止系统字段混入"
    ],
-   "zh_desc": "只保留作者字段，避免后端自报系统字段混入。"
+   "zh_desc": "只保留作者字段，避免后端自报系统字段混入。",
+   "fan_in": 4,
+   "pagerank": 0.0074575,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 6,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py::_caps_from_config",
@@ -278,7 +340,17 @@
     "生成适配器能力",
     "根据配置算能力"
    ],
-   "zh_desc": "从 config 派生 Caps，为适配器初始化补齐缺省能力。"
+   "zh_desc": "从 config 派生 Caps，为适配器初始化补齐缺省能力。",
+   "fan_in": 4,
+   "pagerank": 0.01064494,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 22,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py::_build_allowed_tools_args",
@@ -302,7 +374,17 @@
     "构造允许工具列表",
     "加白名单命令行片段"
    ],
-   "zh_desc": "按 §17 把 caps.tools 折成 argv 白名单片段，空则不注入 f"
+   "zh_desc": "按 §17 把 caps.tools 折成 argv 白名单片段，空则不注入 f",
+   "fan_in": 2,
+   "pagerank": 0.00334469,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 28,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py::CliAdapter.__init__",
@@ -326,7 +408,17 @@
     "准备 kimi 适配器",
     "搭建命令转接器"
    ],
-   "zh_desc": "初始化 CliAdapter，完成适配层后端接入设置。"
+   "zh_desc": "初始化 CliAdapter，完成适配层后端接入设置。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 3,
+   "commits_90d": 3,
+   "churn_90d": 30,
+   "heat": 9,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py::CliAdapter.invoke",
@@ -349,7 +441,17 @@
     "提取最后json块",
     "命令行适配调用"
    ],
-   "zh_desc": "CliAdapter.invoke 冷启动调后端取最后 json 块"
+   "zh_desc": "CliAdapter.invoke 冷启动调后端取最后 json 块",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 4,
+   "commits_90d": 4,
+   "churn_90d": 109,
+   "heat": 12,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 12
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py::ApiAdapter.__init__",
@@ -372,7 +474,17 @@
     "准备后端适配器",
     "装配统一调用适配器",
     "创建适配层实例"
-   ]
+   ],
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 38,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py::ApiAdapter.invoke",
@@ -396,7 +508,17 @@
     "整理消息格式",
     "统一后端接口"
    ],
-   "zh_desc": "适配层统一 invoke，发送 text 并归一化 messages。"
+   "zh_desc": "适配层统一 invoke，发送 text 并归一化 messages。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 34,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py::FakeCliAdapter.__init__",
@@ -420,7 +542,17 @@
     "设置模拟输出和超时",
     "装配假命令行后端"
    ],
-   "zh_desc": "初始化 FakeCliAdapter，设置模拟输出、超时与脚本回复。"
+   "zh_desc": "初始化 FakeCliAdapter，设置模拟输出、超时与脚本回复。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 3,
+   "commits_90d": 3,
+   "churn_90d": 64,
+   "heat": 9,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py::FakeCliAdapter.invoke",
@@ -444,7 +576,17 @@
     "假适配调用",
     "假子进程启动"
    ],
-   "zh_desc": "FakeCliAdapter.invoke 假子进程冷启动，不真启动进程。"
+   "zh_desc": "FakeCliAdapter.invoke 假子进程冷启动，不真启动进程。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 3,
+   "commits_90d": 3,
+   "churn_90d": 150,
+   "heat": 9,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 13
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py::FakeApiAdapter.__init__",
@@ -468,7 +610,17 @@
     "造个假接口",
     "初始化假适配器"
    ],
-   "zh_desc": "初始化 FakeApiAdapter，配置脚本回复以模拟后端。"
+   "zh_desc": "初始化 FakeApiAdapter，配置脚本回复以模拟后端。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 3,
+   "commits_90d": 3,
+   "churn_90d": 64,
+   "heat": 9,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/adapters/__init__.py::FakeApiAdapter.invoke",
@@ -492,7 +644,17 @@
     "假接口重新组装",
     "忽略会话的假调用"
    ],
-   "zh_desc": "适配层单步 invoke，忽略 sess 返回 None。"
+   "zh_desc": "适配层单步 invoke，忽略 sess 返回 None。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 3,
+   "commits_90d": 3,
+   "churn_90d": 52,
+   "heat": 9,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/chaos/expected.py",
@@ -505,7 +667,8 @@
    "docstring": "附录B 期望事件序列常量（orch.chaos 自有，审计 G 解耦）。",
    "external_imports": [
     "__future__"
-   ]
+   ],
+   "module_pagerank": 0.02987724
   },
   {
    "id": "multi-agent-orch::src/orch/chaos/__init__.py",
@@ -521,7 +684,8 @@
     "__future__",
     "dataclasses",
     "pathlib"
-   ]
+   ],
+   "module_pagerank": 0.02464102
   },
   {
    "id": "multi-agent-orch::src/orch/chaos/__init__.py::_IdempotentMockAdapter",
@@ -614,7 +778,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 18,
+   "heat": 3,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness.__init__",
@@ -637,7 +811,17 @@
     "配置混沌注入参数",
     "准备混沌注入环境",
     "设定混沌演练种子"
-   ]
+   ],
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 3,
+   "commits_90d": 3,
+   "churn_90d": 24,
+   "heat": 9,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness.run",
@@ -661,7 +845,17 @@
     "生成混沌报告",
     "启动混沌注入试验"
    ],
-   "zh_desc": "按轮数跑混沌并生成混沌报告，可选记录指标"
+   "zh_desc": "按轮数跑混沌并生成混沌报告，可选记录指标",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 4,
+   "commits_90d": 4,
+   "churn_90d": 112,
+   "heat": 12,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 11
   },
   {
    "id": "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness._ensure_baseline",
@@ -685,7 +879,17 @@
     "做混沌对照样本",
     "先存正常结果"
    ],
-   "zh_desc": "跑无故障完整流程，缓存基线产物供混沌对比。"
+   "zh_desc": "跑无故障完整流程，缓存基线产物供混沌对比。",
+   "fan_in": 2,
+   "pagerank": 0.00348178,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 19,
+   "heat": 3,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness._capture_artifacts",
@@ -709,7 +913,17 @@
     "拿黑板终态字节",
     "存最终状态文件字节"
    ],
-   "zh_desc": "读取 ledger 与 state.json 终态原始字节，得到 Baselin"
+   "zh_desc": "读取 ledger 与 state.json 终态原始字节，得到 Baselin",
+   "fan_in": 2,
+   "pagerank": 0.00353619,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 9,
+   "heat": 3,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness._run_one_round",
@@ -733,7 +947,17 @@
     "执行单次混沌",
     "跑单轮混沌"
    ],
-   "zh_desc": "执行单轮混沌注入并返回是否成功与说明"
+   "zh_desc": "执行单轮混沌注入并返回是否成功与说明",
+   "fan_in": 1,
+   "pagerank": 0.00310477,
+   "fix_involvement": 0,
+   "commits_all": 3,
+   "commits_90d": 3,
+   "churn_90d": 182,
+   "heat": 9,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 21
   },
   {
    "id": "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness._drive_until_stopped",
@@ -757,7 +981,17 @@
     "一直跑到没任务",
     "自动跑完整轮"
    ],
-   "zh_desc": "反复运行，遇 gate 自动批准至终止或无待办。"
+   "zh_desc": "反复运行，遇 gate 自动批准至终止或无待办。",
+   "fan_in": 2,
+   "pagerank": 0.00353619,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 52,
+   "heat": 6,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 7
   },
   {
    "id": "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness._build_adapters",
@@ -780,7 +1014,17 @@
     "准备注入点适配",
     "建立混沌测试桩",
     "组装mock层"
-   ]
+   ],
+   "fan_in": 2,
+   "pagerank": 0.00353619,
+   "fix_involvement": 0,
+   "commits_all": 3,
+   "commits_90d": 3,
+   "churn_90d": 19,
+   "heat": 9,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness._config",
@@ -803,7 +1047,17 @@
     "跳过权限三件套配置",
     "混沌 harness 配置"
    ],
-   "zh_desc": "返回 ChaosHarness 最小配置，令 worktree 权限三件套 sk"
+   "zh_desc": "返回 ChaosHarness 最小配置，令 worktree 权限三件套 sk",
+   "fan_in": 2,
+   "pagerank": 0.00353619,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 52,
+   "heat": 6,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness._pick_site",
@@ -827,7 +1081,17 @@
     "轮换选注入位置",
     "决定往哪注入"
    ],
-   "zh_desc": "按轮转和随机组合挑选混沌注入面。"
+   "zh_desc": "按轮转和随机组合挑选混沌注入面。",
+   "fan_in": 1,
+   "pagerank": 0.00310477,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 18,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness._resolve_site",
@@ -851,7 +1115,17 @@
     "映射站点到注入面",
     "确定故障注入点"
    ],
-   "zh_desc": "把 site 名映射为实际注入 site，确保真实注入。"
+   "zh_desc": "把 site 名映射为实际注入 site，确保真实注入。",
+   "fan_in": 1,
+   "pagerank": 0.00279631,
+   "fix_involvement": 0,
+   "commits_all": 3,
+   "commits_90d": 3,
+   "churn_90d": 42,
+   "heat": 9,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness._read_ledger",
@@ -875,7 +1149,17 @@
     "取账本内容",
     "查本轮账本"
    ],
-   "zh_desc": "ChaosHarness 按 path 读账本，返回 list[str]。"
+   "zh_desc": "ChaosHarness 按 path 读账本，返回 list[str]。",
+   "fan_in": 1,
+   "pagerank": 0.00279631,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 14,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness._latest_pending_gate",
@@ -898,7 +1182,17 @@
     "找待放行门禁事件",
     "查挂起的门禁申请"
    ],
-   "zh_desc": "找 status=gate_wait 派发行对应的 gate_request 事"
+   "zh_desc": "找 status=gate_wait 派发行对应的 gate_request 事",
+   "fan_in": 1,
+   "pagerank": 0.00542506,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 20,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py",
@@ -920,7 +1214,8 @@
     "logging",
     "__future__",
     "pathlib"
-   ]
+   ],
+   "module_pagerank": 0.05673692
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_load_config",
@@ -943,7 +1238,17 @@
     "读yaml配置",
     "没配置返空"
    ],
-   "zh_desc": "读取工作区 config.yaml，没有则返回空配置。"
+   "zh_desc": "读取工作区 config.yaml，没有则返回空配置。",
+   "fan_in": 4,
+   "pagerank": 0.00567558,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 24,
+   "heat": 6,
+   "blast_radius": 8,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_resolve_workspace",
@@ -966,7 +1271,17 @@
     "没填就用当前目录",
     "把工作区转成路径"
    ],
-   "zh_desc": "把 --workspace 转为 Path，未提供用当前目录。"
+   "zh_desc": "把 --workspace 转为 Path，未提供用当前目录。",
+   "fan_in": 15,
+   "pagerank": 0.0111672,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 10,
+   "heat": 6,
+   "blast_radius": 15,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_open_thread_store",
@@ -990,7 +1305,17 @@
     "新建并打开线程库",
     "打开聊天线程库"
    ],
-   "zh_desc": "按 thread_id 打开线程 Store，目录缺失则创建。"
+   "zh_desc": "按 thread_id 打开线程 Store，目录缺失则创建。",
+   "fan_in": 9,
+   "pagerank": 0.00911345,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 8,
+   "heat": 6,
+   "blast_radius": 13,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_new_thread_id",
@@ -1014,7 +1339,17 @@
     "新线程唯一编号",
     "生成线程短号"
    ],
-   "zh_desc": "生成 t-xxxxxxxx 形态的线程 id，为新建线程提供唯一标识。"
+   "zh_desc": "生成 t-xxxxxxxx 形态的线程 id，为新建线程提供唯一标识。",
+   "fan_in": 2,
+   "pagerank": 0.00404955,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 6,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_find_thread_dirs",
@@ -1037,7 +1372,17 @@
     "扫线程文件夹",
     "列出线程子目录"
    ],
-   "zh_desc": "查找 workspace 下所有 t-xxx 线程目录。"
+   "zh_desc": "查找 workspace 下所有 t-xxx 线程目录。",
+   "fan_in": 5,
+   "pagerank": 0.0081118,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 16,
+   "heat": 6,
+   "blast_radius": 11,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_force_utf8_stdio",
@@ -1053,7 +1398,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "审视快赢②（P1 乱码根治）：Windows GBK 控制台/管道下中文输出全乱码。"
+   "docstring": "审视快赢②（P1 乱码根治）：Windows GBK 控制台/管道下中文输出全乱码。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 12,
+   "heat": 3,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_attach_run_log_handler",
@@ -1069,7 +1424,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "审视快赢①：把核心环 orch.run 过程日志接到 stderr（[run] 前缀）。"
+   "docstring": "审视快赢①：把核心环 orch.run 过程日志接到 stderr（[run] 前缀）。",
+   "fan_in": 1,
+   "pagerank": 0.00264779,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 18,
+   "heat": 3,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_echo",
@@ -1092,7 +1457,17 @@
     "命令回显提示",
     "给用户输出消息",
     "在 CLI 打印消息"
-   ]
+   ],
+   "fan_in": 15,
+   "pagerank": 0.0111672,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 4,
+   "heat": 6,
+   "blast_radius": 15,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_thread_roles",
@@ -1115,7 +1490,17 @@
     "看线程有哪些角色",
     "读回角色名单"
    ],
-   "zh_desc": "从 thread_meta.roles 读回角色列表"
+   "zh_desc": "从 thread_meta.roles 读回角色列表",
+   "fan_in": 3,
+   "pagerank": 0.00421039,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 20,
+   "heat": 6,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_build_default_adapters",
@@ -1139,7 +1524,17 @@
     "按角色配适配器",
     "给运行配默认件"
    ],
-   "zh_desc": "为 orch run 构建默认 Fake 骨架适配器字典。"
+   "zh_desc": "为 orch run 构建默认 Fake 骨架适配器字典。",
+   "fan_in": 2,
+   "pagerank": 0.00309425,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 86,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_build_adapters_from_config",
@@ -1163,7 +1558,17 @@
     "接入陪跑后端",
     "角色适配器装配"
    ],
-   "zh_desc": "按config为roles装配真实CLI适配器以接入Q1/Q2陪跑"
+   "zh_desc": "按config为roles装配真实CLI适配器以接入Q1/Q2陪跑",
+   "fan_in": 2,
+   "pagerank": 0.00309425,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 45,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 9
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_stop_marker_path",
@@ -1186,7 +1591,17 @@
     "生成停止文件路径",
     "orch.stop 路径",
     "工作区停止标记路径"
-   ]
+   ],
+   "fan_in": 2,
+   "pagerank": 0.00690221,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 4,
+   "heat": 6,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_consume_stop_marker",
@@ -1210,7 +1625,17 @@
     "清理 stop 标志",
     "消费停止标志"
    ],
-   "zh_desc": "消费 workspace/orch.stop，有则删除并返回 True。"
+   "zh_desc": "消费 workspace/orch.stop，有则删除并返回 True。",
+   "fan_in": 1,
+   "pagerank": 0.00264779,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 30,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::cmd_run",
@@ -1234,7 +1659,17 @@
     "只跑一轮冒烟",
     "启动 orch 调度"
    ],
-   "zh_desc": "启动 orch run 调度进程，可常驻或只跑一轮"
+   "zh_desc": "启动 orch run 调度进程，可常驻或只跑一轮",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 4,
+   "commits_90d": 4,
+   "churn_90d": 130,
+   "heat": 12,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 13
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::cmd_new",
@@ -1250,7 +1685,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "建线程：目录 / events.db，E1（human assign）入队（spec §12）。"
+   "docstring": "建线程：目录 / events.db，E1（human assign）入队（spec §12）。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 92,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::cmd_send",
@@ -1266,7 +1711,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "人类发言入队（spec §12：`orch send t-xxx \"...\" [--to r]`）。"
+   "docstring": "人类发言入队（spec §12：`orch send t-xxx \"...\" [--to r]`）。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 50,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_render_event_bubble",
@@ -1290,7 +1745,17 @@
     "显示事件消息",
     "把事件画成气泡"
    ],
-   "zh_desc": "将一条事件渲染为群聊气泡，用于展示事件日志。"
+   "zh_desc": "将一条事件渲染为群聊气泡，用于展示事件日志。",
+   "fan_in": 1,
+   "pagerank": 0.00293341,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 26,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::cmd_chat",
@@ -1306,7 +1771,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "把事件日志渲染成群聊（spec §12/§16.1）。"
+   "docstring": "把事件日志渲染成群聊（spec §12/§16.1）。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 74,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 8
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::cmd_status",
@@ -1322,7 +1797,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "线程 status + 派发行摘要（spec §12）。"
+   "docstring": "线程 status + 派发行摘要（spec §12）。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 48,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_resolve_gate_thread",
@@ -1346,7 +1831,17 @@
     "审批前找线程",
     "自动定位门禁线程"
    ],
-   "zh_desc": "缺省 --thread 时按 corr 扫描唯一定位门禁线程。"
+   "zh_desc": "缺省 --thread 时按 corr 扫描唯一定位门禁线程。",
+   "fan_in": 2,
+   "pagerank": 0.00344751,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 19,
+   "heat": 3,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 6
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_apply_gate",
@@ -1369,7 +1864,17 @@
     "门禁放行或驳回",
     "审批后恢复门禁",
     "门禁批不批"
-   ]
+   ],
+   "fan_in": 2,
+   "pagerank": 0.00344751,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 18,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::cmd_approve",
@@ -1393,7 +1898,17 @@
     "批准并继续",
     "恢复被卡流程"
    ],
-   "zh_desc": "门禁 approve 裁决并恢复流程。"
+   "zh_desc": "门禁 approve 裁决并恢复流程。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 4,
+   "commits_90d": 4,
+   "churn_90d": 43,
+   "heat": 12,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::cmd_reject",
@@ -1417,7 +1932,17 @@
     "不批准门禁",
     "拒门禁后继续"
    ],
-   "zh_desc": "门禁裁决 reject：拒绝后 resume，不执行特权。"
+   "zh_desc": "门禁裁决 reject：拒绝后 resume，不执行特权。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 4,
+   "commits_90d": 4,
+   "churn_90d": 43,
+   "heat": 12,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::cmd_stop",
@@ -1441,7 +1966,17 @@
     "安全停止运行",
     "发停机信号"
    ],
-   "zh_desc": "写入 workspace 级 orch.stop 标志文件，触发优雅停机"
+   "zh_desc": "写入 workspace 级 orch.stop 标志文件，触发优雅停机",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 30,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::cmd_reopen",
@@ -1457,7 +1992,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "重开已终止线程（spec §12）：thread_meta.status = running。"
+   "docstring": "重开已终止线程（spec §12）：thread_meta.status = running。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 24,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_lookup_session",
@@ -1481,7 +2026,17 @@
     "查会话后端",
     "取会话信息"
    ],
-   "zh_desc": "按 role 从 sessions 读取 sid/backend。"
+   "zh_desc": "按 role 从 sessions 读取 sid/backend。",
+   "fan_in": 2,
+   "pagerank": 0.00404955,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 20,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::cmd_attach",
@@ -1497,7 +2052,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "打印该角色原生会话接入命令（spec §12：`claude --resume <sid>` 等）。"
+   "docstring": "打印该角色原生会话接入命令（spec §12：`claude --resume <sid>` 等）。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 84,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 7
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_bench_config",
@@ -1521,7 +2086,17 @@
     "占位提示词配置",
     "压测默认参数"
    ],
-   "zh_desc": "为 bench 生成最小 config。"
+   "zh_desc": "为 bench 生成最小 config。",
+   "fan_in": 1,
+   "pagerank": 0.00355343,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 42,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_bench_fixture_events",
@@ -1545,7 +2120,17 @@
     "夹具事件列表",
     "生成测试事件"
    ],
-   "zh_desc": "按 pytest fixture 生成 bench 简化任务事件序列。"
+   "zh_desc": "按 pytest fixture 生成 bench 简化任务事件序列。",
+   "fan_in": 1,
+   "pagerank": 0.00543972,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 62,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_bench_seed",
@@ -1568,7 +2153,17 @@
     "按样例备料",
     "给测试铺底数据",
     "产出每轮输入"
-   ]
+   ],
+   "fan_in": 1,
+   "pagerank": 0.00355343,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 10,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_bench_cold_tokens",
@@ -1591,7 +2186,17 @@
     "冷启估算输入量",
     "完整事件流重跑"
    ],
-   "zh_desc": "关 resume 冷启动重跑 render_view 统计 tokens_in"
+   "zh_desc": "关 resume 冷启动重跑 render_view 统计 tokens_in",
+   "fan_in": 2,
+   "pagerank": 0.00657384,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 16,
+   "heat": 6,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_bench_resume_tokens",
@@ -1614,7 +2219,17 @@
     "增量事件token数",
     "resume令牌近似",
     "新增片段token量"
-   ]
+   ],
+   "fan_in": 1,
+   "pagerank": 0.00355343,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 72,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_run_bench_series",
@@ -1638,7 +2253,17 @@
     "记录每轮读入词元",
     "恢复对比跑分"
    ],
-   "zh_desc": "多轮独立跑 bench，返回每轮 tokens_in 供 resume 对比。"
+   "zh_desc": "多轮独立跑 bench，返回每轮 tokens_in 供 resume 对比。",
+   "fan_in": 2,
+   "pagerank": 0.00533705,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 40,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::cmd_bench_resume",
@@ -1654,7 +2279,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§12/§13 `orch bench resume`：同 fixture 开/关 resume 各跑 N 次的 token 对比。"
+   "docstring": "§12/§13 `orch bench resume`：同 fixture 开/关 resume 各跑 N 次的 token 对比。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 136,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 12
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::cmd_threads",
@@ -1670,7 +2305,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "列 workspace 下所有 `t-xxx` 线程（spec §12）。"
+   "docstring": "列 workspace 下所有 `t-xxx` 线程（spec §12）。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 40,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_thread_dirs_for_metrics",
@@ -1694,7 +2339,17 @@
     "指标数据目录",
     "找线程路径"
    ],
-   "zh_desc": "按 thread 选取 workspace 下 t-xxx 目录供指标聚合。"
+   "zh_desc": "按 thread 选取 workspace 下 t-xxx 目录供指标聚合。",
+   "fan_in": 2,
+   "pagerank": 0.00315953,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 12,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_collect_metric_values",
@@ -1718,7 +2373,17 @@
     "没指标值给空",
     "拿某指标全部值"
    ],
-   "zh_desc": "按 key 取 metrics 的全部 value，空则返回空列表。"
+   "zh_desc": "按 key 取 metrics 的全部 value，空则返回空列表。",
+   "fan_in": 2,
+   "pagerank": 0.00315953,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 18,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_fmt_num",
@@ -1742,7 +2407,17 @@
     "指标数字变文本",
     "没数据显示N/A"
    ],
-   "zh_desc": "把 float 数字格式化为 str，空值显示 N/A 并可加 suffix。"
+   "zh_desc": "把 float 数字格式化为 str，空值显示 N/A 并可加 suffix。",
+   "fan_in": 3,
+   "pagerank": 0.00584513,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 8,
+   "heat": 6,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_fmt_pct",
@@ -1766,7 +2441,17 @@
     "指标比率展示",
     "百分号显示"
    ],
-   "zh_desc": "把 float 或 None 格式化为百分比，空值显示 N/A。"
+   "zh_desc": "把 float 或 None 格式化为百分比，空值显示 N/A。",
+   "fan_in": 2,
+   "pagerank": 0.00315953,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 4,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::cmd_metrics",
@@ -1790,7 +2475,17 @@
     "统计测量指标",
     "空数据显N/A"
    ],
-   "zh_desc": "从metrics与events聚合线程指标汇总，空数据显示N/A"
+   "zh_desc": "从metrics与events聚合线程指标汇总，空数据显示N/A",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 4,
+   "commits_90d": 4,
+   "churn_90d": 244,
+   "heat": 12,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 18
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_count_adapter_loc_from_third",
@@ -1814,7 +2509,17 @@
     "粗算适配器行数",
     "指标代码行数统计"
    ],
-   "zh_desc": "从第 3 个 adapter 文件起粗略累加行数"
+   "zh_desc": "从第 3 个 adapter 文件起粗略累加行数",
+   "fan_in": 2,
+   "pagerank": 0.00315953,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 46,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 8
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_render_replay_line",
@@ -1838,7 +2543,17 @@
     "把事件写成群聊文本",
     "单条回放转文字"
    ],
-   "zh_desc": "将一条 ev 渲染为第三人称群聊 markdown 行。"
+   "zh_desc": "将一条 ev 渲染为第三人称群聊 markdown 行。",
+   "fan_in": 1,
+   "pagerank": 0.00414036,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 24,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_late_after_id",
@@ -1862,7 +2577,17 @@
     "晚到回复编号",
     "最后终止事件号"
    ],
-   "zh_desc": "取最后一条 terminate 事件号，用于标记迟到回复。"
+   "zh_desc": "取最后一条 terminate 事件号，用于标记迟到回复。",
+   "fan_in": 1,
+   "pagerank": 0.00414036,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 8,
+   "heat": 3,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::_render_replay_lines",
@@ -1885,7 +2610,17 @@
     "迟到回复打标",
     "渲染回放文本"
    ],
-   "zh_desc": "逐行渲染回放事件并标记终止后到达的回复。"
+   "zh_desc": "逐行渲染回放事件并标记终止后到达的回复。",
+   "fan_in": 2,
+   "pagerank": 0.00404955,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 11,
+   "heat": 3,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 6
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::cmd_replay",
@@ -1909,7 +2644,17 @@
     "按顺序看群聊",
     "查看聊天回放"
    ],
-   "zh_desc": "按事件 id 升序渲染第三人称群聊 markdown 回放。"
+   "zh_desc": "按事件 id 升序渲染第三人称群聊 markdown 回放。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 3,
+   "commits_90d": 3,
+   "churn_90d": 63,
+   "heat": 9,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::cmd_serve",
@@ -1925,7 +2670,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "启动玻璃感 Web 控制台（spec 之外的补充工具）。"
+   "docstring": "启动玻璃感 Web 控制台（spec 之外的补充工具）。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 43,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 6
   },
   {
    "id": "multi-agent-orch::src/orch/cli/main.py::main",
@@ -1941,7 +2696,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 4,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/cli/__init__.py",
@@ -1954,7 +2719,8 @@
    "docstring": "用户界面 CLI（spec §12）。",
    "external_imports": [
     "__future__"
-   ]
+   ],
+   "module_pagerank": 0.02464102
   },
   {
    "id": "multi-agent-orch::src/orch/protocol/rules.py",
@@ -1967,7 +2733,8 @@
    "docstring": "§3.2 发送者约束 / 保留策略，§3.3 blackboard_ops 应用门槛。",
    "external_imports": [
     "__future__"
-   ]
+   ],
+   "module_pagerank": 0.05647717
   },
   {
    "id": "multi-agent-orch::src/orch/protocol/rules.py::allowed_sender",
@@ -1983,7 +2750,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§3.2 发送者约束。"
+   "docstring": "§3.2 发送者约束。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 44,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 6
   },
   {
    "id": "multi-agent-orch::src/orch/protocol/rules.py::can_apply_blackboard_ops",
@@ -1999,7 +2776,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§3.3 门槛：type ∈ {decision, acceptance, gate_decision} 且 sender 具 can_decide。"
+   "docstring": "§3.3 门槛：type ∈ {decision, acceptance, gate_decision} 且 sender 具 can_decide。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 14,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/protocol/schema.py",
@@ -2013,7 +2800,8 @@
    "external_imports": [
     "__future__",
     "jsonschema"
-   ]
+   ],
+   "module_pagerank": 0.05647717
   },
   {
    "id": "multi-agent-orch::src/orch/protocol/schema.py::validate_author_fields",
@@ -2029,7 +2817,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "用 jsonschema 校验作者字段（附录A）。返回错误消息列表；空列表 = 合法。"
+   "docstring": "用 jsonschema 校验作者字段（附录A）。返回错误消息列表；空列表 = 合法。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 26,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/protocol/__init__.py",
@@ -2042,7 +2840,8 @@
    "docstring": "协议层：信封结构与 schema 校验（spec §3、附录A）。",
    "external_imports": [
     "__future__"
-   ]
+   ],
+   "module_pagerank": 0.07490876
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py",
@@ -2058,7 +2857,8 @@
     "__future__",
     "pathlib",
     "typing"
-   ]
+   ],
+   "module_pagerank": 0.05024282
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::RenderedView",
@@ -2103,7 +2903,17 @@
     "称一下文字分量",
     "估个文本消耗量"
    ],
-   "zh_desc": "按字符系数估算 text 的词元数，用于配额截断与压缩。"
+   "zh_desc": "按字符系数估算 text 的词元数，用于配额截断与压缩。",
+   "fan_in": 5,
+   "pagerank": 0.00725529,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 34,
+   "heat": 6,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_summarize",
@@ -2127,7 +2937,17 @@
     "背景一行摘要",
     "焦点摘要截断"
    ],
-   "zh_desc": "按 limit 折叠并截断 body，生成背景与焦点摘要"
+   "zh_desc": "按 limit 折叠并截断 body，生成背景与焦点摘要",
+   "fan_in": 4,
+   "pagerank": 0.00644551,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 12,
+   "heat": 6,
+   "blast_radius": 7,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_to_labels",
@@ -2151,7 +2971,17 @@
     "to转@名单",
     "拼接@提醒名单"
    ],
-   "zh_desc": "把信封 to 渲染成 @a,@b 标签"
+   "zh_desc": "把信封 to 渲染成 @a,@b 标签",
+   "fan_in": 5,
+   "pagerank": 0.01211593,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 18,
+   "heat": 6,
+   "blast_radius": 11,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::render_event_third_person",
@@ -2175,7 +3005,17 @@
     "焦点窗事件旁观渲染",
     "单事件第三人称展示"
    ],
-   "zh_desc": "按观看者角色渲染焦点窗单事件第三人称视图"
+   "zh_desc": "按观看者角色渲染焦点窗单事件第三人称视图",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 28,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_render_event_full",
@@ -2199,7 +3039,17 @@
     "新事件全文渲染",
     "带标签事件全文"
    ],
-   "zh_desc": "将焦点窗新事件渲染为第三人称带标签全文"
+   "zh_desc": "将焦点窗新事件渲染为第三人称带标签全文",
+   "fan_in": 2,
+   "pagerank": 0.00374997,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 24,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_retention_of",
@@ -2223,7 +3073,17 @@
     "分桶前查保留",
     "事件保留分类"
    ],
-   "zh_desc": "按 etype 给出保留策略，用于 A/B/C/D 分桶。"
+   "zh_desc": "按 etype 给出保留策略，用于 A/B/C/D 分桶。",
+   "fan_in": 3,
+   "pagerank": 0.0047379,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 6,
+   "heat": 6,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_role_authored_ids",
@@ -2247,7 +3107,17 @@
     "角色发的事件集合",
     "查角色发过的事"
    ],
-   "zh_desc": "获取 role 发过的事件号集合，用于焦点窗相交判定。"
+   "zh_desc": "获取 role 发过的事件号集合，用于焦点窗相交判定。",
+   "fan_in": 2,
+   "pagerank": 0.00356404,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 6,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_is_focus_relevant",
@@ -2270,7 +3140,17 @@
     "筛出焦点窗相关事件",
     "看事件是不是焦点窗相关"
    ],
-   "zh_desc": "判断事件是否与role相关，用于焦点窗分桶与渲染。"
+   "zh_desc": "判断事件是否与role相关，用于焦点窗分桶与渲染。",
+   "fan_in": 2,
+   "pagerank": 0.00356404,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 16,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_classify",
@@ -2294,7 +3174,17 @@
     "事件归类",
     "筛选聊天事件"
    ],
-   "zh_desc": "按保留策略与相关性把 events 分成 A/B/C/D 桶，供视图渲染使用。"
+   "zh_desc": "按保留策略与相关性把 events 分成 A/B/C/D 桶，供视图渲染使用。",
+   "fan_in": 1,
+   "pagerank": 0.00262494,
+   "fix_involvement": 0,
+   "commits_all": 3,
+   "commits_90d": 3,
+   "churn_90d": 88,
+   "heat": 9,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 8
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_bg_line",
@@ -2318,7 +3208,17 @@
     "背景行摘要",
     "事件背景摘要"
    ],
-   "zh_desc": "根据 event 生成背景层一行摘要，用于视图组装。"
+   "zh_desc": "根据 event 生成背景层一行摘要，用于视图组装。",
+   "fan_in": 1,
+   "pagerank": 0.0029771,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 22,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_read_prompt",
@@ -2334,7 +3234,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "读 config.roles[role].prompt 文件原文（§6.2 身份与职责）。"
+   "docstring": "读 config.roles[role].prompt 文件原文（§6.2 身份与职责）。",
+   "fan_in": 1,
+   "pagerank": 0.00465051,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 28,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_build_system",
@@ -2350,7 +3260,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "系统层（§6.2 冷启动全文）：身份 + 权限申报 + 身份声明 + 输出格式 + 幂等指令。"
+   "docstring": "系统层（§6.2 冷启动全文）：身份 + 权限申报 + 身份声明 + 输出格式 + 幂等指令。",
+   "fan_in": 1,
+   "pagerank": 0.00262494,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 74,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_read_board",
@@ -2366,7 +3286,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "黑板层 = board.md 全文（§6.1）。"
+   "docstring": "黑板层 = board.md 全文（§6.1）。",
+   "fan_in": 1,
+   "pagerank": 0.00465051,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 26,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_build_blackboard",
@@ -2382,7 +3312,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00262494,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 10,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_build_instruction",
@@ -2404,7 +3344,17 @@
     "按事件编号拼指令",
     "拼指定编号回应指令"
    ],
-   "zh_desc": "按角色和事件编号拼接回应指令尾。"
+   "zh_desc": "按角色和事件编号拼接回应指令尾。",
+   "fan_in": 2,
+   "pagerank": 0.00296768,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 14,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_join_background",
@@ -2428,7 +3378,17 @@
     "把背景拼成一段",
     "背景层拼文本"
    ],
-   "zh_desc": "拼接背景项，生成四层视图背景文本供压缩。"
+   "zh_desc": "拼接背景项，生成四层视图背景文本供压缩。",
+   "fan_in": 2,
+   "pagerank": 0.00419124,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 10,
+   "heat": 6,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_join_focus",
@@ -2452,7 +3412,17 @@
     "生成焦点窗全文",
     "焦点窗拼成一段"
    ],
-   "zh_desc": "将 focus_rendered 拼接成焦点窗文本"
+   "zh_desc": "将 focus_rendered 拼接成焦点窗文本",
+   "fan_in": 2,
+   "pagerank": 0.00365315,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 8,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_truncate_blackboard_to_quota",
@@ -2468,7 +3438,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§6.3 黑板层 ≤20% window：超配额时**尾部截断、保留头部结构**（Lead 裁决）。"
+   "docstring": "§6.3 黑板层 ≤20% window：超配额时**尾部截断、保留头部结构**（Lead 裁决）。",
+   "fan_in": 1,
+   "pagerank": 0.00262494,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 38,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_compress",
@@ -2492,7 +3472,17 @@
     "给视图内容减字数",
     "裁剪焦点和背景"
    ],
-   "zh_desc": "按分层配比和 budget 压缩视图内容，避免超预算。"
+   "zh_desc": "按分层配比和 budget 压缩视图内容，避免超预算。",
+   "fan_in": 1,
+   "pagerank": 0.00262494,
+   "fix_involvement": 0,
+   "commits_all": 3,
+   "commits_90d": 3,
+   "churn_90d": 164,
+   "heat": 9,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 8
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_compress._focus_tokens",
@@ -2508,7 +3498,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 4,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_compress._bg_tokens",
@@ -2524,7 +3524,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 4,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_compress._over",
@@ -2540,7 +3550,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 4,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_truncate_focus_body",
@@ -2556,7 +3576,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "截断单个焦点事件正文，保首尾各一段（§6.3），标签头保持第三人称。"
+   "docstring": "截断单个焦点事件正文，保首尾各一段（§6.3），标签头保持第三人称。",
+   "fan_in": 1,
+   "pagerank": 0.00316304,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 24,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_context_window",
@@ -2572,7 +3602,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "预算上限 = 该 role 绑定 adapter 的 context_window（§6.3，经 config）。"
+   "docstring": "预算上限 = 该 role 绑定 adapter 的 context_window（§6.3，经 config）。",
+   "fan_in": 1,
+   "pagerank": 0.00262494,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 22,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 7
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::render_view",
@@ -2596,7 +3636,17 @@
     "把事件拼成视图",
     "生成四层渲染结果"
    ],
-   "zh_desc": "冷启动全量组装不对称四层视图并返回渲染结果。"
+   "zh_desc": "冷启动全量组装不对称四层视图并返回渲染结果。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 6,
+   "commits_90d": 6,
+   "churn_90d": 244,
+   "heat": 18,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 9
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_render_a_event_diff",
@@ -2612,7 +3662,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "把单个 A 类事件（decision/acceptance/gate_decision）渲染为黑板 diff 单行。"
+   "docstring": "把单个 A 类事件（decision/acceptance/gate_decision）渲染为黑板 diff 单行。",
+   "fan_in": 1,
+   "pagerank": 0.00359317,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 22,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_contract_versions_from_events",
@@ -2628,7 +3688,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "扫描给定事件列表的 blackboard_ops，返回 {contract_name: latest_version}。"
+   "docstring": "扫描给定事件列表的 blackboard_ops，返回 {contract_name: latest_version}。",
+   "fan_in": 1,
+   "pagerank": 0.00476704,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 40,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 8
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_needs_cold_start_by_version",
@@ -2644,7 +3714,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§6.5 规则2：契约 version 变更 ≥ 1 → needs_cold_start = True。"
+   "docstring": "§6.5 规则2：契约 version 变更 ≥ 1 → needs_cold_start = True。",
+   "fan_in": 1,
+   "pagerank": 0.00276204,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 46,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 6
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_build_blackboard_diff",
@@ -2660,7 +3740,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§6.5 规则1：黑板 diff = last_evt 之后的 A 类事件，前缀\"以下决策覆盖旧结论：\"。"
+   "docstring": "§6.5 规则1：黑板 diff = last_evt 之后的 A 类事件，前缀\"以下决策覆盖旧结论：\"。",
+   "fan_in": 1,
+   "pagerank": 0.00276204,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 30,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_build_focus_delta",
@@ -2676,7 +3766,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§6.5 规则3：新事件全文 = event_id > last_evt 的 B 类事件（相关，第三人称、带 # 号）。"
+   "docstring": "§6.5 规则3：新事件全文 = event_id > last_evt 的 B 类事件（相关，第三人称、带 # 号）。",
+   "fan_in": 1,
+   "pagerank": 0.00276204,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 44,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 6
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::_build_system_delta",
@@ -2692,7 +3792,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§6.5 规则4：热续 system 段最小签名——不重新灌 prompt 原文。"
+   "docstring": "§6.5 规则4：热续 system 段最小签名——不重新灌 prompt 原文。",
+   "fan_in": 1,
+   "pagerank": 0.00276204,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 24,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/render/__init__.py::render_delta",
@@ -2716,7 +3826,17 @@
     "断点续看视图",
     "增量续渲染"
    ],
-   "zh_desc": "用 event_ids 和 last_evt 生成热续增量视图"
+   "zh_desc": "用 event_ids 和 last_evt 生成热续增量视图",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 118,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/async_core.py",
@@ -2734,7 +3854,8 @@
     "__future__",
     "pathlib",
     "typing"
-   ]
+   ],
+   "module_pagerank": 0.03142938
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/async_core.py::_store_lock",
@@ -2758,7 +3879,17 @@
     "防止同时写",
     "存储写锁"
    ],
-   "zh_desc": "按 store 获取 asyncio.Lock，防止 SQLite 并发写冲突"
+   "zh_desc": "按 store 获取 asyncio.Lock，防止 SQLite 并发写冲突",
+   "fan_in": 2,
+   "pagerank": 0.00408157,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 24,
+   "heat": 6,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/async_core.py::_scopes_intersect",
@@ -2774,7 +3905,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "两 write_scope 前缀集合是否相交（§8.2/§5.1）。空集视为不相交（API 型无写盘）。"
+   "docstring": "两 write_scope 前缀集合是否相交（§8.2/§5.1）。空集视为不相交（API 型无写盘）。",
+   "fan_in": 1,
+   "pagerank": 0.00371698,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 28,
+   "heat": 6,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 10
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/async_core.py::_partition_parallel_groups",
@@ -2790,7 +3931,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "把 groups 按写域相交关系分成\"批\"——批内两两写域不相交（可并行），批间串行。"
+   "docstring": "把 groups 按写域相交关系分成\"批\"——批内两两写域不相交（可并行），批间串行。",
+   "fan_in": 1,
+   "pagerank": 0.00305336,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 66,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 7
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/async_core.py::_adapter_max_concurrent",
@@ -2806,7 +3957,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "从 adapter.caps.max_concurrent 读并发上限；缺省 1（保守）。"
+   "docstring": "从 adapter.caps.max_concurrent 读并发上限；缺省 1（保守）。",
+   "fan_in": 1,
+   "pagerank": 0.00632783,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 16,
+   "heat": 6,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/async_core.py::_adapter_semaphore",
@@ -2822,7 +3983,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "按 adapter 对象身份取 Semaphore（§9.3 per-adapter caps.max_concurrent 全局限流）。"
+   "docstring": "按 adapter 对象身份取 Semaphore（§9.3 per-adapter caps.max_concurrent 全局限流）。",
+   "fan_in": 1,
+   "pagerank": 0.00459827,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 16,
+   "heat": 6,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/async_core.py::_invoke_adapter",
@@ -2838,7 +4009,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "统一 invoke 入口：async ainvoke 直调；sync invoke 走 asyncio.to_thread。"
+   "docstring": "统一 invoke 入口：async ainvoke 直调；sync invoke 走 asyncio.to_thread。",
+   "fan_in": 1,
+   "pagerank": 0.00256349,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 24,
+   "heat": 6,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/async_core.py::_dispatch_group_async",
@@ -2862,7 +4043,17 @@
     "单组事件异步执行",
     "异步处理目标分组"
    ],
-   "zh_desc": "异步处理单个 target 的 event_ids 事件组"
+   "zh_desc": "异步处理单个 target 的 event_ids 事件组",
+   "fan_in": 1,
+   "pagerank": 0.00305336,
+   "fix_involvement": 0,
+   "commits_all": 8,
+   "commits_90d": 8,
+   "churn_90d": 351,
+   "heat": 24,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 23
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/async_core.py::run_thread_async",
@@ -2884,7 +4075,17 @@
     "后台执行核心循环",
     "工作区异步跑环"
    ],
-   "zh_desc": "异步执行核心循环，支撑长作业多线程运行。"
+   "zh_desc": "异步执行核心循环，支撑长作业多线程运行。",
+   "fan_in": 1,
+   "pagerank": 0.00447571,
+   "fix_involvement": 0,
+   "commits_all": 3,
+   "commits_90d": 3,
+   "churn_90d": 140,
+   "heat": 9,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 12
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/async_core.py::register_async_job",
@@ -2900,7 +4101,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§5.2：非阻塞启动 subprocess，完成后 append system 事件回调。"
+   "docstring": "§5.2：非阻塞启动 subprocess，完成后 append system 事件回调。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 214,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 9
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/async_core.py::register_async_job._wait_and_callback",
@@ -2916,7 +4127,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "后台协程：轮询进程结束，落盘回调。"
+   "docstring": "后台协程：轮询进程结束，落盘回调。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 68,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 8
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/async_core.py::run_workspace",
@@ -2932,7 +4153,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§9.3：workspace_dir 下每个 t-* 子目录为一个线程，各自跑 run_thread_async。"
+   "docstring": "§9.3：workspace_dir 下每个 t-* 子目录为一个线程，各自跑 run_thread_async。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 54,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/async_core.py::run_workspace._run_one",
@@ -2948,7 +4179,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 8,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py",
@@ -2966,7 +4207,8 @@
     "__future__",
     "itertools",
     "pathlib"
-   ]
+   ],
+   "module_pagerank": 0.03476875
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_view_with_retry_note",
@@ -2982,7 +4224,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "R-T2 · D：为\"原地重调那一次\"生成携带具体校验错误说明的视图（§5.1）。"
+   "docstring": "R-T2 · D：为\"原地重调那一次\"生成携带具体校验错误说明的视图（§5.1）。",
+   "fan_in": 2,
+   "pagerank": 0.00268816,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 25,
+   "heat": 3,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_record_invoke_tokens",
@@ -2998,7 +4250,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§13 采集点1：每次 invoke 记一条 tokens 行（可复算，随代码交付）。"
+   "docstring": "§13 采集点1：每次 invoke 记一条 tokens 行（可复算，随代码交付）。",
+   "fan_in": 2,
+   "pagerank": 0.00268816,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 18,
+   "heat": 3,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_record_render_compression",
@@ -3014,7 +4276,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§13 采集点3：渲染时记 背景层 原文/摘要 token（背景压缩比）。"
+   "docstring": "§13 采集点3：渲染时记 背景层 原文/摘要 token（背景压缩比）。",
+   "fan_in": 2,
+   "pagerank": 0.00268816,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 19,
+   "heat": 3,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 6
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_record_invoke_cost",
@@ -3030,7 +4302,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§13 采集点1（费用侧）：仅当 adapter 暴露真实用量 last_usage 时记 cost 行。"
+   "docstring": "§13 采集点1（费用侧）：仅当 adapter 暴露真实用量 last_usage 时记 cost 行。",
+   "fan_in": 2,
+   "pagerank": 0.00268816,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 14,
+   "heat": 3,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_role_conf",
@@ -3054,7 +4336,17 @@
     "看这个角色怎么配",
     "拿角色参数"
    ],
-   "zh_desc": "按 role 从 config 取角色配置 dict"
+   "zh_desc": "按 role 从 config 取角色配置 dict",
+   "fan_in": 6,
+   "pagerank": 0.01854571,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 4,
+   "heat": 6,
+   "blast_radius": 13,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_role_worktree",
@@ -3078,7 +4370,17 @@
     "按角色拿工作树位置",
     "读角色工作区路径"
    ],
-   "zh_desc": "按 role 从 config['worktrees'] 取 worktree "
+   "zh_desc": "按 role 从 config['worktrees'] 取 worktree ",
+   "fan_in": 3,
+   "pagerank": 0.0034498,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 22,
+   "heat": 6,
+   "blast_radius": 6,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_write_scope",
@@ -3102,7 +4404,17 @@
     "写权限清单",
     "审计写域声明"
    ],
-   "zh_desc": "按 config 与 role 输出写域申报，用于审计和并行分批。"
+   "zh_desc": "按 config 与 role 输出写域申报，用于审计和并行分批。",
+   "fan_in": 3,
+   "pagerank": 0.00398584,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 6,
+   "heat": 6,
+   "blast_radius": 6,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_last_ok_commit",
@@ -3125,7 +4437,17 @@
     "审计对齐提交",
     "找最近成功提交",
     "首轮审计兜底点"
-   ]
+   ],
+   "fan_in": 3,
+   "pagerank": 0.0034498,
+   "fix_involvement": 0,
+   "commits_all": 3,
+   "commits_90d": 3,
+   "churn_90d": 42,
+   "heat": 9,
+   "blast_radius": 6,
+   "blast_endpoints": 0,
+   "cyclomatic": 6
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_ensure_audit_baseline",
@@ -3141,7 +4463,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "R-T2 · E（§8.2 首轮审计兜底）：确保该角色审计恒有对齐点，消除首轮 fail-open。"
+   "docstring": "R-T2 · E（§8.2 首轮审计兜底）：确保该角色审计恒有对齐点，消除首轮 fail-open。",
+   "fan_in": 2,
+   "pagerank": 0.00268816,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 19,
+   "heat": 3,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_timeout_for",
@@ -3165,7 +4497,17 @@
     "看最多能等多久",
     "读取超时设置"
    ],
-   "zh_desc": "根据 config 与 role 取得分发组等待超时时间。"
+   "zh_desc": "根据 config 与 role 取得分发组等待超时时间。",
+   "fan_in": 2,
+   "pagerank": 0.00268816,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 14,
+   "heat": 6,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_group_pending",
@@ -3189,7 +4531,17 @@
     "同目标合并调用",
     "把同目标合一起"
    ],
-   "zh_desc": "按 target 聚合 pending，使同目标同批 invoke"
+   "zh_desc": "按 target 聚合 pending，使同目标同批 invoke",
+   "fan_in": 2,
+   "pagerank": 0.00356746,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 26,
+   "heat": 6,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_is_cold_start",
@@ -3205,7 +4557,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§6.2/契约 §4：该 role 是否冷启动（sessions.gen==0 或无 sid，即尚未热续）。"
+   "docstring": "§6.2/契约 §4：该 role 是否冷启动（sessions.gen==0 或无 sid，即尚未热续）。",
+   "fan_in": 1,
+   "pagerank": 0.00496126,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 16,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_assemble_view",
@@ -3229,7 +4591,17 @@
     "把视图拼全",
     "做整页视图"
    ],
-   "zh_desc": "调用 render.render_view 组装完整不对称四层视图"
+   "zh_desc": "调用 render.render_view 组装完整不对称四层视图",
+   "fan_in": 1,
+   "pagerank": 0.00299054,
+   "fix_involvement": 0,
+   "commits_all": 4,
+   "commits_90d": 4,
+   "churn_90d": 96,
+   "heat": 12,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_blackboard_version",
@@ -3245,7 +4617,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "黑板 version 标量（§6.5 门控3 / 规则2 的\"版本推进\"判据，调度层自定，§17 归档）。"
+   "docstring": "黑板 version 标量（§6.5 门控3 / 规则2 的\"版本推进\"判据，调度层自定，§17 归档）。",
+   "fan_in": 2,
+   "pagerank": 0.00610373,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 20,
+   "heat": 3,
+   "blast_radius": 7,
+   "blast_endpoints": 0,
+   "cyclomatic": 6
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_adapter_name",
@@ -3261,7 +4643,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "该角色绑定的 adapter 名（config.roles[role].adapter）；缺省 role 名兜底（会话 backend 列）。"
+   "docstring": "该角色绑定的 adapter 名（config.roles[role].adapter）；缺省 role 名兜底（会话 backend 列）。",
+   "fan_in": 1,
+   "pagerank": 0.00356177,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 3,
+   "heat": 3,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_session_row",
@@ -3285,7 +4677,17 @@
     "取热续会话",
     "找该角色会话"
    ],
-   "zh_desc": "读取 role 的 sessions 行以获取热续落盘真实状态。"
+   "zh_desc": "读取 role 的 sessions 行以获取热续落盘真实状态。",
+   "fan_in": 3,
+   "pagerank": 0.0072462,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 6,
+   "heat": 3,
+   "blast_radius": 8,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_resume_session_ok",
@@ -3301,7 +4703,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "m3-contract §2 门控 (1)(2)：会话侧热续前置——adapter 支持 resume + sid 非空 + gen 未变。"
+   "docstring": "m3-contract §2 门控 (1)(2)：会话侧热续前置——adapter 支持 resume + sid 非空 + gen 未变。",
+   "fan_in": 1,
+   "pagerank": 0.00299054,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 22,
+   "heat": 3,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 9
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_blackboard_version_advanced",
@@ -3317,7 +4729,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "m3-contract §2 门控(3)：黑板 version 是否自上次渲染推进（≥1 step）。"
+   "docstring": "m3-contract §2 门控(3)：黑板 version 是否自上次渲染推进（≥1 step）。",
+   "fan_in": 1,
+   "pagerank": 0.00299054,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 11,
+   "heat": 3,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_invalidate_sid",
@@ -3333,7 +4755,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§6.5 规则2：作废该角色 sid（sessions.sid 置空 + gen 递增）——纯会话簿记，不经事件日志。"
+   "docstring": "§6.5 规则2：作废该角色 sid（sessions.sid 置空 + gen 递增）——纯会话簿记，不经事件日志。",
+   "fan_in": 1,
+   "pagerank": 0.00299054,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 79,
+   "heat": 6,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_session_for_upsert",
@@ -3349,7 +4781,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "把 adapter 返回的会话（{sid,gen}）规范化为 reply_and_done 的 session upsert 入参。"
+   "docstring": "把 adapter 返回的会话（{sid,gen}）规范化为 reply_and_done 的 session upsert 入参。",
+   "fan_in": 2,
+   "pagerank": 0.00268816,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 24,
+   "heat": 3,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_persist_resume_state",
@@ -3365,7 +4807,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "成功渲染派发后持久化热续判据（§16.9 全部落盘，键名稳定可从盘重建）。"
+   "docstring": "成功渲染派发后持久化热续判据（§16.9 全部落盘，键名稳定可从盘重建）。",
+   "fan_in": 2,
+   "pagerank": 0.00268816,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 16,
+   "heat": 3,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_render_for_dispatch",
@@ -3381,7 +4833,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "R-T3 热续决策（同步/异步核心环复用同一函数）：决定本轮走 render_delta 还是 render_view。"
+   "docstring": "R-T3 热续决策（同步/异步核心环复用同一函数）：决定本轮走 render_delta 还是 render_view。",
+   "fan_in": 2,
+   "pagerank": 0.00268816,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 45,
+   "heat": 3,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 6
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_run_verify",
@@ -3397,7 +4859,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§8.3 验证钩子：回复为 acceptance 时编排器亲自执行 role.verify.cmd。"
+   "docstring": "§8.3 验证钩子：回复为 acceptance 时编排器亲自执行 role.verify.cmd。",
+   "fan_in": 1,
+   "pagerank": 0.00470424,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 46,
+   "heat": 6,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 7
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_finalize_envelope",
@@ -3421,7 +4893,17 @@
     "做落盘前校验",
     "最后封好信封"
    ],
-   "zh_desc": "定稿作者字段信封，赋系统字段并走verify钩子。"
+   "zh_desc": "定稿作者字段信封，赋系统字段并走verify钩子。",
+   "fan_in": 2,
+   "pagerank": 0.00268816,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 38,
+   "heat": 6,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_enforce_sender_constraint",
@@ -3445,7 +4927,17 @@
     "限制发送者回复类型",
     "发送者约束降级"
    ],
-   "zh_desc": "执行发送者约束，越权时将 reply 的 type 改为 report 并返回原"
+   "zh_desc": "执行发送者约束，越权时将 reply 的 type 改为 report 并返回原",
+   "fan_in": 2,
+   "pagerank": 0.00268816,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 36,
+   "heat": 6,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_apply_bb_if_eligible",
@@ -3469,7 +4961,17 @@
     "门槛过了再操作黑板",
     "黑板操作合格检查"
    ],
-   "zh_desc": "门槛判定后应用 blackboard_ops，不满足则忽略并追加 system "
+   "zh_desc": "门槛判定后应用 blackboard_ops，不满足则忽略并追加 system ",
+   "fan_in": 2,
+   "pagerank": 0.00268816,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 46,
+   "heat": 6,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_collect_branches",
@@ -3485,7 +4987,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§5.4 终止清单\"分支列表\"段（M1 mock 退化为空）。"
+   "docstring": "§5.4 终止清单\"分支列表\"段（M1 mock 退化为空）。",
+   "fan_in": 1,
+   "pagerank": 0.00404011,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 32,
+   "heat": 6,
+   "blast_radius": 6,
+   "blast_endpoints": 0,
+   "cyclomatic": 7
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_find_terminate_summary",
@@ -3501,7 +5013,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "按 re=[term_event_id] + sender=system 定位已落盘的终止总结事件（§9.1 只查表）。"
+   "docstring": "按 re=[term_event_id] + sender=system 定位已落盘的终止总结事件（§9.1 只查表）。",
+   "fan_in": 1,
+   "pagerank": 0.00404011,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 13,
+   "heat": 3,
+   "blast_radius": 6,
+   "blast_endpoints": 0,
+   "cyclomatic": 6
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_handle_terminate",
@@ -3525,7 +5047,17 @@
     "终止会话收尾",
     "终止后拒新派发"
    ],
-   "zh_desc": "执行终止清单：汇总产物、status=terminated、拒绝新派发。"
+   "zh_desc": "执行终止清单：汇总产物、status=terminated、拒绝新派发。",
+   "fan_in": 3,
+   "pagerank": 0.0057205,
+   "fix_involvement": 0,
+   "commits_all": 6,
+   "commits_90d": 6,
+   "churn_90d": 256,
+   "heat": 18,
+   "blast_radius": 6,
+   "blast_endpoints": 0,
+   "cyclomatic": 11
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_finish_interrupted_terminate",
@@ -3541,7 +5073,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§9.1 恢复补完：若盘上有 terminate 事件但线程未 terminated，幂等重入终止清算。"
+   "docstring": "§9.1 恢复补完：若盘上有 terminate 事件但线程未 terminated，幂等重入终止清算。",
+   "fan_in": 2,
+   "pagerank": 0.00356746,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 21,
+   "heat": 3,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::run_thread",
@@ -3565,7 +5107,17 @@
     "单线程执行调度环",
     "跑核心循环到停"
    ],
-   "zh_desc": "运行 run_thread 核心循环，直到 thread 挂起或终止。"
+   "zh_desc": "运行 run_thread 核心循环，直到 thread 挂起或终止。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 6,
+   "commits_90d": 6,
+   "churn_90d": 93,
+   "heat": 18,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 10
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/core.py::_dispatch_group",
@@ -3589,7 +5141,17 @@
     "发一组事件到目标",
     "目标事件组分发"
    ],
-   "zh_desc": "处理单个 target 和 event_ids 组，两次 schema 失败返回"
+   "zh_desc": "处理单个 target 和 event_ids 组，两次 schema 失败返回",
+   "fan_in": 1,
+   "pagerank": 0.00293341,
+   "fix_involvement": 0,
+   "commits_all": 15,
+   "commits_90d": 15,
+   "churn_90d": 400,
+   "heat": 45,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 21
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/permissions.py",
@@ -3604,7 +5166,8 @@
     "subprocess",
     "__future__",
     "pathlib"
-   ]
+   ],
+   "module_pagerank": 0.04588016
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/permissions.py::_git",
@@ -3628,7 +5191,17 @@
     "调用git",
     "git执行器"
    ],
-   "zh_desc": "在 cwd 执行 git，返回 CompletedProcess，check=T"
+   "zh_desc": "在 cwd 执行 git，返回 CompletedProcess，check=T",
+   "fan_in": 7,
+   "pagerank": 0.02034402,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 18,
+   "heat": 6,
+   "blast_radius": 15,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/permissions.py::_worktree_exists",
@@ -3644,7 +5217,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "通过 `git worktree list --porcelain` 判定 wt_path 是否已注册（避免\"已存在\"报错）。"
+   "docstring": "通过 `git worktree list --porcelain` 判定 wt_path 是否已注册（避免\"已存在\"报错）。",
+   "fan_in": 1,
+   "pagerank": 0.00456531,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 38,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 8
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/permissions.py::ensure_worktrees",
@@ -3668,7 +5251,17 @@
     "为可写角色开工作树",
     "生成角色工作目录"
    ],
-   "zh_desc": "为 write_scope 非空角色建 worktree 隔离"
+   "zh_desc": "为 write_scope 非空角色建 worktree 隔离",
+   "fan_in": 1,
+   "pagerank": 0.00504941,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 114,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 11
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/permissions.py::_diff_touched_paths",
@@ -3684,7 +5277,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "`git diff --name-only {last_ok_commit}..HEAD` 返回触及路径列表（POSIX 分隔符）。"
+   "docstring": "`git diff --name-only {last_ok_commit}..HEAD` 返回触及路径列表（POSIX 分隔符）。",
+   "fan_in": 1,
+   "pagerank": 0.00350049,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 38,
+   "heat": 6,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/permissions.py::_matches_write_scope",
@@ -3700,7 +5303,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "前缀匹配：path 是否落在 write_scope 任一前缀内（§8.2）。"
+   "docstring": "前缀匹配：path 是否落在 write_scope 任一前缀内（§8.2）。",
+   "fan_in": 1,
+   "pagerank": 0.00350049,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 28,
+   "heat": 6,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/permissions.py::audit_write_scope",
@@ -3724,7 +5337,17 @@
     "文件越权修改检查",
     "审计写入路径越权"
    ],
-   "zh_desc": "审计 worktree 的 diff 是否超 write_scope，返回合规与"
+   "zh_desc": "审计 worktree 的 diff 是否超 write_scope，返回合规与",
+   "fan_in": 1,
+   "pagerank": 0.00254397,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 24,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/permissions.py::_has_uncommitted_changes",
@@ -3740,7 +5363,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "`git status --porcelain` 非空 → 有未提交改动（含未跟踪）。"
+   "docstring": "`git status --porcelain` 非空 → 有未提交改动（含未跟踪）。",
+   "fan_in": 1,
+   "pagerank": 0.00350049,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 8,
+   "heat": 6,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/permissions.py::autocommit",
@@ -3762,7 +5395,17 @@
     "改完自动存档",
     "工作区自动提交"
    ],
-   "zh_desc": "有改动时自动 git 提交并返回 sha"
+   "zh_desc": "有改动时自动 git 提交并返回 sha",
+   "fan_in": 1,
+   "pagerank": 0.00254397,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 30,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/permissions.py::reset_hard",
@@ -3778,7 +5421,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "`git reset --hard {commit}`：§8.2 越权后回上个合法 commit。"
+   "docstring": "`git reset --hard {commit}`：§8.2 越权后回上个合法 commit。",
+   "fan_in": 1,
+   "pagerank": 0.00254397,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 6,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/permissions.py::head_sha",
@@ -3794,7 +5447,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "`git rev-parse HEAD` 返回 worktree 当前 HEAD 的完整 sha；失败返回 None。"
+   "docstring": "`git rev-parse HEAD` 返回 worktree 当前 HEAD 的完整 sha；失败返回 None。",
+   "fan_in": 1,
+   "pagerank": 0.00318095,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 15,
+   "heat": 3,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/recover.py",
@@ -3810,7 +5473,8 @@
     "time",
     "__future__",
     "pathlib"
-   ]
+   ],
+   "module_pagerank": 0.03142938
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/recover.py::_blackboard_intact",
@@ -3833,7 +5497,17 @@
     "检查状态存档是否完好",
     "判断要不要重建黑板"
    ],
-   "zh_desc": "检查 state.json 是否合法，决定是否 rebuild。"
+   "zh_desc": "检查 state.json 是否合法，决定是否 rebuild。",
+   "fan_in": 1,
+   "pagerank": 0.00310477,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 28,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/recover.py::recover",
@@ -3857,7 +5531,17 @@
     "按日志恢复",
     "停机重启修复"
    ],
-   "zh_desc": "启动时按日志与表机械执行崩溃恢复。"
+   "zh_desc": "启动时按日志与表机械执行崩溃恢复。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 62,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 7
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/systemexec.py",
@@ -3872,7 +5556,8 @@
     "re",
     "subprocess",
     "__future__"
-   ]
+   ],
+   "module_pagerank": 0.04588016
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event",
@@ -3896,7 +5581,17 @@
     "补一条系统通知",
     "写入系统事件"
    ],
-   "zh_desc": "编排器追加一条 system 事件并返回 int。"
+   "zh_desc": "编排器追加一条 system 事件并返回 int。",
+   "fan_in": 6,
+   "pagerank": 0.00811824,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 30,
+   "heat": 6,
+   "blast_radius": 10,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/systemexec.py::_find_gate_request",
@@ -3920,7 +5615,17 @@
     "定位门禁事件",
     "匹配门禁单"
    ],
-   "zh_desc": "按 corr 定位最近的 gate_request 事件"
+   "zh_desc": "按 corr 定位最近的 gate_request 事件",
+   "fan_in": 2,
+   "pagerank": 0.00380738,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 14,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/systemexec.py::_run_gate_op",
@@ -3936,7 +5641,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "执行单个 gate_op 命令模板（§5.5 系统执行器）。"
+   "docstring": "执行单个 gate_op 命令模板（§5.5 系统执行器）。",
+   "fan_in": 1,
+   "pagerank": 0.0036223,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 32,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/systemexec.py::run_privileged_and_callbacks",
@@ -3952,7 +5667,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "approve 后的系统执行器（§5.5）：执行 config['gate_ops'] 中的特权操作。"
+   "docstring": "approve 后的系统执行器（§5.5）：执行 config['gate_ops'] 中的特权操作。",
+   "fan_in": 1,
+   "pagerank": 0.00283058,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 78,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 6
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/systemexec.py::_find_informal_gate",
@@ -3968,7 +5693,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§10 corr 缺省生成条款：按生成形 corr 反解\"非正式门禁\"信封。"
+   "docstring": "§10 corr 缺省生成条款：按生成形 corr 反解\"非正式门禁\"信封。",
+   "fan_in": 2,
+   "pagerank": 0.00380738,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 18,
+   "heat": 3,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 6
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/systemexec.py::_find_gate_decision",
@@ -3992,7 +5727,17 @@
     "找回已有门禁决定",
     "门禁裁决恢复查询"
    ],
-   "zh_desc": "按corr定位已有gate_decision事件，恢复时只查表。"
+   "zh_desc": "按corr定位已有gate_decision事件，恢复时只查表。",
+   "fan_in": 1,
+   "pagerank": 0.00283058,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 14,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/systemexec.py::_ci_callback_exists",
@@ -4008,7 +5753,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§9.1：run_privileged_and_callbacks 的产物是否已落盘（防重复 CI 回调）。"
+   "docstring": "§9.1：run_privileged_and_callbacks 的产物是否已落盘（防重复 CI 回调）。",
+   "fan_in": 1,
+   "pagerank": 0.00283058,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 28,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/systemexec.py::apply_gate_decision",
@@ -4032,7 +5787,17 @@
     "人工审批门禁",
     "决定门禁过不过"
    ],
-   "zh_desc": "orch 审批入口，按 corr 裁决门禁是否放行"
+   "zh_desc": "orch 审批入口，按 corr 裁决门禁是否放行",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 5,
+   "commits_90d": 5,
+   "churn_90d": 140,
+   "heat": 15,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 7
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/watchdog.py",
@@ -4046,7 +5811,8 @@
    "external_imports": [
     "time",
     "__future__"
-   ]
+   ],
+   "module_pagerank": 0.03899066
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/watchdog.py::_thread_defaults",
@@ -4070,7 +5836,17 @@
     "线程限制默认值",
     "线程默认配置"
    ],
-   "zh_desc": "根据 config 返回看门狗三级线程默认配置 dict。"
+   "zh_desc": "根据 config 返回看门狗三级线程默认配置 dict。",
+   "fan_in": 2,
+   "pagerank": 0.00726855,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 4,
+   "heat": 6,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/watchdog.py::_loop_limit",
@@ -4094,7 +5870,17 @@
     "每轮检查上限",
     "限制跑多少圈"
    ],
-   "zh_desc": "返回 config 中用于看门狗三级的循环限制值。"
+   "zh_desc": "返回 config 中用于看门狗三级的循环限制值。",
+   "fan_in": 1,
+   "pagerank": 0.0028525,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 12,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/watchdog.py::_max_rounds",
@@ -4110,7 +5896,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.0028525,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 12,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/watchdog.py::_l2_watermark_key",
@@ -4126,7 +5922,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "level2 每有序对一个水位键：wd_l2:{sender}:{tgt}。"
+   "docstring": "level2 每有序对一个水位键：wd_l2:{sender}:{tgt}。",
+   "fan_in": 1,
+   "pagerank": 0.0028525,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 3,
+   "heat": 3,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/watchdog.py::_read_watermark",
@@ -4142,7 +5948,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "读升级水位（thread_meta 存字符串）；缺失/非整数 → None（视为未升级过）。"
+   "docstring": "读升级水位（thread_meta 存字符串）；缺失/非整数 → None（视为未升级过）。",
+   "fan_in": 1,
+   "pagerank": 0.0028525,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 9,
+   "heat": 3,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/watchdog.py::_defect_pair_counts",
@@ -4166,7 +5982,17 @@
     "查互发缺陷次数",
     "统计环路缺陷数"
    ],
-   "zh_desc": "统计同一 from→to 的 defect 事件数，供看门狗判断互@环路。"
+   "zh_desc": "统计同一 from→to 的 defect 事件数，供看门狗判断互@环路。",
+   "fan_in": 1,
+   "pagerank": 0.0028525,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 30,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/watchdog.py::_next_event_id",
@@ -4182,7 +6008,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "预测下一条 append_event 将分配的事件号 = 当前 max(id)+1（§7 读盘观察持久真相）。"
+   "docstring": "预测下一条 append_event 将分配的事件号 = 当前 max(id)+1（§7 读盘观察持久真相）。",
+   "fan_in": 1,
+   "pagerank": 0.00484392,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 10,
+   "heat": 3,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/watchdog.py::_raise_gate",
@@ -4206,7 +6042,17 @@
     "请求人工接管",
     "拉闸等人工审批"
    ],
-   "zh_desc": "追加gate_request(to=[human])并用M0门禁挂起线程"
+   "zh_desc": "追加gate_request(to=[human])并用M0门禁挂起线程",
+   "fan_in": 1,
+   "pagerank": 0.0028525,
+   "fix_involvement": 0,
+   "commits_all": 3,
+   "commits_90d": 3,
+   "churn_90d": 61,
+   "heat": 9,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/watchdog.py::check_watchdogs",
@@ -4230,7 +6076,17 @@
     "看门狗报警检查",
     "每轮查看门狗"
    ],
-   "zh_desc": "核心环每轮检查看门狗，返回触发动作列表。"
+   "zh_desc": "核心环每轮检查看门狗，返回触发动作列表。",
+   "fan_in": 2,
+   "pagerank": 0.00356746,
+   "fix_involvement": 0,
+   "commits_all": 4,
+   "commits_90d": 4,
+   "churn_90d": 191,
+   "heat": 12,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 10
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/_dispatch.py",
@@ -4245,7 +6101,8 @@
     "sqlite3",
     "__future__",
     "pathlib"
-   ]
+   ],
+   "module_pagerank": 0.07870183
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/_dispatch.py::_db_path",
@@ -4269,7 +6126,17 @@
     "看台账文件位置",
     "拿存储路径"
    ],
-   "zh_desc": "按 store 取 _db_path，供派发行与会话台账只读观察。"
+   "zh_desc": "按 store 取 _db_path，供派发行与会话台账只读观察。",
+   "fan_in": 3,
+   "pagerank": 0.01973697,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 6,
+   "heat": 6,
+   "blast_radius": 17,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/_dispatch.py::dispatching_rows",
@@ -4293,7 +6160,17 @@
     "列出派发中的行",
     "找正在派发的行"
    ],
-   "zh_desc": "按event_id升序取status='dispatching'派发行供对账"
+   "zh_desc": "按event_id升序取status='dispatching'派发行供对账",
+   "fan_in": 2,
+   "pagerank": 0.00353796,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 32,
+   "heat": 6,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/_dispatch.py::dispatch_row",
@@ -4309,7 +6186,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "按 (event_id, target) 读单个派发行；不存在返回 None。"
+   "docstring": "按 (event_id, target) 读单个派发行；不存在返回 None。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 26,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/_dispatch.py::session_rows",
@@ -4333,7 +6220,17 @@
     "看全部会话记录",
     "翻出会话台账清单"
    ],
-   "zh_desc": "读取 sessions 表全部会话台账行并按 role 升序返回，供恢复对账观察"
+   "zh_desc": "读取 sessions 表全部会话台账行并按 role 升序返回，供恢复对账观察",
+   "fan_in": 3,
+   "pagerank": 0.01441645,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 32,
+   "heat": 6,
+   "blast_radius": 13,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/_dispatch.py::has_matching_reply",
@@ -4349,7 +6246,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§9.1 a)：events 中是否存在 sender==target 且 event_id ∈ re 的回复（纵深防御）。"
+   "docstring": "§9.1 a)：events 中是否存在 sender==target 且 event_id ∈ re 的回复（纵深防御）。",
+   "fan_in": 1,
+   "pagerank": 0.00310477,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 18,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/scheduler/__init__.py",
@@ -4362,7 +6269,8 @@
    "docstring": "调度层：核心循环、触发源与崩溃恢复（spec §5、§9）。",
    "external_imports": [
     "__future__"
-   ]
+   ],
+   "module_pagerank": 0.04791775
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py",
@@ -4379,7 +6287,8 @@
     "time",
     "__future__",
     "pathlib"
-   ]
+   ],
+   "module_pagerank": 0.10783465
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::FaultInjector",
@@ -4440,7 +6349,17 @@
     "准备故障模拟",
     "注入前故障设定"
    ],
-   "zh_desc": "初始化 FaultInjector，用 fault_map 指定要注入的故障。"
+   "zh_desc": "初始化 FaultInjector，用 fault_map 指定要注入的故障。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 10,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::FaultInjector.check",
@@ -4463,7 +6382,17 @@
     "在指定位置搞故障",
     "触发故障检查",
     "故意在某个点出错"
-   ]
+   ],
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 22,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::set_fault_injector",
@@ -4479,7 +6408,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "装载 / 清除全局故障注入器。fj=None 清除。"
+   "docstring": "装载 / 清除全局故障注入器。fj=None 清除。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 8,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::clear_fault_injector",
@@ -4503,7 +6442,17 @@
     "撤掉故障注入",
     "恢复无注入状态"
    ],
-   "zh_desc": "显式清除已设置的故障注入，恢复无注入状态。"
+   "zh_desc": "显式清除已设置的故障注入，恢复无注入状态。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 8,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::_fault_check",
@@ -4527,7 +6476,17 @@
     "故障注入点",
     "保存时查故障"
    ],
-   "zh_desc": "关键落盘点内嵌故障注入钩子，未注入时零开销返回。"
+   "zh_desc": "关键落盘点内嵌故障注入钩子，未注入时零开销返回。",
+   "fan_in": 4,
+   "pagerank": 0.00721759,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 10,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::fault_check",
@@ -4543,7 +6502,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "公共故障注入检查点（R-T1：§4.4 间隙(3)invoke_post/(4)autocommit_post 复用）。"
+   "docstring": "公共故障注入检查点（R-T1：§4.4 间隙(3)invoke_post/(4)autocommit_post 复用）。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 12,
+   "heat": 3,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.__init__",
@@ -4567,7 +6536,17 @@
     "指定线程目录",
     "建立状态层存储"
    ],
-   "zh_desc": "初始化 Store，指定 thread_dir 以持久化状态层数据。"
+   "zh_desc": "初始化 Store，指定 thread_dir 以持久化状态层数据。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 42,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store._begin",
@@ -4591,7 +6570,17 @@
     "派发回复开事务",
     "开启一次存盘事务"
    ],
-   "zh_desc": "为 Store 的事件、派发和回复写入开启事务边界。"
+   "zh_desc": "为 Store 的事件、派发和回复写入开启事务边界。",
+   "fan_in": 10,
+   "pagerank": 0.02551962,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 6,
+   "heat": 6,
+   "blast_radius": 14,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.append_event",
@@ -4615,7 +6604,17 @@
     "生成待派发记录",
     "新增事件和派发"
    ],
-   "zh_desc": "写入events并为to目标插入pending的dispatches。"
+   "zh_desc": "写入events并为to目标插入pending的dispatches。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 4,
+   "commits_90d": 4,
+   "churn_90d": 128,
+   "heat": 12,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 11
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.pending_dispatches",
@@ -4631,7 +6630,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "全部 status='pending' 的派发行，按 event_id 升序（§5.1）。"
+   "docstring": "全部 status='pending' 的派发行，按 event_id 升序（§5.1）。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 16,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.mark_dispatching",
@@ -4655,7 +6664,17 @@
     "写绝对截止时间",
     "改成派发中"
    ],
-   "zh_desc": "把 event_id 的 status 改为 dispatching 并写入 d"
+   "zh_desc": "把 event_id 的 status 改为 dispatching 并写入 d",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 4,
+   "commits_90d": 4,
+   "churn_90d": 30,
+   "heat": 12,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.reply_and_done",
@@ -4679,7 +6698,17 @@
     "把回复存好并办结",
     "记录回信并收尾"
    ],
-   "zh_desc": "单事务内落盘 reply 并完成事件记录"
+   "zh_desc": "单事务内落盘 reply 并完成事件记录",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 5,
+   "commits_90d": 5,
+   "churn_90d": 201,
+   "heat": 15,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 15
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store._upsert_session_row",
@@ -4695,7 +6724,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§7.5 sessions upsert 的唯一内部实现（在调用方已开启的事务内执行，不自 commit）。"
+   "docstring": "§7.5 sessions upsert 的唯一内部实现（在调用方已开启的事务内执行，不自 commit）。",
+   "fan_in": 2,
+   "pagerank": 0.00413298,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 20,
+   "heat": 3,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.upsert_session",
@@ -4711,7 +6750,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "会话簿记：单事务直写 sessions 表（§7.5），不经事件日志（§4.2）。"
+   "docstring": "会话簿记：单事务直写 sessions 表（§7.5），不经事件日志（§4.2）。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 33,
+   "heat": 3,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 7
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.mark_failed",
@@ -4727,7 +6776,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 4,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.mark_gate_wait",
@@ -4743,7 +6802,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 4,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.mark_done",
@@ -4759,7 +6828,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "通用标 done（契约 §8 缺口⑤）：把任一派发行状态置 done。"
+   "docstring": "通用标 done（契约 §8 缺口⑤）：把任一派发行状态置 done。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 6,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.set_pending",
@@ -4775,7 +6854,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 4,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store._set_status",
@@ -4798,7 +6887,17 @@
     "给派单换状态",
     "写入新状态"
    ],
-   "zh_desc": "按 event_id 与 target 设置派发行状态。"
+   "zh_desc": "按 event_id 与 target 设置派发行状态。",
+   "fan_in": 4,
+   "pagerank": 0.01064494,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 22,
+   "heat": 6,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.bump_attempt",
@@ -4814,7 +6913,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "看门狗 attempts+1，返回新值（§5.3/§9.1 b）。"
+   "docstring": "看门狗 attempts+1，返回新值（§5.3/§9.1 b）。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 40,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.events",
@@ -4830,7 +6939,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "全部事件，id 升序，dict 形态（键用协议名，含 \"from\" 由 sender 映射，§0.1）。"
+   "docstring": "全部事件，id 升序，dict 形态（键用协议名，含 \"from\" 由 sender 映射，§0.1）。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 16,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store._row_to_event",
@@ -4846,7 +6965,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00447571,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 32,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.get_meta",
@@ -4862,7 +6991,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 10,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.set_meta",
@@ -4878,7 +7017,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 24,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.register_job",
@@ -4894,7 +7043,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 48,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.set_job_status",
@@ -4910,7 +7069,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 20,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.record_metric",
@@ -4926,7 +7095,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 22,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store.write_invoke_log",
@@ -4942,7 +7121,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "落 <thread_dir>/logs/ 一个文件，文件名含事件号与角色（§14）。"
+   "docstring": "落 <thread_dir>/logs/ 一个文件，文件名含事件号与角色（§14）。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 40,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store._read_state",
@@ -4958,7 +7147,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 18,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store._write_state",
@@ -4974,7 +7173,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 10,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::Store._write_board",
@@ -4998,7 +7207,17 @@
     "持久化黑板文本",
     "记录黑板状态"
    ],
-   "zh_desc": "Store 将 text 写入黑板以持久化状态。"
+   "zh_desc": "Store 将 text 写入黑板以持久化状态。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 4,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::_empty_state",
@@ -5022,7 +7241,17 @@
     "重建前空状态",
     "重放前空底稿"
    ],
-   "zh_desc": "返回空 state 字典，供读取或重建黑板时初始化状态。"
+   "zh_desc": "返回空 state 字典，供读取或重建黑板时初始化状态。",
+   "fan_in": 2,
+   "pagerank": 0.00413298,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 4,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::_normalize_state",
@@ -5038,7 +7267,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "把任意来源 state 收敛到规范结构，容忍缺键。"
+   "docstring": "把任意来源 state 收敛到规范结构，容忍缺键。",
+   "fan_in": 1,
+   "pagerank": 0.00344751,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 14,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::_apply_ops_into",
@@ -5061,7 +7300,17 @@
     "重放操作改状态",
     "按操作修改黑板"
    ],
-   "zh_desc": "把一批 ops 就地作用到 state，更新或重建黑板状态。"
+   "zh_desc": "把一批 ops 就地作用到 state，更新或重建黑板状态。",
+   "fan_in": 2,
+   "pagerank": 0.00413298,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 28,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 6
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::_render_board",
@@ -5085,7 +7334,17 @@
     "更新黑板展示",
     "把黑板写成页面"
    ],
-   "zh_desc": "根据 state 重新渲染 board.md，生成黑板投影。"
+   "zh_desc": "根据 state 重新渲染 board.md，生成黑板投影。",
+   "fan_in": 2,
+   "pagerank": 0.00413298,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 78,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 11
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::apply_blackboard_ops",
@@ -5109,7 +7368,17 @@
     "重画黑板页面",
     "改黑板记录"
    ],
-   "zh_desc": "按三种 op 更新黑板状态并重渲染 board.md。"
+   "zh_desc": "按三种 op 更新黑板状态并重渲染 board.md。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 18,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::rebuild_blackboard",
@@ -5125,7 +7394,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "清空 state 后按 id 升序重放全部满足 §3.3 门槛的 A 类事件的 bb_ops。"
+   "docstring": "清空 state 后按 id 升序重放全部满足 §3.3 门槛的 A 类事件的 bb_ops。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 40,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/store/__init__.py::board_state",
@@ -5141,7 +7420,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "读 state.json 供断言（§4.6）。"
+   "docstring": "读 state.json 供断言（§4.6）。",
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 6,
+   "heat": 6,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/verify/__init__.py",
@@ -5152,7 +7441,8 @@
    "package": "orch",
    "loc": 1,
    "docstring": "验证钩子（spec §8.3）。M2 里程碑实现，M0 占位。",
-   "external_imports": []
+   "external_imports": [],
+   "module_pagerank": 0.02464102
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py",
@@ -5173,7 +7463,8 @@
     "http.server",
     "pathlib",
     "urllib.parse"
-   ]
+   ],
+   "module_pagerank": 0.05247538
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ApiError",
@@ -5229,7 +7520,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 4,
+   "heat": 3,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ep_health",
@@ -5245,7 +7546,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00262621,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 2,
+   "heat": 3,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ep_threads_list",
@@ -5261,7 +7572,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00262621,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 10,
+   "heat": 3,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ep_thread_create",
@@ -5277,7 +7598,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00262621,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 23,
+   "heat": 3,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 9
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_require_thread",
@@ -5301,7 +7632,17 @@
     "定位线程存储",
     "取指定线程仓库"
    ],
-   "zh_desc": "按 ws 和 tid 获取线程存储。"
+   "zh_desc": "按 ws 和 tid 获取线程存储。",
+   "fan_in": 8,
+   "pagerank": 0.01514331,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 5,
+   "heat": 3,
+   "blast_radius": 10,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ep_thread_events",
@@ -5325,7 +7666,17 @@
     "补线程事件数据",
     "线程事件接口"
    ],
-   "zh_desc": "按 tid 补全 events 端点投影并返回结果"
+   "zh_desc": "按 tid 补全 events 端点投影并返回结果",
+   "fan_in": 1,
+   "pagerank": 0.00262621,
+   "fix_involvement": 0,
+   "commits_all": 3,
+   "commits_90d": 3,
+   "churn_90d": 31,
+   "heat": 9,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 7
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ep_thread_status",
@@ -5341,7 +7692,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00262621,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 13,
+   "heat": 3,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ep_thread_send",
@@ -5357,7 +7718,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00262621,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 10,
+   "heat": 3,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 6
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ep_thread_run",
@@ -5373,7 +7744,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00262621,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 17,
+   "heat": 6,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ep_thread_reopen",
@@ -5389,7 +7770,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00262621,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 4,
+   "heat": 3,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ep_thread_attach",
@@ -5405,7 +7796,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00262621,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 14,
+   "heat": 3,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ep_thread_replay",
@@ -5421,7 +7822,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00262621,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 16,
+   "heat": 6,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 2
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ep_gate",
@@ -5437,7 +7848,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00262621,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 15,
+   "heat": 3,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ep_stop",
@@ -5453,7 +7874,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00262621,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 6,
+   "heat": 3,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ep_config_get",
@@ -5469,7 +7900,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00262621,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 9,
+   "heat": 3,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ep_config_put",
@@ -5485,7 +7926,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00262621,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 13,
+   "heat": 3,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 4
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ep_metrics",
@@ -5501,7 +7952,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "§13 全表——复用 CLI 层聚合口径 helper，字段名齐全，无数据显示 N/A。"
+   "docstring": "§13 全表——复用 CLI 层聚合口径 helper，字段名齐全，无数据显示 N/A。",
+   "fan_in": 1,
+   "pagerank": 0.00262621,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 75,
+   "heat": 3,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 16
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_ep_bench",
@@ -5517,7 +7978,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "等价 orch bench resume——复用 CLI 层 _run_bench_series，不重跑子进程。"
+   "docstring": "等价 orch bench resume——复用 CLI 层 _run_bench_series，不重跑子进程。",
+   "fan_in": 1,
+   "pagerank": 0.00262621,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 31,
+   "heat": 3,
+   "blast_radius": 3,
+   "blast_endpoints": 0,
+   "cyclomatic": 10
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_make_handler",
@@ -5533,7 +8004,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "② 多工作区单控制台：ws_map = {名字: Path}（有序），每请求按 ?ws= 解析。"
+   "docstring": "② 多工作区单控制台：ws_map = {名字: Path}（有序），每请求按 ?ws= 解析。",
+   "fan_in": 1,
+   "pagerank": 0.00505836,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 212,
+   "heat": 6,
+   "blast_radius": 2,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_make_handler._pick_ws",
@@ -5549,7 +8030,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 8,
+   "heat": 3,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._send_json",
@@ -5573,7 +8064,17 @@
     "回传响应消息",
     "发回带状态内容"
    ],
-   "zh_desc": "_send_json 用 status 返回 payload 响应。"
+   "zh_desc": "_send_json 用 status 返回 payload 响应。",
+   "fan_in": 3,
+   "pagerank": 0.01172943,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 7,
+   "heat": 3,
+   "blast_radius": 7,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._send_static",
@@ -5589,7 +8090,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00389478,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 13,
+   "heat": 3,
+   "blast_radius": 6,
+   "blast_endpoints": 0,
+   "cyclomatic": 3
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._read_body",
@@ -5605,7 +8116,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00389478,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 12,
+   "heat": 3,
+   "blast_radius": 6,
+   "blast_endpoints": 0,
+   "cyclomatic": 6
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler.log_message",
@@ -5621,7 +8142,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 2,
+   "heat": 3,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._dispatch",
@@ -5637,7 +8168,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.0069434,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 26,
+   "heat": 3,
+   "blast_radius": 5,
+   "blast_endpoints": 0,
+   "cyclomatic": 7
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._route_api",
@@ -5653,7 +8194,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 1,
+   "pagerank": 0.00389478,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 95,
+   "heat": 6,
+   "blast_radius": 6,
+   "blast_endpoints": 0,
+   "cyclomatic": 40
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._handle",
@@ -5675,7 +8226,17 @@
     "统一接各种请求",
     "请求方法分发",
     "网关请求分流"
-   ]
+   ],
+   "fan_in": 4,
+   "pagerank": 0.01064494,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 14,
+   "heat": 3,
+   "blast_radius": 4,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler.do_GET",
@@ -5691,7 +8252,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 2,
+   "heat": 3,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler.do_POST",
@@ -5707,7 +8278,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 2,
+   "heat": 3,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler.do_PUT",
@@ -5723,7 +8304,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 2,
+   "heat": 3,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler.do_DELETE",
@@ -5739,7 +8330,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": null
+   "docstring": null,
+   "fan_in": 0,
+   "pagerank": 0.0024193,
+   "fix_involvement": 0,
+   "commits_all": 1,
+   "commits_90d": 1,
+   "churn_90d": 2,
+   "heat": 3,
+   "blast_radius": 0,
+   "blast_endpoints": 0,
+   "cyclomatic": 1
   },
   {
    "id": "multi-agent-orch::src/orch/web/server.py::make_server",
@@ -5755,7 +8356,17 @@
    "is_endpoint": false,
    "http_method": null,
    "route_path": null,
-   "docstring": "构造并返回一个常驻 HTTP server（调用方负责 serve_forever / shutdown）。"
+   "docstring": "构造并返回一个常驻 HTTP server（调用方负责 serve_forever / shutdown）。",
+   "fan_in": 1,
+   "pagerank": 0.00310477,
+   "fix_involvement": 0,
+   "commits_all": 2,
+   "commits_90d": 2,
+   "churn_90d": 31,
+   "heat": 6,
+   "blast_radius": 1,
+   "blast_endpoints": 0,
+   "cyclomatic": 5
   },
   {
    "id": "multi-agent-orch::src/orch/web/__init__.py",
@@ -5768,7 +8379,8 @@
    "docstring": "orch.web —— 玻璃感 Web 控制台（spec 之外的补充交付）。",
    "external_imports": [
     "__future__"
-   ]
+   ],
+   "module_pagerank": 0.02464102
   },
   {
    "id": "multi-agent-orch::commit::1795d6682259c7de56e0a1baad00f3754fb0907c",

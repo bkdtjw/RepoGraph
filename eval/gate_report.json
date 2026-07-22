@@ -2,7 +2,7 @@
   "meta": {
     "phase": "A (治理与再基线) · 任务 A4 门禁基线",
     "git": {
-      "head": "d4e403318219c585fc5040f3b8b828839c0f9d17",
+      "head": "63b6152f0f3cd9e71f72193b3137c5e0e7a109e5",
       "tags_at_head": [],
       "expected_tag": "rebaseline-20260723",
       "tag_bound": false
@@ -41,11 +41,14 @@
     },
     "AMB": {
       "n": 10,
-      "behavior_consistency_rate": 0.7,
-      "consistent_n": 7,
+      "behavior_consistency_rate": 1.0,
+      "consistent_n": 10,
       "over_ask_rate": 0.0,
-      "under_ask_rate": 1.0,
+      "under_ask_rate": 0.0,
       "consistent_ids": [
+        "AMB-01",
+        "AMB-02",
+        "AMB-03",
         "AMB-04",
         "AMB-05",
         "AMB-06",
@@ -174,7 +177,7 @@
     "漏问率": {
       "threshold": "≤ 0.1",
       "effective": "Phase C4",
-      "measured": 1.0,
+      "measured": 0.0,
       "status": "PENDING"
     }
   },
@@ -830,10 +833,10 @@
       "n_linked": 5,
       "bare_refusal": false,
       "judge": {
-        "pass": false,
-        "predicted": "should_autopick",
+        "pass": true,
+        "predicted": "should_disambiguate",
         "over_ask": false,
-        "under_ask": true,
+        "under_ask": false,
         "anchored": true,
         "has_nd_field": true
       },
@@ -851,10 +854,10 @@
       "n_linked": 5,
       "bare_refusal": false,
       "judge": {
-        "pass": false,
-        "predicted": "should_autopick",
+        "pass": true,
+        "predicted": "should_disambiguate",
         "over_ask": false,
-        "under_ask": true,
+        "under_ask": false,
         "anchored": true,
         "has_nd_field": true
       },
@@ -872,10 +875,10 @@
       "n_linked": 5,
       "bare_refusal": false,
       "judge": {
-        "pass": false,
-        "predicted": "should_autopick",
+        "pass": true,
+        "predicted": "should_disambiguate",
         "over_ask": false,
-        "under_ask": true,
+        "under_ask": false,
         "anchored": true,
         "has_nd_field": true
       },
@@ -889,7 +892,7 @@
       "mode_class": "symbol",
       "route_label": "entity_local",
       "route_source": "fallback:default",
-      "degraded": false,
+      "degraded": true,
       "n_linked": 1,
       "bare_refusal": false,
       "judge": {

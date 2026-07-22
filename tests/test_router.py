@@ -28,6 +28,7 @@ from repograph.retrieve.router import (
     merge_link_candidates, has_strong_method, can_auto_anchor,
     content_terms, card_hits_to_candidates,
     extract_lexical_premises, verify_premises, premises_from_claims,
+    disambiguate, enrich_candidates,
 )
 from repograph.retrieve.context import build_repo_context
 from repograph.retrieve.lexicon import find_tech_terms
@@ -359,6 +360,91 @@ def test_premises_from_claims(store):
     print("test_premises_from_claims OK")
 
 
+# ---------------------------------------------------------------------------
+# J) S4 消歧协议 disambiguate（落地设计 §4.5/§4.6 / D-04；AMB 子集支撑）
+# ---------------------------------------------------------------------------
+
+def _c(eid, score, method, label="Function"):
+    return {"entity_id": eid, "score": score, "method": method, "label": label}
+
+
+def test_disambiguate_bands():
+    # 强档领先：exact 即锚（即便有同名 Class exact，属聚合非歧义——Store._begin 回归）；
+    # pick 为按 (-score,id) 排序的 top（二者皆 exact 强档，autopick 谁都合法，关键是不进消歧）。
+    d = disambiguate([_c("f", 100, "exact_qualname"), _c("C", 100, "exact_qualname", "Class")])
+    assert not d["needs_disambiguation"] and d["pick"] is not None and has_strong_method(d["pick"])
+    # 单一弱候选：autopick + degraded（弱匹配披露）
+    d = disambiguate([_c("r", 60, "short_name")])
+    assert not d["needs_disambiguation"] and d["degraded"] and d["pick"]["entity_id"] == "r"
+    # 弱档明显领先（δ_score=20）：short 60 vs module 30 → autopick（_dispatch 型）
+    d = disambiguate([_c("fn", 60, "short_name"), _c("mod", 30, "module_path", "Module")])
+    assert not d["needs_disambiguation"] and d["pick"]["entity_id"] == "fn"
+    # 弱档近并列：6×short 60 → needs_disambiguation（invoke 型）
+    d = disambiguate([_c(f"a{i}", 60, "short_name") for i in range(6)])
+    assert d["needs_disambiguation"] and d["pick"] is None and len(d["candidates"]) == 6
+    # exact 主导 vs 弱模块：recover 型 → autopick（强档领先）
+    d = disambiguate([_c("recover", 100, "exact_qualname"),
+                      _c("recover.py", 30, "module_path", "Module")])
+    assert not d["needs_disambiguation"] and d["pick"]["entity_id"] == "recover"
+    # 空候选 → 不消歧、pick None
+    d = disambiguate([])
+    assert not d["needs_disambiguation"] and d["pick"] is None
+    print("test_disambiguate_bands OK")
+
+
+def test_disambiguate_delta_boundary():
+    # 分差恰好 = δ_score(20)：50 vs 30 → 领先自选（≥ 边界）
+    d = disambiguate([_c("a", 50, "short_name"), _c("b", 30, "short_name")])
+    assert not d["needs_disambiguation"], "分差=δ 应自选"
+    # 分差 < δ：45 vs 30（=15）→ 近并列消歧
+    d = disambiguate([_c("a", 45, "short_name"), _c("b", 30, "short_name")])
+    assert d["needs_disambiguation"], "分差<δ 应消歧"
+    print("test_disambiguate_delta_boundary OK")
+
+
+def test_amb_dataset_end_to_end(store):
+    """AMB 十题端到端：build_repo_context 的 needs_disambiguation 与 gold_behavior 一致（行为一致率）。"""
+    rows = [json.loads(l) for l in open(_DATASET, encoding="utf-8") if l.strip()]
+    amb = [r for r in rows if r["subset"] == "AMB"]
+    assert len(amb) == 10
+    consistent = 0
+    over_ask = under_ask = 0
+    n_autopick = n_disamb = 0
+    for r in amb:
+        ctx = build_repo_context(store, r["question"])
+        nd = bool(ctx.get("needs_disambiguation"))
+        pred = "should_disambiguate" if nd else "should_autopick"
+        gold = r["gold_behavior"]
+        consistent += (pred == gold)
+        if gold == "should_autopick":
+            n_autopick += 1
+            over_ask += nd
+            # 自选题须真锚定（symbol 档 + 非空 linked）
+            assert ctx["mode"] == "symbol" and ctx.get("linked"), f"{r['id']} 自选须锚定"
+        else:
+            n_disamb += 1
+            under_ask += (not nd)
+            assert ctx.get("candidates"), f"{r['id']} 消歧须附 candidates"
+    rate = consistent / len(amb)
+    oa = over_ask / n_autopick if n_autopick else 0
+    ua = under_ask / n_disamb if n_disamb else 0
+    assert rate >= 0.8, f"AMB 行为一致率 {rate} < 0.8"
+    assert oa <= 0.2, f"过问率 {oa} > 0.2"
+    assert ua <= 0.1, f"漏问率 {ua} > 0.1"
+    print(f"test_amb_dataset_end_to_end OK (一致率={rate}, 过问={oa}, 漏问={ua})")
+
+
+def test_enrich_candidates(store):
+    # 用真实 AMB invoke 候选做富化，断言 path/doc_head/fan_in 元数据就位
+    from repograph.retrieve.context import link_entities
+    linked = link_entities(store, normalize("invoke 这个方法在哪定义的"), top_k=6)
+    cands = enrich_candidates(store, linked)
+    assert cands and all("path" in c and "fan_in" in c and "doc_head" in c for c in cands)
+    # fan_in 来自 metrics 预计算（≥0 整数）
+    assert all(isinstance(c["fan_in"], int) for c in cands)
+    print("test_enrich_candidates OK")
+
+
 if __name__ == "__main__":
     store = _load()
     test_normalize()
@@ -381,4 +467,8 @@ if __name__ == "__main__":
     test_verify_premises_absent_vs_present(store)
     test_pp_dataset_lexical_premises(store)
     test_premises_from_claims(store)
+    test_disambiguate_bands()
+    test_disambiguate_delta_boundary()
+    test_amb_dataset_end_to_end(store)
+    test_enrich_candidates(store)
     print("\nALL TESTS PASSED")

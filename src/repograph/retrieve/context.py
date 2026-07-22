@@ -26,7 +26,7 @@ from .topic import topic_recall
 from .router import (
     normalize, is_code_token, route, default_suggestions,
     merge_link_candidates, card_hits_to_candidates, has_strong_method,
-    extract_lexical_premises, verify_premises,
+    extract_lexical_premises, verify_premises, disambiguate, enrich_candidates,
 )
 from .repo_card import build_meta_context
 from .lexicon import expand_abbreviations
@@ -391,10 +391,19 @@ def _entity_local_waterfall(
     card_cands = card_hits_to_candidates(topic_hits)
     candidates = merge_link_candidates(linked, card_cands)
 
-    # L0 符号
+    # L0 符号 + S4 消歧协议（落地设计 §4.5/§4.6 / D-04）
     if linked:
+        dis = disambiguate(linked)
+        if dis["needs_disambiguation"]:
+            # 多合法弱候选近并列 → 交上游澄清（附区分性 candidates，actionable 不裸拒）
+            return _build_disambiguation_context(store, linked, question, src)
+        # autopick：现符号档聚合上下文，回显解读（P5）+ 单一弱候选降级披露
         ctx = _build_symbol_context(store, linked, budget_chars, impact_depth)
         ctx["candidates"] = candidates
+        ctx["needs_disambiguation"] = False
+        ctx["resolved_query"] = dis.get("resolved_note") or question
+        if dis.get("degraded"):
+            ctx["degraded"] = True
         return _finalize(ctx, "entity_local", src)
     # L1 主题（复用已算的 topic_hits，避免二次召回）
     topic = _build_topic_context(store, question, budget_chars, recall=topic_hits)
@@ -407,6 +416,37 @@ def _entity_local_waterfall(
                          degraded=True, suggestions=default_suggestions())
     return _finalize({"mode": "none", "linked": [], "context_text": "", "stats": _stats()},
                      "entity_local", src, degraded=True)
+
+
+def _build_disambiguation_context(store: GraphStore, linked: list[dict],
+                                  question: str, src: str) -> dict:
+    """S4 多合法弱候选 → needs_disambiguation + 区分性 candidates（path/doc_head/fan_in）交上游。
+
+    context_text 列出候选（actionable，绝不裸拒 P4）；mode 保持 symbol（确有符号命中，仅歧义）。
+    resolved_query 留待上游澄清后回填，本轮回显原问题 + 候选清单。
+    """
+    cands = enrich_candidates(store, linked)
+    lines = ["【候选消歧】（来源: 词面链接多合法候选，需澄清）",
+             f"「{question}」匹配到 {len(cands)} 个同名符号，请指明具体是哪一个："]
+    for c in cands:
+        eid = c.get("entity_id", "")
+        lines.append(
+            f"- {_qn(store, eid)}  （文件: {c.get('path', '?')}, "
+            f"fan_in={c.get('fan_in', 0)}）{c.get('doc_head', '')}".rstrip())
+    text = "\n".join(lines) + "\n"
+    ctx = {
+        "mode": "symbol",
+        "linked": linked,
+        "context_text": text,
+        "stats": _stats(symbols=len(linked)),
+        "needs_disambiguation": True,
+        "candidates": cands,
+        "degraded": False,
+        "suggestions": [
+            "可以追问：上面第 N 个（或直接点名 类名.方法名）",
+        ],
+    }
+    return _finalize(ctx, "entity_local", src)
 
 
 def _build_oos_context(store: GraphStore, src: str) -> dict:

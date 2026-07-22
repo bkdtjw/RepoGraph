@@ -294,6 +294,96 @@ def has_strong_method(cand: dict) -> bool:
     return cand.get("method") in _STRONG_METHODS
 
 
+# ---------------------------------------------------------------------------
+# S4 消歧协议（落地设计 §4.5/§4.6 / 裁定 D-04）——纯函数，link_entities 候选 → 消歧决策
+#
+# 真歧义在本图极稀缺：函数短名碰撞仅 invoke×6 / __init__×N。分带（§4.6）：
+#   · **强档领先**：top 方法档 ∈ {exact,suffix}（≥80）→ 自选并披露（即便存在同名 Class/更弱候选，
+#     强精确匹配即锚，不进消歧——如 `Store._begin`(Function exact)+`Store`(Class exact) 属聚合非歧义）；
+#   · **单一弱候选**：只 1 个 short/concept/module 候选 → autopick + degraded 披露「弱匹配」；
+#   · **弱档近并列**：top 为弱档且与次者整数分差 < δ_score → needs_disambiguation 交上游（invoke 6×60）;
+#     弱档但明显领先（≥δ_score，如 `_dispatch` short 60 vs module 30）→ autopick。
+# δ_score=20（D-04）。澄清预算 1 次/查询（由上游 Claude Code 侧执行，本层只产结构化候选）。
+# ---------------------------------------------------------------------------
+
+# 消歧整数分差阈值（落地设计 §4.6 / D-04：δ_score=20）。
+_DELTA_SCORE = 20
+
+
+def _first_line_of(text) -> str:
+    for line in (text or "").splitlines():
+        s = line.strip()
+        if s:
+            return s
+    return ""
+
+
+def _pick_label(cand: dict) -> str:
+    """候选展示名：优先 qualname/name，兜底 entity_id 末段。"""
+    return (cand.get("name") or cand.get("qualname")
+            or _cand_key(cand).rsplit("::", 1)[-1])
+
+
+def disambiguate(candidates: list, delta_score: int = _DELTA_SCORE) -> dict:
+    """S4 消歧协议：对 link_entities 候选判「自选 / 交上游消歧」。
+
+    返回 ``{needs_disambiguation, pick, candidates, degraded, resolved_note}``：
+      · ``needs_disambiguation``  多合法弱候选近并列 → True（上游据 candidates 澄清）；
+      · ``pick``                  autopick 时选中的候选（强档领先 / 明显领先 / 单一），否则 None；
+      · ``degraded``              单一弱候选自选时 True（披露「弱匹配」）；
+      · ``resolved_note``         解读回显话术（P5，如「按 X 解读，另 N 个同名已忽略」）。
+    纯函数、零副作用；candidates 为 link_entities 结果（含 score/method）。
+    """
+    cands = sorted(candidates or [],
+                   key=lambda c: (-(c.get("score") or 0), _cand_key(c)))
+    if not cands:
+        return {"needs_disambiguation": False, "pick": None, "candidates": [],
+                "degraded": False, "resolved_note": None}
+    top = cands[0]
+    others = len(cands) - 1
+
+    # 强档领先：exact/suffix 即锚（同名 Class 等更弱/关联候选一并交符号档聚合，不算歧义）
+    if has_strong_method(top):
+        note = f"按 {_pick_label(top)} 解读" + (f"，另 {others} 个关联候选一并纳入" if others else "")
+        return {"needs_disambiguation": False, "pick": top, "candidates": cands,
+                "degraded": False, "resolved_note": note}
+
+    # 单一弱候选：autopick 但降级披露「弱匹配」（不进消歧，over-ask 面小）
+    if len(cands) == 1:
+        return {"needs_disambiguation": False, "pick": top, "candidates": cands,
+                "degraded": True,
+                "resolved_note": f"按 {_pick_label(top)} 解读（弱匹配）"}
+
+    # 弱档多候选：整数分差 ≥ δ_score → 明显领先自选；否则近并列 → 交上游消歧
+    margin = (top.get("score") or 0) - (cands[1].get("score") or 0)
+    if margin >= delta_score:
+        return {"needs_disambiguation": False, "pick": top, "candidates": cands,
+                "degraded": False,
+                "resolved_note": f"按 {_pick_label(top)} 解读，另 {others} 个较弱同名已忽略"}
+    return {"needs_disambiguation": True, "pick": None, "candidates": cands,
+            "degraded": False, "resolved_note": None}
+
+
+def enrich_candidates(store, candidates: list) -> list[dict]:
+    """给消歧候选附区分性元数据 ``path`` / ``doc_head`` / ``fan_in``（落地设计 §4.5，供上游选择）。
+
+    ``fan_in`` 读节点属性（metrics.py 预计算，缺则 0）。store 为 GraphStore（duck-typed，
+    router 不 import models，保持纯路由）。
+    """
+    out = []
+    for c in candidates or []:
+        node = store.get_node(_cand_key(c)) if hasattr(store, "get_node") else None
+        meta = dict(c)
+        meta["entity_id"] = _cand_key(c)
+        if node is not None:
+            meta["path"] = node.get("file") or node.get("path") or ""
+            meta["doc_head"] = _first_line_of(
+                node.get("docstring") or node.get("description") or "")
+            meta["fan_in"] = node.get("fan_in", 0)
+        out.append(meta)
+    return out
+
+
 def content_terms(matched_terms, min_len: int = 2) -> list[str]:
     """从命中词里筛"内容词"：非中文停用/功能/疑问词、且长度≥min_len（D-N1 绝对下限操作化）。
 

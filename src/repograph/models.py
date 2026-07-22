@@ -95,6 +95,9 @@ class FunctionFacts:
     is_endpoint: bool = False
     http_method: Optional[str] = None
     route_path: Optional[str] = None
+    # 圈复杂度（v0.3 · §4.3 / 裁定 D-03）：ast_extractor 遍历函数体计分支数（1+决策点）。
+    # 嵌套函数各自归属；白名单 If/For/While/ExceptHandler/BoolOp额外值/推导式if/IfExp/match_case。
+    cyclomatic: int = 1
 
 
 @dataclass

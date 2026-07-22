@@ -33,6 +33,49 @@ def _posix(p: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# 圈复杂度（§4.3 / 裁定 D-03）——纯语法量，遍历函数体计决策点
+#
+# 白名单（一次写死，避免实现分叉，保守近似 McCabe；assert / with 按惯例不计）：
+#   If / For / AsyncFor / While / ExceptHandler / IfExp（三元）/ match_case（每 case）
+#   / BoolOp（and·or 每个**额外**操作数 +1）/ 推导式的每个 if 过滤子。
+# 复杂度 = 1 + 决策点数。**嵌套函数/类各自归属**：遍历不下沉进嵌套 def/class 作用域。
+# ---------------------------------------------------------------------------
+
+_SCOPE_BOUNDARY = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+_BRANCH_NODES = (ast.If, ast.For, ast.AsyncFor, ast.While, ast.ExceptHandler, ast.IfExp)
+_MATCH_CASE = getattr(ast, "match_case", ())   # Python 3.10+；旧版无 match 语句
+
+
+def _iter_scope_nodes(func_node):
+    """产出 func_node 函数体内全部 AST 节点，**不下沉**进嵌套 def/class（各自归属）。
+
+    嵌套作用域节点本身会被产出（用于判定它不是决策点），但其子树不再展开。
+    """
+    stack = list(getattr(func_node, "body", ()))
+    while stack:
+        node = stack.pop()
+        yield node
+        if isinstance(node, _SCOPE_BOUNDARY):
+            continue                                    # 嵌套作用域：产出自身、不展开子树
+        stack.extend(ast.iter_child_nodes(node))
+
+
+def count_cyclomatic(func_node) -> int:
+    """函数体圈复杂度 = 1 + 决策点数（白名单见上；嵌套 def/class 不计入本函数）。"""
+    count = 1
+    for node in _iter_scope_nodes(func_node):
+        if isinstance(node, _BRANCH_NODES):
+            count += 1
+        elif isinstance(node, ast.BoolOp):
+            count += len(node.values) - 1               # a and b and c → +2
+        elif isinstance(node, ast.comprehension):
+            count += len(node.ifs)                       # 推导式每个 if 过滤子
+        elif _MATCH_CASE and isinstance(node, _MATCH_CASE):
+            count += 1                                   # match 每个 case
+    return count
+
+
+# ---------------------------------------------------------------------------
 # 单模块递归下降访问器
 # ---------------------------------------------------------------------------
 
@@ -103,6 +146,7 @@ class _ScopeVisitor:
             is_async=isinstance(node, ast.AsyncFunctionDef),
             is_method=is_method,
             docstring=ast.get_docstring(node),
+            cyclomatic=count_cyclomatic(node),          # §4.3 / D-03：圈复杂度顺带计数
         )
         for dec in node.decorator_list:
             name, first_arg = self._decorator(dec)
