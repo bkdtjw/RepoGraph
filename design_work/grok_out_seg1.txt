@@ -1,0 +1,101 @@
+==== RETURNCODE 0 ====
+==== STDOUT ====
+## 架构评审结论（第 1/2 段）
+
+审查范围：§0–§4。维度(4)本段无§6评测正文，仅能标“本段无法充分评估”。
+
+---
+
+### (1) 内部一致性
+
+【1】| 1 | §4.1 架构图 vs §4.3 四档瀑布 | 总览写「全程：S2 改写 + S7 合并一次 flash」；§4.3 写「link 无命中 → 才 S2」。S2/S7 是每问必跑还是仅 miss 触发，前后矛盾。 | 高 | 统一触发条件：写明入口是否总调用 `_rg_llm_rewrite`，或仅 `entity_local ∧ 无锚 ∧ semantic_mode==llm`；同步改 §4.1 图注与 §4.3/§4.4。 |
+
+【2】| 1 | §3.3 schema v2 vs §4.2 路由器 | §4.2 要求 SSE 透传 `route_source`/`confidence` 作路由准确率数据源；§3.3 扩字段清单只有 `resolved_query/needs_disambiguation/candidates/premise_flags/degraded/suggestions`，无路由字段。 | 高 | 将 `route_label`/`route_source`/`rule_id`/`confidence` 写入 schema v2 与 §4.7 `repo_context` 扩字段清单。 |
+
+【3】| 1 | §4.2 mode 值域 vs §1.1 既有 mode | 既有 mode∈`{symbol,topic,llm,overview,none}`；§4.2 新增 `mode="meta"`/`"global"`，且 `entity_local` 不落为 mode 名。决策表/schema 未定义新值域与前端映射规则。 | 高 | 单列 mode 规范表：路由五标签 → SSE `mode`/`route_label` 对照；明确 `meta`/`global` 是否替换 `overview` 或并存。 |
+
+【4】| 1 | §3.2 S4 vs §4.6 分带 | S4：「exact/suffix 领先→自选；多合法候选→消歧」；§4.6 自动锚定仅 `exact_qualname/suffix_qualname`。单候选 `short_name`/`concept_name` 落在三档缝隙，未定义。 | 高 | 补全分带：单候选短名/概念是否 autopick、是否标 low-confidence；与 `δ_score=20`、相对边际 0.15 写进同一张表。 |
+
+【5】| 1 | §3.1 level-0「原样采纳」 vs 改法正文 | 决策为原样采纳，改法含 LLM `summary`、`heat` 换源、`repo_card.json` 缓存——已超出「机制设计不变」定义（对比同表 level-1/双语卡片标改造）。 | 中 | 改为「改造采纳」，或收窄原样范围（仅确定性骨架）并单列 summary/缓存为改造子项。 |
+
+【6】| 1 | §3.2 S3 method 名 vs §4.6 / §1.1 `_SCORE` | §1.1 档名 exact/suffix/short/concept/module；§4.6 写 exact_qualname/suffix_qualname；S4 又写 exact/suffix。同一套 method 枚举三处命名不一致。 | 中 | 冻结一份 method 枚举（与 `link_entities` 输出一致），全文替换。 |
+
+【7】| 1 | §0「24 机制」计数口径 vs §3 行项 | §3 多行合并（如 fan_in/heat/… 一行、披露四条一行），与「24 个可落地机制」无法从正文逐条加总复核；易与差距矩阵条数错位。 | 低 | 附录给 24 项 ID 列表与决策一一对应，或改写为「按表 24 行」并编号。 |
+
+---
+
+### (2) 可行性
+
+【8】| 2 | §4.7 文件清单 vs §3.2 S4 / §4.5 / §5.7 | `disambiguate()`、前提边校验、S3 候选并集（link∪缩写∪BM25）、S6 阶梯形式化均无落点文件；`build.py` 仅在 metrics 描述中「调一次」，未进扩展清单。 | 高 | 补全：`context.disambiguate`/`merge_link_candidates`/`verify_premises`、S6 函数位、`build.py` 调 `metrics`+写 `repo_card.json`。 |
+
+【9】| 2 | §3.1 双语卡片 / S3 BM25-over-实体卡片 | Function/Class 进 `_DOC_LABELS` 后，`topic_recall` 原路径按 Concept 沿 IMPLEMENTS/DESCRIBES 展开；实体作 BM25 候选如何映射回 `link_entities` 候选结构（id/score/method）未定义，有悬空集成风险。 | 高 | 规定：BM25 命中 Function/Class 时产出的候选 schema、与 `link_entities` 去重键、method 标记（如 `bm25_card`），以及是否禁止走 Concept 展开。 |
+
+【10】| 2 | §4.1 level-0/1 summary、§4.2 中文描述 | 索引期依赖 grok/LLM 批量生成；本稿约束强调检索侧 stdlib+网关注入，未论证索引流水线是否已有等价 LLM 通道与失败降级（summary 缺失时 meta 路由仍能否 P4）。需源码核实索引路径。 | 高 | 明确索引期 LLM 入口/配额/失败态：无 summary 时 `repo_card` 仅确定性字段 + 固定话术；禁止 meta 因缺文件裸拒。 |
+
+【11】| 2 | §1.3 增量水位缺失 + §3 无刷新决策 | `repo_card.json`、节点 metrics、level-1 `overview`、中文卡片均缓存/落属性，无「何时重算」；与原稿「随增量水位重算」能力缺口未闭环，易出现图谱已变卡片/指标仍旧。 | 高 | 在决策表补刷新策略：至少「全量 rebuild 末尾重算」；若无增量水位则显式砍增量、写清陈旧窗口。 |
+
+【12】| 2 | §4.5 焦点栈 TTL | TTL=「turn 差 ≤10」，session schema 只写 `rg_focus` 键，未定义 focus 条目是否含 `turn`、turn 是否等于 messages 长度/独立计数器。 | 中 | 冻结 `rg_focus: [{id,label,turn,ts?}]` 与 turn 递增规则；过期弹出算法伪代码一行。 |
+
+【13】| 2 | §4.2 structural → topic 降级 | 模板/text2cypher「未建」却保留 structural 标签；降级后若 SSE 只报 `mode=topic`，下游与评测无法区分真 topic 与 structural 降级（`degraded` 未规定置位条件）。 | 中 | structural 命中必须：`route_label=structural` + `degraded=true` + `suggestions` 指向可答问法；并写入 schema。 |
+
+【14】| 2 | §3.1 cyclomatic「原样采纳」 | 计数节点集合（If/For/While/ExceptHandler/BoolOp/推导式 if/IfExp）是否含 `assert`/`match-case`/理解式 for 等未封口；与「1+分支数」口径需一次写死，否则实现分叉。 | 低 | 附最小 AST 节点白名单与嵌套函数归属测试用例名。 |
+
+【15】| 2 | 纯 Python PageRank / 缩写扩展 / BM25 扩容 | 在「无 networkx 算图、无第三方」约束下自洽；PageRank 拆 Function/Module 两图合理。前置是 CALLS/IMPORTS 边与 `impact` 邻接复用——文档已宣称存在，最终以源码为准。需源码核实 `_reverse_adjacency`/`_bfs_levels` 可复用性。 | 低 | 实现前对 `impact.py` 导出符号做一次只读确认；metrics 避免复制粘贴分叉。 |
+
+---
+
+### (3) 与 P1–P5 符合度
+
+【16】| 3 | §4.2 `out_of_scope` + P4 | P4 要求任一路径至少一个可行动元素；`out_of_scope` 写「界外声明，`answer_general` 默认 false 仅声明」，未强制 `suggestions[]`/可改写问法，存在合法裸拒变体。 | 高 | 界外响应固定：边界说明 + ≥1 条建议问法（或打开 `answer_general` 的配置说明）；写入 S6/schema 必填约束。 |
+
+【17】| 3 | structural 降级 vs P1/P2 | 结构化计数题无索引期答案素材（P1）却仍接题并降级 topic（可能答非所问）；若路由标签被 mode=topic 吞掉则违反 P2「可日志可评测」。决策未声明对 P1/P2 的有意折中。 | 中 | 标注「已知违反/折中」：structural 预计算指标清单或明确「只披露不能精确计数 + 建议改问 impact/指标」；日志保留 structural。 |
+
+【18】| 3 | §3.2 S5 焦点栈「退化」vs P5 | 主消解交给 S2/上游，焦点栈仅类型相容兜底，可接受；但指代场景若 `semantic_mode!=llm`（无 S2）且焦点未命中，P5 `resolved_query` 可能为空——未规定 lexical/off 档的回显保底。 | 中 | 规定非 llm 档：指代无解时 `resolved_query` 原样 + `suggestions` 要求用户点名实体；禁止静默错锚。 |
+
+【19】| 3 | §3.3 impact「原样采纳（部分平移）」vs P3 | 自承缺「多候选返回 candidates 且不执行遍历」分支，则模糊输入仍可能在消解未完成时进入遍历，与所标 P3 不完全一致且未升为改造项。 | 中 | 改为「改造采纳」：多候选/零候选短路径必须先返回 candidates，禁止 `_bfs`；与 S4 共用 `disambiguate`。 |
+
+---
+
+### (4) 评测题目健全性
+
+【20】| 4 | （本段范围） | 本段仅零星提及裸拒率、FZ 子集、§8.4 校准与 `route_source` 数据源，**无 §6 题目/门禁/判定伪代码**，无法核对 facts_hit、anchor hit@k、语义等价集合、幻觉率等是否可程序断言。 | — | 第 2/2 段审完 §6 后再出维度(4)问题清单；本段记为「未充分评估」。 |
+
+---
+
+### (5) 原稿机制漏列（相对所附清单）
+
+【21】| 5 | §4.1 刷新策略（随增量水位重算） | 决策表有 level-0/1，无刷新/水位策略的采纳·改造·砍除；§1.3 已点名水位缺失却无对应行。 | 高 | 增决策行：砍增量水位则改「全量重建末重算」；或改造为 mtime/commit-head 触发。 |
+
+【22】| 5 | §4.3 死代码(A7,非属性) | §3.1 列了 fan_in/heat/cyclomatic/blast/fix/churn/pagerank，**未列死代码(A7)**。 | 中 | 补行：改造为基于 `fan_in=0∧非 entrypoint` 的报告/注入提示，或明确砍除与损失。 |
+
+【23】| 5 | §7.3 `query_graph` 不变 | 清单要求对 `query_graph` 表态；§3.3 只写了 `impact_analysis`，无 `query_graph`。 | 中 | 增「原样保持/不改契约」一行，避免实施时误改查询 API。 |
+
+【24】| 5 | §8 评测四子集/指标/主表/阈值校准 | 非 §3 行项；§4.6 只改校准三元组名，无「评测体系是否整包采纳」决策（与 §0「只覆盖 §4–§7」口径未写死）。 | 中 | 若决策表范围不含 §8，在 §0 明示；否则补「改造采纳：阈值换标度，子集/门禁见 §6」。 |
+
+【25】| 5 | §9 成本延迟预算 | 落地含索引期 grok 卡片 + 查询期 flash 改写/路由，无预算采纳行，难约束 P0/P1 范围。 | 中 | 补决策：沿用原稿预算或按「索引 LLM 批次数 × 查询稳态 0–1 次 flash」重算一版。 |
+
+【26】| 5 | §10 风险 F1–F7 | 正文仅 structural 指向「§8 风险」，无 F1–F7 映射/取舍。 | 低 | 附录保留 F1–F7 对照：哪些因砍向量/MCP 关闭、哪些仍开放。 |
+
+【27】| 5 | §11 实施计划 P0–P3 | 仅 §0 有 P0 切片，无 P1–P3 与 24 机制的依赖序（metrics→卡片→路由→schema）。 | 中 | 补 P0–P3 与 §3 行项依赖表（至少：metrics 先于 heat 热点与消歧 candidates 展示）。 |
+
+【28】| 5 | §4.3 披露话术模板（指标释义） | §3.3「披露四条」覆盖边界/代理/消解/前提；**指标类 fan_in/heat 等披露模板**未单独决策，易与生成期四约束混淆导致实施遗漏。 | 低 | 并入 §6 披露为第五条「模糊谓词定义固定话术」，或并入 level-0/注入前缀模板清单。 |
+
+---
+
+### 分维度小结
+
+| 维度 | 结论 |
+|---|---|
+| (1) 内部一致性 | **有问题**：S2 触发、schema/mode 值域、S4↔§4.6 分带为主要矛盾 |
+| (2) 可行性 | **有问题**：文件清单缺口、BM25 实体候选集成、索引 LLM/刷新策略为阻塞级 |
+| (3) P1–P5 | **有问题**：`out_of_scope` 对 P4；structural/impact 对 P1–P3 标注不完整 |
+| (4) 评测健全性 | **本段无法充分评估**（待第 2/2 段） |
+| (5) 漏列 | **有漏列**：刷新策略、死代码 A7、`query_graph`、§8–§11（及指标披露模板） |
+
+**优先改三类后再进第 2 段评测审查**：① S2/S7 触发与数据流单源化；② SSE schema = mode/路由/消歧字段闭包；③ 刷新策略 + §4.7 落点补全（含 `query_graph`/A7 决策）。
+
+==== STDERR ====
+[2m2026-07-22T05:35:02.268646Z[0m [31mERROR[0m responses API error [3mstatus[0m[2m=[0m402 Payment Required [3merror_message[0m[2m=[0mpersonal-team-blocked:spending-limit: You have run out of credits or need a Grok subscription. Add credits at https://grok.com/?_s=usage or upgrade at https://grok.com/supergrok.
+
+Request URL: https://cli-chat-proxy.grok.com/v1/responses [3mmodel_id[0m[2m=[0mgrok-build
+

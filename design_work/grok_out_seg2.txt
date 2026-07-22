@@ -1,0 +1,95 @@
+==== RETURNCODE 0 ====
+==== STDOUT ====
+## 审查结论（第 2/2 段：§5–§8 + 附录 A/B/C）
+
+### (1) 内部一致性
+
+【1】| 1 | §5.1 mode 值域 ↔ 附录 A/C | §5.1 事件 `mode` 写为 `meta|global|symbol|topic|llm|structural|out_of_scope|none`，语义等价集合与附录 A/C 却使用 `entity_local`（`symbol 类={symbol,entity_local}`；规则 label/`entity_local → 四档瀑布`）。线上到底 emit `symbol` 还是 `entity_local` 未统一，评测 gold 与前端 `renderRepoRef` 会分叉。 | 高 | 二选一冻结：要么值域改为含 `entity_local` 并废弃 `symbol`，要么规则/附录统一 label=`symbol`，等价集合只保留一个正式枚举。 |
+
+【2】| 1 | §5.1 语义等价集合 | `overview 类={meta,overview,global}` 仍保留 `overview`，但附录 C 顶层路由无 `overview`（仅作回退产物）。`global` 与 `meta` 被算作同类后，§6.2「路由准确率」会把 meta/global 互错计为正确，与「路由显式化」口径冲突。 | 高 | 路由准确率按**精确 mode**计；另设「概览能力命中率」把 `{meta,global,overview}` 并集只用于 L0 能力门禁，两套指标拆开。 |
+
+【3】| 1 | 附录 C「四档瀑布」 | 写「四档瀑布（symbol→topic→llm）」，括号内仅三档；概览写在「无锚」失败支路。与正文「四层瀑布（…→build_overview）」及 §5.1 仍可能出现的 `overview` 不一致。 | 中 | 改为「三档检索 + 概览兜底」，并规定兜底时 `mode` 固定为 `overview` 还是保留原 route mode + `degraded=true`。 |
+
+【4】| 1 | §5.1 `structural` ↔ 附录 C / F8 | 附录 C：`structural → 降级 topic`；未规定 SSE 的 `mode` 报 `structural` 还是降级后的 `topic`，也未规定 `route_source`/`degraded` 如何标记。§6.2 路由准确率与 F8「精度损失」无法对账。 | 高 | 契约写死：`mode` 保持路由意图（`structural`），`degraded=true` + `stats`/注入说明实际走 topic；或 `mode=topic` 且 `route_source=rule:struct-1→degraded`。 |
+
+【5】| 1 | §6.1 基线注记交叉引用 | 写「§4.2 双语卡片+**§5.3** 改写、**§5.7** 前提校验」，本落地稿 §5.3 是前端 mode 展示、无 §5.7；改写在衔接文 §4.x / 附录 B。章节号串到原稿，读者无法定位。 | 中 | 改为本文件锚点（如 §4.4/附录 B、前提校验专节号）。 |
+
+【6】| 1 | §5.1 `linked[].entity_id` vs `candidates[].id` | 同事件内实体主键字段名不统一，前端/评测解析易写两套。 | 低 | 统一为 `entity_id`（或统一 `id`），并在契约中写死。 |
+
+【7】| 1 | §5.1 `route_source` 示例值域 | 仅示例 `rule:meta-1 \| llm \| fallback`；附录 A 还有 `meta-2/struct-1/...`，降级路径是否算 `fallback` 未定义，与附录 C 多级回退不对齐。 | 低 | 枚举：`rule:<id>` / `llm` / `fallback:<reason>`（如 `no_anchor`/`structural_degrade`）。 |
+
+---
+
+### (2) 可行性（stdlib + 网关注入约束下）
+
+【8】| 2 | 附录 A `requires: no_linker_hit`（global-1） | 规则路由若在 `link_entities` 之前执行，则 `no_linker_hit` 无定义；若之后执行，则与「先 route 再检索」的常见流水线及 §4.5「链接后消歧」时序冲突。文档未给出 route 与 linker 的调用顺序。 | 高 | 在 §5 或附录 C 画死时序：例如 `normalize → cheap route → link/topic → （可选）re-route/global 门闩`；或把 `no_linker_hit` 从规则 requires 删掉，改成链接后的二次门控。 |
+
+【9】| 2 | 附录 A `entity-1` | 仅有 `requires: has_code_token`、**无 pattern**，按「首中即出」会在 struct-1 未中后吞掉一切含代码 token 的问句，使 global/oos 规则对「带符号的总览/界外」不可达。是否为有意设计未说明，行为面过宽。 | 中 | 补 pattern（定义/实现/调用类问法）或把 entity 改为「默认桶」并文档化优先级；加反例单测（「Foo 模块整体架构」期望 global vs entity）。 |
+
+【10】| 2 | 附录 A `oos-1` 正则 | `(是什么意思|什么是)\s*(?!.*(本项目|这个项目|仓库))`：对「什么是适配层/看门狗」等**仓库内概念**易误标 `out_of_scope`（问句常不含「本项目」字样）；与「答案应来自图谱」目标相反。 | 高 | oos 改为「无仓库指称且无 linker/topic 命中」的组合谓词，或正向前置 `no_repo_reference` 的可操作定义（指代/「这仓库」/已链实体/会话焦点），不能单靠「什么是」字面。 |
+
+【11】| 2 | 附录 B「不发明仓库中不可能存在的专名」 | prompt 骨架未要求注入词表/实体清单/卡片；模型无法可靠知「不可能存在」。该规则在网关 flash 调用下不可执行，只能靠事后过滤，但过滤器未设计。 | 中 | 要么注入 top-N 符号/概念词表做约束解码/事后白名单，要么降级为软提示并依赖 §4.4 premises 图校验，删除「不可能存在」的硬表述。 |
+
+【12】| 2 | 附录 C meta「失败不可能（卡片常驻）」 | 冷启动、索引未跑完、`repo_card.json` 缺失/损坏时注入仍会失败；与 §4.7「索引期产出」矛盾。 | 中 | 规定缺卡时 `degraded=true` 回退 `build_overview` 现场统计，并单测该路径。 |
+
+【13】| 2 | §5.2「生成层强制先纠正后答」 | 纠正依赖 system 话术 + 上游模型服从，**无程序闸门**；却被 PP「幻觉率=0」硬门禁绑定，机制与门禁力度不匹配。 | 高 | 网关在 `premise_flags` 非空时：拒绝直接放行自由生成，或固定前缀模板「前提不成立：…」+ 仅允许边界/建议段，再交给模型润色；门禁扫强制前缀/结构字段。 |
+
+【14】| 2 | §5.1 / 附录 C `answer_general` | `out_of_scope → answer_general 可配` 在 §4.7 文件清单与砍除清单中均未出现，归属模块与是否仍算「无 MCP/无新服务」未说明。 | 中 | 写明为 `server.api_chat` 内本地分支 + 固定界外模板，或删该名、改为「界外声明注入块」。 |
+
+---
+
+### (3) 与 P1–P5 符合度
+
+【15】| 3 | 附录 C structural 降级 topic（对照 P2/P3） | 路由标 `structural` 却走 topic 模糊检索；若计数/「列出全部」类题仍进 BM25/LLM 概念层，则 **P2 显式路由与真实执行路径不一致**，且有 **P3「确定性工具不吃模糊输入」** 被绕开之嫌（文档仅 F8 谈精度，未声明原则例外）。 | 高 | 在决策/附录标明：v0.2 structural 为「意图标签 + 降级」，P3 仅约束仍存在的确定性 API；能答的计数必须走 `build_overview` 确定性字段，不能静默 topic。 |
+
+【16】| 3 | §5.2 / PP 门禁（对照 P1/P5） | P1/P5 要求来源前置与披露；PP 正确性完全交给生成层与裁判，**程序侧不验证「是否纠正」**，原则落地与 §6.2 硬门禁脱节且未声明「仅 prompt 尽力」。 | 中 | 原则符合性改为：前提校验结果必须进入 `premise_flags` 与注入块（P5 可观测）；是否「顺着预设答」用规则/字段约束，而非只靠模型自觉。 |
+
+【17】| 3 | 附录 C out_of_scope（对照 P4） | 「界外声明」若实现为拒答/无能话术，可能触 **P4 永不裸拒**；文档未定义界外是否仍给最近仓库信息+建议问法。 | 中 | 写死 oos 模板：界外说明 + 可选最近 repo 上下文 + `suggestions`，并纳入裸拒率扫描模式。 |
+
+---
+
+### (4) 评测题目健全性
+
+【18】| 4 | §6 开篇「脚本 stdlib 可跑 / 程序可断言」vs §6.1 判定列 | FZ「答案准确率（裁判）」、PP「裁判判指出并纠正」明确非程序断言；与开篇「全部…判定断言…脚本可跑」直接矛盾。 | 高 | 拆成：程序门禁集（mode/anchor/flags/裸拒模式）与裁判报告集（答案质量/纠正质量）；开篇删除「全部程序可断言」。 |
+
+【19】| 4 | §6.1 L0 `facts_hit≥3` | 对自由生成答案做子串命中（22/15/259/…）会因措辞/约数失败；能力类题（「你能做什么」）合理作答也可能不含规模数字，**指标与题型不匹配**。 | 高 | L0 程序断言改为检查 **注入上下文/repo_card 是否含 L0_FACTS**（来源侧）+ `mode∈{meta,global,overview}`；答案侧 facts_hit 降为抽检或仅用于规模/总览子类。 |
+
+【20】| 4 | §6.2 路由准确率 + §5.1 语义等价集合 | 用并集判定「与人工标注一致」会使 meta↔global、topic↔llm、symbol↔entity_local 错分仍算对，**门禁≥0.90 可被等价集合放水**；非真路由准确率。 | 高 | 主门禁用 exact mode match；等价集合只用于「能力面回归」附属指标，名称勿叫路由准确率。 |
+
+【21】| 4 | §6.1 AMB 判定式 | `should_disambiguate ⇔ needs_disambiguation且len(candidates)≥2` 若 should_* 指系统输出，则是恒真重写，**未对接 gold（3 消歧+7 自选）**；§6.2 过问率/漏问率无公式。 | 高 | 定义：过问=预测消歧∧gold 自选；漏问=预测自选∧gold 消歧；一致率=(TP+TN)/n；与 `needs_disambiguation` 字段一一对应。 |
+
+【22】| 4 | §6.2 预设幻觉率=0（硬门禁） | 依赖 LLM 裁判、n=8、零容忍；裁判漂移即可误杀/漏放，**不可机械复现**，与「程序可断言」及发布阻断绑定不当。 | 高 | 幻觉改程序定义：答案是否肯定不存在技术栈实体名（Redis/FastAPI/…词表）或肯定错误结构量（五级/100 轮）；裁判仅作辅助报告。硬门禁只绑程序规则。 |
+
+【23】| 4 | §6.2 裸拒率=0 | 未给出「裸拒」可匹配模式（无上下文、无建议、固定拒答句等），无法写稳定判定脚本。 | 中 | 给出否定模式表 + 例外（oos 模板）；扫描 assistant 全文与 `repo_context.suggestions/degraded`。 |
+
+【24】| 4 | §6.1 FZ anchor「放宽 1 跳 IMPLEMENTS/DESCRIBES」 | 扩展命中会抬高 hit@k，且与 gold 粒度（函数 id vs 概念名）混用时**可测但偏松**；未规定多 gold、空链、消歧未选时的计分。 | 中 | 主报 exact id hit@k；1-hop 作 secondary；写清：`needs_disambiguation` 题不计入 anchor 或单独子集。 |
+
+【25】| 4 | §6.2 澄清开销≤0.15（全集） | 全集 48 题若 gold 仅 3 题应消歧，期望触发率≈0.06；但未排除「评测是否允许自动选焦点/多轮」，单轮 JSONL 与「平均每题消歧触发」操作定义不清。 | 低 | 固定单轮、以 `needs_disambiguation=true` 计数；写公式 = 触发题数/总题数。 |
+
+【26】| 4 | §6.2「L1/L2/L3 下降 >3pt 阻断」 | 本段未给 L1/L2/L3 的题目定义、指标名与计算方式，门禁不可执行。 | 中 | 引用 `eval-design.md` 中的指标主键与基线表列；或删该条直至可复算。 |
+
+---
+
+### (5) 遗漏
+
+本段按你的要求不重复评决策表遗漏：**跳过**（第 1 段已覆盖）。
+
+---
+
+### 分维度汇总
+
+| 维度 | 结论 |
+|---|---|
+| (1) 内部一致性 | 有问题：mode/`entity_local`/`overview`/`structural` 降级语义、§6 错引章节号等 |
+| (2) 可行性 | 有问题：route↔linker 时序、oos/entity 规则、前提「强制纠正」、缺卡、`answer_general` |
+| (3) P1–P5 | 有问题：structural 降级对 P2/P3；PP/oos 对 P1/P4/P5 落地不完整 |
+| (4) 评测健全性 | 有问题：程序断言与裁判混用、facts_hit、等价集合放水、AMB/幻觉率不可机械执行 |
+| (5) 遗漏 | 本段不评 |
+
+**最优先修（发布阻断级）**：【1】【4】mode/降级契约；【18】【19】【20】【21】【22】评测可执行性；【8】【10】【13】路由与前提闭环。
+
+==== STDERR ====
+[2m2026-07-22T05:38:35.030812Z[0m [31mERROR[0m responses API error [3mstatus[0m[2m=[0m402 Payment Required [3merror_message[0m[2m=[0mpersonal-team-blocked:spending-limit: You have run out of credits or need a Grok subscription. Add credits at https://grok.com/?_s=usage or upgrade at https://grok.com/supergrok.
+
+Request URL: https://cli-chat-proxy.grok.com/v1/responses [3mmodel_id[0m[2m=[0mgrok-build
+

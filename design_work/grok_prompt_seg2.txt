@@ -1,0 +1,217 @@
+禁止使用任何工具、禁止读取任何文件、禁止联网检索；只依据本提示词下方内嵌的《落地设计》文档全文直接作答，不得臆测文档以外的代码细节。
+
+你是一名资深架构评审。被审对象是一份中文技术落地设计文档《RepoGraph 模糊语义处理·落地设计》（v0.2 落地版）。背景：RepoGraph 是代码知识图谱系统。原 v0.2 设计稿假设存在向量层/embedding、MCP 工具层、SQL 中文别名表、进程内单会话焦点栈等基础设施，但经核对真实代码库中这些都不存在；真实检索路径是纯 stdlib 的“四层瀑布”（context.py 符号→topic.py 主题→LLM 受限概念→build_overview 概览兜底），集成形态是 claude-ui 网关把检索上下文注入聊天 system prompt（push 模型、无工具、会话存磁盘 JSON）。本落地稿的任务是把原稿每条机制重定位到“stdlib + 网关注入”的现实。
+
+请严格按以下 5 个维度逐项审查。每发现一个问题给一条记录，一行一条，格式：
+【编号】| 维度号 | 定位(章节号/机制名) | 问题描述(具体、可核对) | 严重度(高/中/低) | 修改建议
+只报真问题，不要客套；某维度若无问题请明确写“未发现问题”。若某条需要看源码才能最终确认，请在描述里标“需源码核实”。
+
+审查维度：
+(1) 内部一致性：决策表(§3)与架构/接口/附录章节是否自相矛盾——例如某机制在决策表判“砍除”但在架构图/文件清单/附录里又出现并被启用；mode 值域、SSE 事件字段、回退关系速查是否前后一致；同一参数（如分数阈值/δ）在不同处定义是否冲突。
+(2) 可行性：§4.7 文件级改动清单与各机制改法，在“纯 stdlib + 网关注入、无向量层 / 无 MCP / 无 SQL 表 / 无第三方库”的约束下是否成立；有无机制在“砍除”后仍被下游依赖（悬空引用）；纯 Python 幂迭代 PageRank、AST 圈复杂度、BM25 语料扩容、缩写扩展等改法是否自洽、有无遗漏前置。
+(3) 与五原则 P1–P5 的符合度：有无某决策实际违反了它标注的原则却未说明。P1 答案来源前置 / P2 路由显式化 / P3 确定性工具不吃模糊输入 / P4 永不裸拒 / P5 解释回显。
+(4) 评测题目健全性：§6 的判定方式是否真“程序可断言”（不靠主观）；facts_hit≥3、anchor hit@k、needs_disambiguation 判定、路由准确率“语义等价集合”、预设幻觉率=0 等门禁能否机械执行；有无循环定义、无法测量项、或裁判(LLM)与程序判定混淆。
+(5) 遗漏：对照下方“原稿机制清单”，决策表(§3)是否有原稿机制被漏列、未给出采纳/改造/砍除决策。
+
+本段为终稿第 2/2 段（§5 接口契约 ~ §8 风险表 + 附录ABC）。维度(4)评测健全性、(1)附录规则与正文一致性、(2)附录规则/prompt 可行性在本段重点评估；(5)遗漏已在第1段决策表评估，本段不必重复。
+
+---- 上文衔接（第1段结尾，仅供理解上下文，不需重复审查）----
+- 新增 `_rg_llm_rewrite(cfg, question, recent_turns) -> {queries[], symbol_guesses[], premises[]}`（附录 B prompt 骨架），`recent_turns` 取自 `sess["messages"]`。**改写与前提抽取合并同一次 flash 调用**（原稿 §5.3/§5.7 即如此设计），控制延迟。
+- 程序侧约束：`queries` 截 2–4 条（中英各 ≥1）、`symbol_guesses` 截 5、`premises` 允许空。
+- 回灌：`queries`/`symbol_guesses` 喂 `link_entities`+`topic_recall`（RepoGraph 侧纯函数）；`premises` 逐条做图边存在性校验，无支撑→`premise_unverified` 注入生成上下文，生成层强制先纠正后答。
+
+### 4.5 消歧协议与焦点栈的数据流
+
+```text
+读取（检索前）：问题含指代词(它/这个/该/上面) 且 link_entities 无锚
+              → read_session(sid).rg_focus 取最近类型相容实体作种子 → resolved_query 回显
+消歧（链接后）：disambiguate(candidates)
+              → 强候选自选：resolved_query 披露「按 X 解读，另 N 个同名已忽略」
+              → 多合法候选：needs_disambiguation=true + candidates[]（附 path/doc_head/fan_in）交上游
+写入（锚定后）：强锚（method∈{exact,suffix} 或 topic 高分概念）压栈 rg_focus
+              → 就近挂在追加 assistant 消息的 write_session 之前，零额外落盘
+```
+
+### 4.6 分数标度对账（最隐蔽的落地陷阱，单列）
+
+原稿 τ_hi=0.62/τ_lo=0.45/δ=0.05 假设 embedding 余弦 ∈[0,1]。**现实两套分数都不是这个标度**：`link_entities._SCORE` 是整数档 `{100,80,60,40,30}`；`topic_recall` 是无上界 BM25 分（`_MIN_SCORE=1.0` 起，实测常见 1–10）。分带**按方法档 + BM25 边际**重定义：
+
+- **自动锚定**（原 s≥τ_hi）：`method∈{exact_qualname, suffix_qualname}` 或词面精确命中；
+- **进消歧**（原中段）：`method∈{short_name, concept_name}` 且多候选，或 topic Top-2 相对边际 `(s1-s2)/s1 < 0.15`（取代绝对 δ）；
+- **判无锚**（原 s<τ_lo）：`link_entities` 空 且 `topic_recall` 全部 <`_MIN_SCORE`。
+- **AMB 消歧的整数分差**：`δ_score=20`，使 `recover`(fn 100 vs mod 30) 判 autopick、`invoke`(6×60 并列) 判 disambiguate。
+- §8.4 校准三元组随之从 `(τ_hi,τ_lo,δ)` 换为 `(topic 相对边际, 短名档是否强候选, min_score)`；校准流程（FZ-dev 网格→FZ-test 冻结）不变。
+
+**不处理这条，原稿阈值会被当余弦直接套到整数/BM25 分上，全盘失效。**
+
+### 4.7 文件级改动清单（本轮只设计，不改码）
+
+**新增文件**：
+- `src/repograph/metrics.py`：§4.3 全部索引期指标 + 幂迭代 PageRank（纯 stdlib，图建成后 `build.py` 调一次）。
+- `src/repograph/retrieve/router.py`：`normalize()` + 规则 `route()` + `is_code_token()`。
+- （可选）`src/repograph/retrieve/router_rules.json`：规则热改载体（替代 yaml）。
+- `output/repo_card.json`：level-0 卡片缓存（grok 索引期产出）。
+
+**扩展现有（只读设计）**：
+- `models.FunctionFacts`：加 `cyclomatic`；落图后 Function 节点加 `fan_in/pagerank/heat/blast_radius/fix_involvement/churn_90d/zh_aliases`。
+- `ast_extractor._ScopeVisitor._enter_function`：圈复杂度顺带计数。
+- `context.build_overview`：补 `entrypoints`/`hot_functions(heat)`/`summary` 注入。
+- `context._tokenize`：缩写双向扩展 + 停用过滤。
+- `context.link_entities`：Function/Class 纳入 `zh_aliases` 别名匹配。
+- `topic._corpus_nodes`/`_doc_text`/`_DOC_LABELS`：可选收 Function/Class 中文卡片进 BM25 语料；`topic.zh_terms` 停用/疑问词过滤。
+- `server._rg_llm_select_concepts`→抽 `_rg_llm_json` 底座；新增 `_rg_llm_rewrite`/`_rg_llm_route`。
+- `server.api_chat`：路由分派 + 焦点栈读写 + `repo_context` 事件扩字段。
+- `server` session schema：加 `rg_focus` 键。
+- 前端 `web/app.js`：`renderRepoRef` 扩 mode 展示（见 §5.3）。
+
+**砍除清单（明确不做）**：HyDE；pgvector/chunk/embedding 向量层（含 level-1 进向量、实体卡片 embedding、link v2 的 embedding top-5、S2 的 HyDE）；`repo_overview` MCP 工具形态（能力转注入）；`ask_repo` 的 `context` 参数；`symbol_alias` SQL 表（转节点属性）；`router_rules.yaml`（转 Python/json）。
+
+
+---- 上文衔接结束 ----
+
+========== 待审文档（第 2/2 段）开始 ==========
+---
+
+## 5. 接口契约：repo_context v2
+
+### 5.1 SSE `repo_context` 事件扩字段
+
+现状 `server.py:1016` 发 `{mode, linked, stats}`。v2 扩为（**全部可选，v1 消费方兼容**）：
+
+```json
+{
+  "mode": "meta | global | symbol | topic | llm | structural | out_of_scope | none",
+  "route_source": "rule:meta-1 | llm | fallback",
+  "confidence": 0.9,
+  "resolved_query": "系统对问题的最终解读（含消歧/指代消解）",
+  "linked": [{"entity_id": "…", "score": 100, "method": "exact_qualname"}],
+  "needs_disambiguation": false,
+  "candidates": [{"id": "…", "path": "…", "doc_head": "…", "fan_in": 12}],
+  "premise_flags": [{"claim": "…", "status": "unverified"}],
+  "degraded": false,
+  "suggestions": ["可以问：修改 X 会波及哪些端点"],
+  "stats": {"symbols": 0, "topics": 0, "impact_callers": 0, "commits": 0, "concepts": 0}
+}
+```
+
+- `mode` 值域从 v1 的 `{symbol,topic,llm,overview,none}` 扩为叠加 `{meta,global,structural,out_of_scope}`；判定脚本按**语义等价集合**取并（overview 类={meta,overview,global}；symbol 类={symbol,entity_local}；topic 类={topic,llm}）。
+- `resolved_query`/披露话术**同时**写进 system 注入段（供上游模型据以措辞）与事件（供前端标注），双通道。
+
+### 5.2 system 注入段（`_rg_inject_prefix` 之上追加）
+
+按 mode 前缀后追加固定话术块：三段式边界声明（最接近信息 + 明确边界 + 建议问法）、代理定义披露（凡用 §4.3 指标）、`resolved_query` 首句体现解读、`premise_unverified` 前提先纠正。改写产物以 `[检索辅助,非事实]` 段隔离，引用规则禁引。
+
+### 5.3 前端 `app.js` mode 展示扩展
+
+`renderRepoRef`（现按 5 mode 渲染）扩展：
+- `meta`/`global` 复用 overview 视觉档，标签文案区分「仓库卡片」/「全局概览」；
+- `needs_disambiguation=true` 时渲染候选列表卡片（path + doc_head + fan_in），提示上游可继续追问；
+- `premise_flags` 非空时高亮「前提待核实」；`degraded=true` 显示 low-confidence 标记 + `suggestions` 建议问法；
+- `resolved_query` 作为「系统这样理解你的问题」一行回显，是 P5 的前端落点。
+
+---
+
+## 6. 评测方案（并入 `design_work/eval-design.md` 真实题目）
+
+> 全部题目、gold、判定断言已对真实 `output/graph.json` 实跑核对（脚本 stdlib 可跑）。语料：单仓库 `multi-agent-orch`。**语料真实统计**：Module 22 · Class 15 · Function 259 · Commit 75 · Concept 139；CALLS 352 · MODIFIES 533 · IMPLEMENTS 390 · DESCRIBES 104；design_decision 81/domain_concept 40/constraint 18。
+
+### 6.1 四子集真实题目（共 48 题，全部落到真实图谱）
+
+| 子集 | 题数 | 构造要点（实测约束） | 判定 |
+|---|---|---|---|
+| **L0 元问题** | 10 | C1 变体含口语+错别字（「你晓得我这破仓库是干啥的不」「你对这个带码库熟悉么」）；覆盖能力/规模/总览三问 | 纯程序：`mode∈overview 类` 且 `facts_hit≥3`（命中 `L0_FACTS` 规范事实表，如 22/15/259/75/139、`_dispatch_group`、`适配层`） |
+| **FZ 口语指称** | 20（dev/test 各 10） | **刻意与目标实体名零词面重合**（`zh_terms` 校验 20/20 通过）；gold 均为已核对真实 id/概念名 | `anchor hit@1/hit@3`（程序，放宽到 1 跳 IMPLEMENTS/DESCRIBES 概念展开）+ 答案准确率（裁判） |
+| **AMB 歧义** | 10（3 消歧 + 7 自选） | **真歧义极稀缺**：全图函数短名碰撞组**仅 2 个**——`invoke`×6（适配器，唯一有意义者）、`__init__`×9（构造器）。**原稿假设的 `run`×9 在本图证伪**（run 短名唯一） | 程序：should_disambiguate ⇔ `needs_disambiguation且len(candidates)≥2`；should_autopick ⇔ 反之且有 anchor |
+| **PP 错误预设** | 8（6 技术缺席 + 2 结构矛盾） | **技术栈纯 stdlib**（sqlite3+http.server），无 Redis/FastAPI/PostgreSQL/Docker/Celery/React；反证充足。结构量：看门狗**三级**（非五）、混沌**50 轮**（非 100） | 裁判判「指出并纠正」；顺着预设答=幻觉，单列 |
+
+**当前基线注记（衡量 v0.2 增量的核心）**：L0-02、FZ-d01（`_handle_terminate`）、FZ-d02、PP-01/02/06 在 v0.1 实测**均不达标**——L0 口语误路由到 topic、FZ 召回到邻近非 gold 概念、PP 只给概览不主动纠错。这些正是 meta 路由、§4.2 双语卡片+§5.3 改写、§5.7 前提校验要拉升的点。**Concept 别名近乎全空**（139 里仅 1 个带 alias），故 FZ 召回压力几乎全压在 BM25，是天然难集。
+
+### 6.2 指标门禁
+
+| 指标 | 目标 | 归属 | 性质 |
+|---|---|---|---|
+| 路由准确率（mode 按语义等价集合与人工标注一致） | ≥ 0.90 | 全集 | 回归门禁 |
+| L0 事实达标率（mode∈overview 类且 facts_hit≥3） | ≥ 0.90 | L0 | — |
+| anchor hit@1 / hit@3 | test 实测报告，dev 上优化 | FZ | 报 v0.1→v0.2 增量 |
+| 过问率 / 漏问率 | ≤ 0.20 / ≤ 0.10 | AMB | — |
+| 预设纠正率 / **预设幻觉率** | ≥ 0.75 / **0** | PP | **幻觉率=0 硬门禁** |
+| **裸拒率** | **0** | 全集 | **硬门禁**（现状 L3 兜底已达成） |
+| 澄清开销（平均每题消歧触发） | ≤ 0.15 | 全集 | — |
+
+主表增「v0.2（本设计）」列与 v0.1 同题对比；L1/L2/L3 老集允许持平，**下降 >3pt 视为回归、阻断发布**。
+
+### 6.3 阈值校准
+
+FZ-dev 10 题网格搜 `(topic 相对边际, 短名档强候选判定, min_score)`（§4.6 替换后的维度），目标 max hit@1、约束 过问率≤0.2；冻结后跑 FZ-test 与 AMB，校准/测试严格不混用；网格全表 + `_SCORE 带→分带` 映射入 `eval/calibration.md`。
+
+---
+
+## 7. 实施分期 P0–P3
+
+> 工作量按 stdlib+网关注入现实重估（原稿按理想架构估，此处调整）。插入主计划 W3 之后、W4 评测之前。
+
+| 阶段 | 内容 | 工作量 | 验收标准 |
+|---|---|---|---|
+| **P0** 最小可用 | level-0 卡片（`build_overview` 补 summary/entrypoints）+ meta 路由（补 `_is_meta_question` 口语盲区）+ 回退阶梯形式化 | 0.5–1 天 | 「你知道我的代码库吗」返回卡片作答；全链路裸拒率 0；L0-02 等口语题不再误路由到 topic |
+| **P1** 路由与双语 | `router.py` 全量（规则+网关兜底分类）+ S2 改写扩展（`_rg_llm_json` 底座+`_rg_llm_rewrite`）+ 双语卡片（grok 中文描述→BM25 语料扩容+`zh_aliases`）+ 缩写表 + level-1 包概览属性 | 2–3 天 | 附录规则单测全过；**FZ-dev hit@3 ≥ 0.8**（不达标先修卡片/语料再动阈值）；路由准确率 dev 达标 |
+| **P2** 指标与消歧 | `metrics.py`（幂迭代 PageRank + fan_in/heat/blast_radius/fix_involvement/churn）+ AST 期圈复杂度 + 消歧协议 + 焦点栈（`rg_focus`）+ schema v2 事件扩字段 | 2 天 | AMB-dev 行为一致率 ≥ 0.8；`impact_analysis` 模糊输入符合 §3.3；谓词排序题能披露代理定义 |
+| **P3** 评测与校准 | 四子集入 `eval/dataset.jsonl` + 阈值校准（`calibration.md`）+ 报告并入主表 v0.2 列 | 1.5 天 | §6.2 全指标出数；**硬门禁（幻觉率=0、裸拒率=0）达标，否则阻断 v0.2 tag** |
+
+依赖：P1 依赖 P0 路由骨架；P2 与 P1 后半可并行；P3 依赖全部。
+
+---
+
+## 8. 风险表
+
+> 继承原稿 F1–F7 中仍适用者，注明因架构差异**消失**或**新增**的风险。
+
+| # | 风险 | 状态 | 对策 |
+|---|---|---|---|
+| F1 | 改写产物污染答案（检索辅助词被当事实） | 继承 | 改写只进检索通道 + `[检索辅助,非事实]` 隔离段 + 引用禁引；PP 幻觉率=0 为门禁 |
+| F2 | 中文卡片/概览 summary 幻觉 | 继承 | grok 输出专名白名单校验（禁止出现未在输入中的专名）+ 抽检 30 条 ≥85% 可信；索引幂等，不达标改 prompt 重跑 |
+| F3 | 路由规则腐化（新问法绕过规则打错分支） | 继承（更突出） | 规则表 Python/json 配置化 + 路由日志周期回看 + L0/路由准确率入回归门禁；口语盲区已由 L0 实测暴露，须持续补正则 |
+| F4 | 过度澄清损害体验 | 继承（**减弱**） | 本图真歧义仅 2 组（`invoke`/`__init__`），过度澄清面天然极小；澄清预算 1 次/查询 + 过问率≤0.2 压制 |
+| F5 | 焦点栈误消解 | 继承（**变形**） | 从「进程内串味」变为「session 文件隔离」，多会话串味风险**消失**；仅显式指代词触发 + 必回显 + 上游历史优先 |
+| F6 | 模糊谓词代理被当客观结论传播 | 继承 | 披露话术为生成层硬规则；裁判 rubric 中「未披露代理」记 partial |
+| F7 | 阈值在小校准集上过拟合 | 继承（**维度变更**） | 校准维度按 §4.6 换为「方法档+BM25 边际」；校准/测试严格分离，网格全表公开，声称范围限「本仓库语料」 |
+| **F8（新增）** | **structural 路由降级损失**：模板/text2cypher 层未建，结构化计数题（「列出所有端点」）降级到 topic，精度损失 | 新增 | 短期靠 `build_overview` 的确定性统计兜底常见计数问；text2cypher 列入 v0.3，不阻断 v0.2 |
+| **F9（新增）** | **无向量层的召回上界**：长尾中文口语在 BM25+改写后仍可能 miss（FZ 天然难集，Concept 别名近乎全空） | 新增 | §4.2 双语卡片入 BM25 语料 + `zh_aliases` 是主要补偿；FZ hit@k 如实报告 v0.1→v0.2 增量，不承诺向量级召回 |
+
+---
+
+## 附录 A：路由规则初始表（Python 字面量形态，替代 `router_rules.yaml`）
+
+> 落 `src/repograph/retrieve/router.py` 模块级常量，按序首中即出；全不中 → 网关 `_rg_llm_route` 兜底分类。正则须补 `_is_meta_question` 暴露的口语盲区。
+
+```python
+ROUTER_RULES = [
+    {"id": "meta-1",   "label": "meta",
+     "pattern": r"(你|您)?(知道|了解|认识|熟悉|清楚|晓得|懂|读得?懂)\s*(我的|这个|这)?(破)?(代码库|仓库|项目|工程|repo|codebase)"},
+    {"id": "meta-2",   "label": "meta",
+     "pattern": r"你(是谁|能(干|做)(什么|啥|嘛)|有(什么|哪些)(功能|能力))|怎么用你|帮我看(代码|仓库)"},
+    {"id": "struct-1", "label": "structural", "requires": ["has_code_token"],
+     "pattern": r"(最|前\s*\d+|多少|几个|统计|列出(所有|全部)|排(序|名))"},
+    {"id": "entity-1", "label": "entity_local", "requires": ["has_code_token"]},
+    {"id": "global-1", "label": "global", "requires": ["no_code_token", "no_linker_hit"],
+     "pattern": r"(整体|总体|全局|大概|架构|介绍|讲讲|是(干|做)(什么|嘛|啥)|干啥|质量|难点|亮点|风格|规模|多大)"},
+    {"id": "oos-1",    "label": "out_of_scope", "requires": ["no_repo_reference"],
+     "pattern": r"(是什么意思|什么是)\s*(?!.*(本项目|这个项目|仓库))"},
+]
+# 规则表每次增删必须附对应回归用例（F3）。
+```
+
+## 附录 B：改写与前提抽取 prompt 骨架（`_rg_llm_rewrite` 用，冻结版随代码入库）
+
+要点：角色（**检索查询改写器，不是回答者**）→ 输出 JSON schema（`queries` 2–4 条、中英各 ≥1；`symbol_guesses` ≤5；`premises` 抽取「问题所断言的事实」，无则空）→ 三条规则（不回答问题本身；不发明仓库中不可能存在的专名；口语词必须给技术域同义扩展）→ 2 个 few-shot（一 C3 口语题、一 C7 含错误预设题）。走网关 `_rg_llm_json` 底座（`model_haiku`/flash、`gateway_headers`、`/v1/messages` 非流式），异常静默降级、绝不回显 token。
+
+## 附录 C：mode 与回退关系速查
+
+```text
+meta          → 注入 repo_card.json              失败不可能（卡片常驻）
+global        → build_overview + level-1 属性      空 → 卡片 + 建议问法
+entity_local  → 四档瀑布（symbol→topic→llm）       无锚 → S2 改写二次链接 → 概览+近邻+建议
+structural    → 降级 topic（模板层 v0.3 再建）      失败 → 概览兜底
+out_of_scope  → 界外声明（answer_general 可配）     —
+```
+
+========== 待审文档（第 2/2 段）结束 ==========

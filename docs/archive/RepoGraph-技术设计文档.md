@@ -1,3 +1,5 @@
+> **SUPERSEDED 2026-07-22**：本文档已被 v0.3 取代（`docs/RepoGraph-v0.3-执行计划书.md` + v0.3 spec）；机制 ID 仍被引用，作历史依据保留。
+
 # RepoGraph 技术设计文档
 
 **项目代号**:RepoGraph — 代码知识图谱与混合检索系统
