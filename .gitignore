@@ -7,3 +7,4 @@ dist/
 .venv/
 .env
 tests/_viz_out/
+eval/.judge_config.json

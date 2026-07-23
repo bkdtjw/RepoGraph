@@ -1,0 +1,3878 @@
+{
+  "meta": {
+    "phase": "D · D2 两组对比全量评测（精简裁判方案）",
+    "groups": {
+      "A": "BM25-only 无图谱基线（同分词器 topic.zh_terms + 同倒排语料；无路由/符号链接/impact/IMPLEMENTS展开/repo_card/premise）",
+      "B": "图谱混合 build_repo_context 完整 v0.3（lexical 档，离线确定性）"
+    },
+    "online_channel": "grok-4.5 中转站（Anthropic 兼容 /v1/messages）；host/api_key 不入产物",
+    "semantic_mode": "lexical（S2 改写/L2 需阿里网关，本轮未消耗；数字为 lexical 下界，llm 档增益未计入）",
+    "judge_bias_note": "裁判与生成同模型(grok-4.5)存在自评偏置；两组同向作用，组间相对差有效。",
+    "graph": {
+      "nodes": 510,
+      "edges": 1698
+    },
+    "git_head": "7df38d4533f4fecd42679eeb88feb0762aadf234"
+  },
+  "findings": {
+    "L1_L2_图谱决胜": "L1(符号→模块)/L2(反向调用闭包)是纯 BM25 结构性无法完成的任务：L2 组 B correct=0.533 vs 组 A=0.000(Δ+0.533)，c+p Δ+0.700——影响面闭包为图谱独有能力。",
+    "L3_基线反超_诚实负结果": "L3(设计溯源)组 A correct=0.900 反超组 B=0.500。根因(实测)：L3 是「概念卡片即答案」的检索任务，纯 BM25 稳定命中精确概念文档；组 B 路由把部分「为什么这个项目…」问句判为 meta→overview(本轮 L3 模式分布={'overview': 1, 'topic': 9})，overview 概览缺该概念的设计理由与溯源提交，故个别题(如 L3-01)反而答不出。c+p 近平(1.000 vs 0.900)。非稻草人对照的证据；亦暴露 build_repo_context 路由在 L3「why」问句上的过泛化(留 D3/D4)。",
+    "FZ_L0_AMB_48集": "FZ 词面召回两组同分同源(dev hit@3 A=0.7/B=0.7；test A=0.8/B=0.8)——纯检索任务图谱无增益(诚实平局)；L0 元问题(A=0.0/B=1.0)与 AMB 消歧行为一致率(A=0.0/B=1.0)是图谱编排(overview 路由/消歧协议)独有，基线为 0。",
+    "L2_depth_下界说明": "组 B 用 build_repo_context 默认 impact_depth=2；L2 gold 闭包按 depth=3 生成。故组 B 的 L2为 depth=2 下界(诚实未调参、未改冻结 src)，depth=3 预期更高。",
+    "PP_端到端": "PP 前提校验(组 B 端到端在线)：纠正率 correct=0.875(7/8)、c+p=1.000；错误预设未被顺答，S7 闸门在线生效。"
+  },
+  "segment1_program_assertions": {
+    "main_program_assertions": {
+      "definition": {
+        "L1": "上下文是否含 gold 模块路径（context_recall, min_hit 1）",
+        "L2": "gold 反向调用闭包与上下文的交集率（context_answer_intersection, gold_n=6）",
+        "L3": "gold 来源(概念+DESCRIBES 提交)在上下文的召回率（context_recall_provenance）",
+        "entity_token": "Function/Class→qualname 短名; Module→路径; Commit→短sha8; Concept→名称"
+      },
+      "summary": {
+        "A": {
+          "L1": {
+            "n": 20,
+            "context_hit@min1_rate": 0.6,
+            "context_hit@min1_n": 12,
+            "mean_gold_recall": 0.5167,
+            "fail_ids": [
+              "L1-07",
+              "L1-08",
+              "L1-10",
+              "L1-13",
+              "L1-14",
+              "L1-15",
+              "L1-16",
+              "L1-18"
+            ]
+          },
+          "L2": {
+            "n": 30,
+            "context_hit@min1_rate": 0.2667,
+            "context_hit@min1_n": 8,
+            "mean_gold_recall": 0.0831,
+            "fail_ids": [
+              "L2-01",
+              "L2-02",
+              "L2-03",
+              "L2-04",
+              "L2-05",
+              "L2-07",
+              "L2-08",
+              "L2-09",
+              "L2-10",
+              "L2-11",
+              "L2-12",
+              "L2-14",
+              "L2-15",
+              "L2-16",
+              "L2-17",
+              "L2-18",
+              "L2-19",
+              "L2-20",
+              "L2-22",
+              "L2-23",
+              "L2-29",
+              "L2-30"
+            ]
+          },
+          "L3": {
+            "n": 10,
+            "context_hit@min1_rate": 1.0,
+            "context_hit@min1_n": 10,
+            "mean_gold_recall": 0.8833,
+            "fail_ids": []
+          }
+        },
+        "B": {
+          "L1": {
+            "n": 20,
+            "context_hit@min1_rate": 0.8,
+            "context_hit@min1_n": 16,
+            "mean_gold_recall": 0.76,
+            "fail_ids": [
+              "L1-07",
+              "L1-13",
+              "L1-14",
+              "L1-16"
+            ]
+          },
+          "L2": {
+            "n": 30,
+            "context_hit@min1_rate": 0.9,
+            "context_hit@min1_n": 27,
+            "mean_gold_recall": 0.7325,
+            "fail_ids": [
+              "L2-18",
+              "L2-29",
+              "L2-30"
+            ]
+          },
+          "L3": {
+            "n": 10,
+            "context_hit@min1_rate": 0.9,
+            "context_hit@min1_n": 9,
+            "mean_gold_recall": 0.9,
+            "fail_ids": [
+              "L3-01"
+            ]
+          }
+        }
+      },
+      "detail": {
+        "A": [
+          {
+            "id": "L1-01",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1193
+          },
+          {
+            "id": "L1-02",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1185
+          },
+          {
+            "id": "L1-03",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1228
+          },
+          {
+            "id": "L1-04",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1170
+          },
+          {
+            "id": "L1-05",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 4,
+            "gold_hit": 4,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1147
+          },
+          {
+            "id": "L1-06",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 1,
+            "recall": 0.5,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/web/server.py::_ep_stop"
+            ],
+            "context_chars": 1273
+          },
+          {
+            "id": "L1-07",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/cli/main.py::cmd_approve",
+              "multi-agent-orch::src/orch/cli/main.py::cmd_reject"
+            ],
+            "context_chars": 1972
+          },
+          {
+            "id": "L1-08",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 4,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/store/__init__.py::Store.mark_done",
+              "multi-agent-orch::src/orch/store/__init__.py::Store.mark_failed",
+              "multi-agent-orch::src/orch/store/__init__.py::Store.mark_gate_wait",
+              "multi-agent-orch::src/orch/store/__init__.py::Store.set_pending"
+            ],
+            "context_chars": 1331
+          },
+          {
+            "id": "L1-09",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 1,
+            "recall": 0.5,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/scheduler/recover.py::_blackboard_intact"
+            ],
+            "context_chars": 1007
+          },
+          {
+            "id": "L1-10",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 3,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/protocol/rules.py::allowed_sender",
+              "multi-agent-orch::src/orch/protocol/rules.py::can_apply_blackboard_ops",
+              "multi-agent-orch::src/orch/protocol/schema.py::validate_author_fields"
+            ],
+            "context_chars": 1106
+          },
+          {
+            "id": "L1-11",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 3,
+            "gold_hit": 1,
+            "recall": 0.3333,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/render/__init__.py::render_delta",
+              "multi-agent-orch::src/orch/render/__init__.py::render_event_third_person"
+            ],
+            "context_chars": 1127
+          },
+          {
+            "id": "L1-12",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1064
+          },
+          {
+            "id": "L1-13",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 4,
+            "gold_n": 2,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/render/__init__.py::_classify",
+              "multi-agent-orch::src/orch/render/__init__.py::render_view"
+            ],
+            "context_chars": 739
+          },
+          {
+            "id": "L1-14",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 4,
+            "gold_n": 3,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/render/__init__.py::_compress",
+              "multi-agent-orch::src/orch/render/__init__.py::_truncate_blackboard_to_quota",
+              "multi-agent-orch::src/orch/render/__init__.py::render_view"
+            ],
+            "context_chars": 739
+          },
+          {
+            "id": "L1-15",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 7,
+            "gold_n": 5,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/cli/main.py::_build_default_adapters",
+              "multi-agent-orch::src/orch/cli/main.py::_consume_stop_marker",
+              "multi-agent-orch::src/orch/cli/main.py::_stop_marker_path",
+              "multi-agent-orch::src/orch/cli/main.py::_thread_roles",
+              "multi-agent-orch::src/orch/cli/main.py::cmd_run"
+            ],
+            "context_chars": 1590
+          },
+          {
+            "id": "L1-16",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 4,
+            "gold_n": 3,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/protocol/rules.py::allowed_sender",
+              "multi-agent-orch::src/orch/protocol/rules.py::can_apply_blackboard_ops",
+              "multi-agent-orch::src/orch/protocol/schema.py::validate_author_fields"
+            ],
+            "context_chars": 739
+          },
+          {
+            "id": "L1-17",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1359
+          },
+          {
+            "id": "L1-18",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 1,
+            "gold_n": 1,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "concept::stream-json-解包"
+            ],
+            "context_chars": 215
+          },
+          {
+            "id": "L1-19",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1363
+          },
+          {
+            "id": "L1-20",
+            "layer": "L1",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1156
+          },
+          {
+            "id": "L2-01",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 6,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/scheduler/async_core.py::_dispatch_group_async",
+              "multi-agent-orch::src/orch/scheduler/async_core.py::run_thread_async",
+              "multi-agent-orch::src/orch/scheduler/async_core.py::run_workspace._run_one",
+              "multi-agent-orch::src/orch/scheduler/core.py::_dispatch_group",
+              "multi-agent-orch::src/orch/scheduler/core.py::_finish_interrupted_terminate",
+              "multi-agent-orch::src/orch/scheduler/core.py::run_thread"
+            ],
+            "context_chars": 1142
+          },
+          {
+            "id": "L2-02",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 3,
+            "gold_n": 3,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/scheduler/async_core.py::run_thread_async",
+              "multi-agent-orch::src/orch/scheduler/async_core.py::run_workspace._run_one",
+              "multi-agent-orch::src/orch/scheduler/core.py::run_thread"
+            ],
+            "context_chars": 548
+          },
+          {
+            "id": "L2-03",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 6,
+            "gold_n": 4,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/cli/main.py::_build_adapters_from_config",
+              "multi-agent-orch::src/orch/cli/main.py::cmd_run",
+              "multi-agent-orch::src/orch/web/server.py::_ep_thread_run",
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._route_api"
+            ],
+            "context_chars": 1420
+          },
+          {
+            "id": "L2-04",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 4,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/cli/main.py::cmd_bench_resume",
+              "multi-agent-orch::src/orch/web/server.py::_ep_bench",
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._dispatch",
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._route_api"
+            ],
+            "context_chars": 1280
+          },
+          {
+            "id": "L2-05",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 7,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/cli/main.py::_apply_gate",
+              "multi-agent-orch::src/orch/cli/main.py::cmd_approve",
+              "multi-agent-orch::src/orch/cli/main.py::cmd_reject",
+              "multi-agent-orch::src/orch/cli/main.py::cmd_run",
+              "multi-agent-orch::src/orch/web/server.py::_ep_gate",
+              "multi-agent-orch::src/orch/web/server.py::_ep_thread_run",
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._route_api"
+            ],
+            "context_chars": 1614
+          },
+          {
+            "id": "L2-06",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 4,
+            "gold_hit": 1,
+            "recall": 0.25,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/cli/main.py::_resolve_gate_thread",
+              "multi-agent-orch::src/orch/cli/main.py::cmd_approve",
+              "multi-agent-orch::src/orch/cli/main.py::cmd_reject"
+            ],
+            "context_chars": 1998
+          },
+          {
+            "id": "L2-07",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 6,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/render/__init__.py::_bg_line",
+              "multi-agent-orch::src/orch/render/__init__.py::_build_blackboard_diff",
+              "multi-agent-orch::src/orch/render/__init__.py::_classify",
+              "multi-agent-orch::src/orch/render/__init__.py::_render_a_event_diff",
+              "multi-agent-orch::src/orch/render/__init__.py::render_event_third_person",
+              "multi-agent-orch::src/orch/render/__init__.py::render_view"
+            ],
+            "context_chars": 1626
+          },
+          {
+            "id": "L2-08",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 6,
+            "gold_n": 6,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/scheduler/async_core.py::_dispatch_group_async",
+              "multi-agent-orch::src/orch/scheduler/async_core.py::_partition_parallel_groups",
+              "multi-agent-orch::src/orch/scheduler/async_core.py::run_thread_async",
+              "multi-agent-orch::src/orch/scheduler/async_core.py::run_workspace._run_one",
+              "multi-agent-orch::src/orch/scheduler/core.py::_dispatch_group",
+              "multi-agent-orch::src/orch/scheduler/core.py::run_thread"
+            ],
+            "context_chars": 1445
+          },
+          {
+            "id": "L2-09",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 3,
+            "gold_n": 6,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/scheduler/async_core.py::_dispatch_group_async",
+              "multi-agent-orch::src/orch/scheduler/async_core.py::run_thread_async",
+              "multi-agent-orch::src/orch/scheduler/async_core.py::run_workspace._run_one",
+              "multi-agent-orch::src/orch/scheduler/core.py::_dispatch_group",
+              "multi-agent-orch::src/orch/scheduler/core.py::_ensure_audit_baseline",
+              "multi-agent-orch::src/orch/scheduler/core.py::run_thread"
+            ],
+            "context_chars": 506
+          },
+          {
+            "id": "L2-10",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 5,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/render/__init__.py::_compress._bg_tokens",
+              "multi-agent-orch::src/orch/render/__init__.py::_compress._focus_tokens",
+              "multi-agent-orch::src/orch/render/__init__.py::_truncate_blackboard_to_quota",
+              "multi-agent-orch::src/orch/render/__init__.py::render_delta",
+              "multi-agent-orch::src/orch/render/__init__.py::render_view"
+            ],
+            "context_chars": 1310
+          },
+          {
+            "id": "L2-11",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 4,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/cli/main.py::cmd_new",
+              "multi-agent-orch::src/orch/web/server.py::_ep_thread_create",
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._dispatch",
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._route_api"
+            ],
+            "context_chars": 1665
+          },
+          {
+            "id": "L2-12",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 4,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/cli/main.py::cmd_replay",
+              "multi-agent-orch::src/orch/web/server.py::_ep_thread_replay",
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._dispatch",
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._route_api"
+            ],
+            "context_chars": 1810
+          },
+          {
+            "id": "L2-13",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 5,
+            "gold_hit": 1,
+            "recall": 0.2,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/cli/main.py::cmd_run",
+              "multi-agent-orch::src/orch/web/server.py::_ep_stop",
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._dispatch",
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._route_api"
+            ],
+            "context_chars": 1272
+          },
+          {
+            "id": "L2-14",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 5,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/cli/main.py::cmd_run",
+              "multi-agent-orch::src/orch/web/server.py::_ep_thread_run",
+              "multi-agent-orch::src/orch/web/server.py::_ep_threads_list",
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._dispatch",
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._route_api"
+            ],
+            "context_chars": 1918
+          },
+          {
+            "id": "L2-15",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/scheduler/core.py::_apply_bb_if_eligible",
+              "multi-agent-orch::src/orch/scheduler/core.py::_dispatch_group"
+            ],
+            "context_chars": 1599
+          },
+          {
+            "id": "L2-16",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/cli/main.py::_build_adapters_from_config",
+              "multi-agent-orch::src/orch/scheduler/permissions.py::ensure_worktrees"
+            ],
+            "context_chars": 1463
+          },
+          {
+            "id": "L2-17",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 1,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/scheduler/watchdog.py::_raise_gate"
+            ],
+            "context_chars": 1295
+          },
+          {
+            "id": "L2-18",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/render/__init__.py::_bg_line",
+              "multi-agent-orch::src/orch/render/__init__.py::_classify"
+            ],
+            "context_chars": 1817
+          },
+          {
+            "id": "L2-19",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 1,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/scheduler/systemexec.py::run_privileged_and_callbacks"
+            ],
+            "context_chars": 1875
+          },
+          {
+            "id": "L2-20",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 1,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness._ensure_baseline"
+            ],
+            "context_chars": 1708
+          },
+          {
+            "id": "L2-21",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 1,
+            "recall": 0.5,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/web/server.py"
+            ],
+            "context_chars": 1126
+          },
+          {
+            "id": "L2-22",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/scheduler/async_core.py",
+              "multi-agent-orch::src/orch/scheduler/core.py"
+            ],
+            "context_chars": 1290
+          },
+          {
+            "id": "L2-23",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/cli/main.py",
+              "multi-agent-orch::src/orch/web/server.py"
+            ],
+            "context_chars": 1271
+          },
+          {
+            "id": "L2-24",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 3,
+            "gold_hit": 1,
+            "recall": 0.3333,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/cli/main.py",
+              "multi-agent-orch::src/orch/web/server.py"
+            ],
+            "context_chars": 1588
+          },
+          {
+            "id": "L2-25",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 8,
+            "gold_hit": 2,
+            "recall": 0.25,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::commit::30ffca3d6878a5739e9efea7a91a40cd0fc3c1be",
+              "multi-agent-orch::commit::6a9a32f7c8c597ade8699d59fbb766c939d81a91",
+              "multi-agent-orch::commit::712578a7c73d3cfaf3b60b737ec801d28c626298",
+              "multi-agent-orch::commit::799eab039919e33eeaed4445756ba786d2152f31",
+              "multi-agent-orch::commit::88ed2d74055b9e06f2eeec0f1e1fa4255724bded",
+              "multi-agent-orch::commit::eae8ec3f639f3bee3152d5991725a13a383c1ad4"
+            ],
+            "context_chars": 1218
+          },
+          {
+            "id": "L2-26",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 8,
+            "gold_hit": 1,
+            "recall": 0.125,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::commit::2109ec937888e40a1ac240c0dbd435bc3a846c08",
+              "multi-agent-orch::commit::30ffca3d6878a5739e9efea7a91a40cd0fc3c1be",
+              "multi-agent-orch::commit::484ec940dba7ef9452b72df0b4d5e9cbf154d18d",
+              "multi-agent-orch::commit::8b26cfe3adbad580a5354f51eb0db79f69c44a3c",
+              "multi-agent-orch::commit::9ae573743bc1a41908d83e6dc2bcf67144dd269b",
+              "multi-agent-orch::commit::b4a10e6a2feb2212003332be16766a0cd0cde509",
+              "multi-agent-orch::commit::d554fa2f2448a828f19c14fadbf5fb00671c0ddb"
+            ],
+            "context_chars": 1059
+          },
+          {
+            "id": "L2-27",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 3,
+            "gold_hit": 1,
+            "recall": 0.3333,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::commit::0b5d5f065c28d632d6490b48756488b046eafac4",
+              "multi-agent-orch::commit::c792c69e6047be138a917b0f76be0ea8bef4b0aa"
+            ],
+            "context_chars": 1135
+          },
+          {
+            "id": "L2-28",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 1,
+            "recall": 0.5,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::commit::88ed2d74055b9e06f2eeec0f1e1fa4255724bded"
+            ],
+            "context_chars": 1148
+          },
+          {
+            "id": "L2-29",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 12,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "concept::cliadapter",
+              "concept::cliadapter自动注入allowedtools白名单",
+              "concept::config-真实装配",
+              "concept::kimi-真实后端接入",
+              "concept::orch-run-常驻命令",
+              "concept::run过程日志",
+              "concept::stream-json-解包",
+              "concept::web-run-端点真实后端装配",
+              "concept::无adapters配置显式警告fake",
+              "concept::用户界面-cli-子集",
+              "concept::适配层",
+              "concept::适配层统一-invoke-接口"
+            ],
+            "context_chars": 1165
+          },
+          {
+            "id": "L2-30",
+            "layer": "L2",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 7,
+            "gold_n": 12,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "concept::apply-gate-decision-仅认-gate-request-corr-的缺口",
+              "concept::apply-gate-decision幂等化",
+              "concept::async核心环",
+              "concept::corr-缺省生成与-informal-gate-恢复",
+              "concept::find-informal-gate-生成形-corr-反解",
+              "concept::gate-decision",
+              "concept::spec-10-corr-缺省由编排器生成",
+              "concept::停机-重启-approve-terminate控制流",
+              "concept::异步版核心环",
+              "concept::恢复路径同target-pending合并",
+              "concept::核心循环-单线程串行版",
+              "concept::门禁裁决入口"
+            ],
+            "context_chars": 1205
+          },
+          {
+            "id": "L3-01",
+            "layer": "L3",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 3,
+            "gold_hit": 1,
+            "recall": 0.3333,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::commit::5c6bb736c8b009d244b343cb0ee310e65c17c1f7",
+              "multi-agent-orch::commit::c792c69e6047be138a917b0f76be0ea8bef4b0aa"
+            ],
+            "context_chars": 1621
+          },
+          {
+            "id": "L3-02",
+            "layer": "L3",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1163
+          },
+          {
+            "id": "L3-03",
+            "layer": "L3",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1030
+          },
+          {
+            "id": "L3-04",
+            "layer": "L3",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1200
+          },
+          {
+            "id": "L3-05",
+            "layer": "L3",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 1,
+            "recall": 0.5,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::commit::610b412788ce79e3a60ad803b399b7d743df6676"
+            ],
+            "context_chars": 1414
+          },
+          {
+            "id": "L3-06",
+            "layer": "L3",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1311
+          },
+          {
+            "id": "L3-07",
+            "layer": "L3",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1782
+          },
+          {
+            "id": "L3-08",
+            "layer": "L3",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1258
+          },
+          {
+            "id": "L3-09",
+            "layer": "L3",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1174
+          },
+          {
+            "id": "L3-10",
+            "layer": "L3",
+            "group": "A",
+            "mode": "bm25_only",
+            "route_label": "bm25_only",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1485
+          }
+        ],
+        "B": [
+          {
+            "id": "L1-01",
+            "layer": "L1",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1292
+          },
+          {
+            "id": "L1-02",
+            "layer": "L1",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1233
+          },
+          {
+            "id": "L1-03",
+            "layer": "L1",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1131
+          },
+          {
+            "id": "L1-04",
+            "layer": "L1",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 2,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1086
+          },
+          {
+            "id": "L1-05",
+            "layer": "L1",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 4,
+            "gold_hit": 4,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1247
+          },
+          {
+            "id": "L1-06",
+            "layer": "L1",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1154
+          },
+          {
+            "id": "L1-07",
+            "layer": "L1",
+            "group": "B",
+            "mode": "overview",
+            "route_label": "structural",
+            "n_linked": 0,
+            "gold_n": 2,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/cli/main.py::cmd_approve",
+              "multi-agent-orch::src/orch/cli/main.py::cmd_reject"
+            ],
+            "context_chars": 1480
+          },
+          {
+            "id": "L1-08",
+            "layer": "L1",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 2,
+            "gold_n": 4,
+            "gold_hit": 4,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 941
+          },
+          {
+            "id": "L1-09",
+            "layer": "L1",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 2279
+          },
+          {
+            "id": "L1-10",
+            "layer": "L1",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 3,
+            "gold_hit": 3,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 2772
+          },
+          {
+            "id": "L1-11",
+            "layer": "L1",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 3,
+            "gold_hit": 3,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 3815
+          },
+          {
+            "id": "L1-12",
+            "layer": "L1",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 2444
+          },
+          {
+            "id": "L1-13",
+            "layer": "L1",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 4,
+            "gold_n": 2,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/render/__init__.py::_classify",
+              "multi-agent-orch::src/orch/render/__init__.py::render_view"
+            ],
+            "context_chars": 2010
+          },
+          {
+            "id": "L1-14",
+            "layer": "L1",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 4,
+            "gold_n": 3,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/render/__init__.py::_compress",
+              "multi-agent-orch::src/orch/render/__init__.py::_truncate_blackboard_to_quota",
+              "multi-agent-orch::src/orch/render/__init__.py::render_view"
+            ],
+            "context_chars": 2010
+          },
+          {
+            "id": "L1-15",
+            "layer": "L1",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 7,
+            "gold_n": 5,
+            "gold_hit": 1,
+            "recall": 0.2,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/cli/main.py::_build_default_adapters",
+              "multi-agent-orch::src/orch/cli/main.py::_consume_stop_marker",
+              "multi-agent-orch::src/orch/cli/main.py::_stop_marker_path",
+              "multi-agent-orch::src/orch/cli/main.py::_thread_roles"
+            ],
+            "context_chars": 3102
+          },
+          {
+            "id": "L1-16",
+            "layer": "L1",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 4,
+            "gold_n": 3,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/protocol/rules.py::allowed_sender",
+              "multi-agent-orch::src/orch/protocol/rules.py::can_apply_blackboard_ops",
+              "multi-agent-orch::src/orch/protocol/schema.py::validate_author_fields"
+            ],
+            "context_chars": 2010
+          },
+          {
+            "id": "L1-17",
+            "layer": "L1",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 928
+          },
+          {
+            "id": "L1-18",
+            "layer": "L1",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 778
+          },
+          {
+            "id": "L1-19",
+            "layer": "L1",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 117
+          },
+          {
+            "id": "L1-20",
+            "layer": "L1",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 114
+          },
+          {
+            "id": "L2-01",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 6,
+            "gold_hit": 5,
+            "recall": 0.8333,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/scheduler/async_core.py::run_workspace._run_one"
+            ],
+            "context_chars": 1697
+          },
+          {
+            "id": "L2-02",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 3,
+            "gold_hit": 3,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1327
+          },
+          {
+            "id": "L2-03",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 4,
+            "gold_hit": 3,
+            "recall": 0.75,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._route_api"
+            ],
+            "context_chars": 1201
+          },
+          {
+            "id": "L2-04",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 4,
+            "gold_hit": 3,
+            "recall": 0.75,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._dispatch"
+            ],
+            "context_chars": 939
+          },
+          {
+            "id": "L2-05",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 7,
+            "gold_hit": 7,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1320
+          },
+          {
+            "id": "L2-06",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 4,
+            "gold_hit": 4,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 901
+          },
+          {
+            "id": "L2-07",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 6,
+            "gold_hit": 6,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1124
+          },
+          {
+            "id": "L2-08",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 6,
+            "gold_hit": 5,
+            "recall": 0.8333,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/scheduler/async_core.py::run_workspace._run_one"
+            ],
+            "context_chars": 1081
+          },
+          {
+            "id": "L2-09",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 6,
+            "gold_hit": 5,
+            "recall": 0.8333,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/scheduler/async_core.py::run_workspace._run_one"
+            ],
+            "context_chars": 1394
+          },
+          {
+            "id": "L2-10",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 5,
+            "gold_hit": 5,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 733
+          },
+          {
+            "id": "L2-11",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 4,
+            "gold_hit": 3,
+            "recall": 0.75,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._dispatch"
+            ],
+            "context_chars": 1205
+          },
+          {
+            "id": "L2-12",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 4,
+            "gold_hit": 3,
+            "recall": 0.75,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._dispatch"
+            ],
+            "context_chars": 1258
+          },
+          {
+            "id": "L2-13",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 5,
+            "gold_hit": 4,
+            "recall": 0.8,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._dispatch"
+            ],
+            "context_chars": 1154
+          },
+          {
+            "id": "L2-14",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 5,
+            "gold_hit": 4,
+            "recall": 0.8,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._dispatch"
+            ],
+            "context_chars": 1196
+          },
+          {
+            "id": "L2-15",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 2,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 2221
+          },
+          {
+            "id": "L2-16",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 2,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 2524
+          },
+          {
+            "id": "L2-17",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 2,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1657
+          },
+          {
+            "id": "L2-18",
+            "layer": "L2",
+            "group": "B",
+            "mode": "overview",
+            "route_label": "structural",
+            "n_linked": 0,
+            "gold_n": 2,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "multi-agent-orch::src/orch/render/__init__.py::_bg_line",
+              "multi-agent-orch::src/orch/render/__init__.py::_classify"
+            ],
+            "context_chars": 1480
+          },
+          {
+            "id": "L2-19",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 2,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 2333
+          },
+          {
+            "id": "L2-20",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 3,
+            "gold_n": 1,
+            "gold_hit": 1,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 2139
+          },
+          {
+            "id": "L2-21",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1320
+          },
+          {
+            "id": "L2-22",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 1697
+          },
+          {
+            "id": "L2-23",
+            "layer": "L2",
+            "group": "B",
+            "mode": "symbol",
+            "route_label": "entity_local",
+            "n_linked": 1,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 939
+          },
+          {
+            "id": "L2-24",
+            "layer": "L2",
+            "group": "B",
+            "mode": "overview",
+            "route_label": "structural",
+            "n_linked": 0,
+            "gold_n": 3,
+            "gold_hit": 2,
+            "recall": 0.6667,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::src/orch/scheduler/permissions.py"
+            ],
+            "context_chars": 1480
+          },
+          {
+            "id": "L2-25",
+            "layer": "L2",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 8,
+            "gold_hit": 2,
+            "recall": 0.25,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::commit::30ffca3d6878a5739e9efea7a91a40cd0fc3c1be",
+              "multi-agent-orch::commit::6a9a32f7c8c597ade8699d59fbb766c939d81a91",
+              "multi-agent-orch::commit::712578a7c73d3cfaf3b60b737ec801d28c626298",
+              "multi-agent-orch::commit::799eab039919e33eeaed4445756ba786d2152f31",
+              "multi-agent-orch::commit::88ed2d74055b9e06f2eeec0f1e1fa4255724bded",
+              "multi-agent-orch::commit::eae8ec3f639f3bee3152d5991725a13a383c1ad4"
+            ],
+            "context_chars": 2637
+          },
+          {
+            "id": "L2-26",
+            "layer": "L2",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 8,
+            "gold_hit": 1,
+            "recall": 0.125,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::commit::2109ec937888e40a1ac240c0dbd435bc3a846c08",
+              "multi-agent-orch::commit::30ffca3d6878a5739e9efea7a91a40cd0fc3c1be",
+              "multi-agent-orch::commit::484ec940dba7ef9452b72df0b4d5e9cbf154d18d",
+              "multi-agent-orch::commit::8b26cfe3adbad580a5354f51eb0db79f69c44a3c",
+              "multi-agent-orch::commit::9ae573743bc1a41908d83e6dc2bcf67144dd269b",
+              "multi-agent-orch::commit::b4a10e6a2feb2212003332be16766a0cd0cde509",
+              "multi-agent-orch::commit::d554fa2f2448a828f19c14fadbf5fb00671c0ddb"
+            ],
+            "context_chars": 2999
+          },
+          {
+            "id": "L2-27",
+            "layer": "L2",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 3,
+            "gold_hit": 1,
+            "recall": 0.3333,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::commit::0b5d5f065c28d632d6490b48756488b046eafac4",
+              "multi-agent-orch::commit::c792c69e6047be138a917b0f76be0ea8bef4b0aa"
+            ],
+            "context_chars": 1881
+          },
+          {
+            "id": "L2-28",
+            "layer": "L2",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 1,
+            "recall": 0.5,
+            "hit_at_min1": true,
+            "missed": [
+              "multi-agent-orch::commit::88ed2d74055b9e06f2eeec0f1e1fa4255724bded"
+            ],
+            "context_chars": 2873
+          },
+          {
+            "id": "L2-29",
+            "layer": "L2",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 12,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "concept::cliadapter",
+              "concept::cliadapter自动注入allowedtools白名单",
+              "concept::config-真实装配",
+              "concept::kimi-真实后端接入",
+              "concept::orch-run-常驻命令",
+              "concept::run过程日志",
+              "concept::stream-json-解包",
+              "concept::web-run-端点真实后端装配",
+              "concept::无adapters配置显式警告fake",
+              "concept::用户界面-cli-子集",
+              "concept::适配层",
+              "concept::适配层统一-invoke-接口"
+            ],
+            "context_chars": 2099
+          },
+          {
+            "id": "L2-30",
+            "layer": "L2",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 7,
+            "gold_n": 12,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "concept::apply-gate-decision-仅认-gate-request-corr-的缺口",
+              "concept::apply-gate-decision幂等化",
+              "concept::async核心环",
+              "concept::corr-缺省生成与-informal-gate-恢复",
+              "concept::find-informal-gate-生成形-corr-反解",
+              "concept::gate-decision",
+              "concept::spec-10-corr-缺省由编排器生成",
+              "concept::停机-重启-approve-terminate控制流",
+              "concept::异步版核心环",
+              "concept::恢复路径同target-pending合并",
+              "concept::核心循环-单线程串行版",
+              "concept::门禁裁决入口"
+            ],
+            "context_chars": 2873
+          },
+          {
+            "id": "L3-01",
+            "layer": "L3",
+            "group": "B",
+            "mode": "overview",
+            "route_label": "global",
+            "n_linked": 0,
+            "gold_n": 3,
+            "gold_hit": 0,
+            "recall": 0.0,
+            "hit_at_min1": false,
+            "missed": [
+              "concept::权限三件套",
+              "multi-agent-orch::commit::5c6bb736c8b009d244b343cb0ee310e65c17c1f7",
+              "multi-agent-orch::commit::c792c69e6047be138a917b0f76be0ea8bef4b0aa"
+            ],
+            "context_chars": 1480
+          },
+          {
+            "id": "L3-02",
+            "layer": "L3",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 3382
+          },
+          {
+            "id": "L3-03",
+            "layer": "L3",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 2648
+          },
+          {
+            "id": "L3-04",
+            "layer": "L3",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 3635
+          },
+          {
+            "id": "L3-05",
+            "layer": "L3",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 2565
+          },
+          {
+            "id": "L3-06",
+            "layer": "L3",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 2578
+          },
+          {
+            "id": "L3-07",
+            "layer": "L3",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 3728
+          },
+          {
+            "id": "L3-08",
+            "layer": "L3",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 3258
+          },
+          {
+            "id": "L3-09",
+            "layer": "L3",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 4237
+          },
+          {
+            "id": "L3-10",
+            "layer": "L3",
+            "group": "B",
+            "mode": "topic",
+            "route_label": "entity_local",
+            "n_linked": 8,
+            "gold_n": 2,
+            "gold_hit": 2,
+            "recall": 1.0,
+            "hit_at_min1": true,
+            "missed": [],
+            "context_chars": 2640
+          }
+        ]
+      }
+    },
+    "set48_existing_assertions": {
+      "note": "复用 eval/gate.py 判定器；组 A=BM25基线，组 B=build_repo_context。",
+      "A": {
+        "L0_pass_rate": 0.0,
+        "L0_pass_n": 0,
+        "L0_n": 10,
+        "FZ_dev_hit@3": 0.7,
+        "FZ_test_hit@3": 0.8,
+        "AMB_behavior_consistency": 0.0,
+        "PP_suspect_correction_rate": 0.5,
+        "PP_premise_leak_rate": 0.0,
+        "bare_refusal_n": 0
+      },
+      "B": {
+        "L0_pass_rate": 1.0,
+        "L0_pass_n": 10,
+        "L0_n": 10,
+        "FZ_dev_hit@3": 0.7,
+        "FZ_test_hit@3": 0.8,
+        "AMB_behavior_consistency": 1.0,
+        "PP_suspect_correction_rate": 0.0,
+        "PP_premise_leak_rate": 0.0,
+        "bare_refusal_n": 0
+      },
+      "per_question": {
+        "A": [
+          {
+            "id": "L0-01",
+            "subset": "L0",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "mode_ok": false,
+              "facts_hit": 2,
+              "route_label": "bm25_only"
+            }
+          },
+          {
+            "id": "L0-02",
+            "subset": "L0",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "mode_ok": false,
+              "facts_hit": 1,
+              "route_label": "bm25_only"
+            }
+          },
+          {
+            "id": "L0-03",
+            "subset": "L0",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "mode_ok": false,
+              "facts_hit": 1,
+              "route_label": "bm25_only"
+            }
+          },
+          {
+            "id": "L0-04",
+            "subset": "L0",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "mode_ok": false,
+              "facts_hit": 1,
+              "route_label": "bm25_only"
+            }
+          },
+          {
+            "id": "L0-05",
+            "subset": "L0",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "mode_ok": false,
+              "facts_hit": 1,
+              "route_label": "bm25_only"
+            }
+          },
+          {
+            "id": "L0-06",
+            "subset": "L0",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "mode_ok": false,
+              "facts_hit": 0,
+              "route_label": "bm25_only"
+            }
+          },
+          {
+            "id": "L0-07",
+            "subset": "L0",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "mode_ok": false,
+              "facts_hit": 2,
+              "route_label": "bm25_only"
+            }
+          },
+          {
+            "id": "L0-08",
+            "subset": "L0",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "mode_ok": false,
+              "facts_hit": 1,
+              "route_label": "bm25_only"
+            }
+          },
+          {
+            "id": "L0-09",
+            "subset": "L0",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "mode_ok": false,
+              "facts_hit": 2,
+              "route_label": "bm25_only"
+            }
+          },
+          {
+            "id": "L0-10",
+            "subset": "L0",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "mode_ok": false,
+              "facts_hit": 0,
+              "route_label": "bm25_only"
+            }
+          },
+          {
+            "id": "FZ-d01",
+            "subset": "FZ_dev",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "concept::终止完善",
+                "multi-agent-orch::src/orch/scheduler/core.py::_handle_terminate",
+                "multi-agent-orch::src/orch/scheduler/_dispatch.py::_db_path"
+              ],
+              "gold_equiv_size": 6
+            }
+          },
+          {
+            "id": "FZ-d02",
+            "subset": "FZ_dev",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "concept::看门狗三级",
+                "concept::9-1-恢复",
+                "concept::异步版核心环"
+              ],
+              "gold_equiv_size": 8
+            }
+          },
+          {
+            "id": "FZ-d03",
+            "subset": "FZ_dev",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/scheduler/recover.py::recover",
+                "concept::崩溃恢复算法",
+                "concept::审计-g-解耦"
+              ],
+              "gold_equiv_size": 4
+            }
+          },
+          {
+            "id": "FZ-d04",
+            "subset": "FZ_dev",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": true,
+              "anchors_top3": [
+                "multi-agent-orch::commit::8c38a0bd0d9053df0240cf2c12e297236a9b1594",
+                "multi-agent-orch::src/orch/scheduler/_dispatch.py::session_rows",
+                "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event"
+              ],
+              "gold_equiv_size": 2
+            }
+          },
+          {
+            "id": "FZ-d05",
+            "subset": "FZ_dev",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/render/__init__.py::estimate_tokens",
+                "multi-agent-orch::src/orch/render/__init__.py::_join_focus",
+                "multi-agent-orch::src/orch/render/__init__.py::_join_background"
+              ],
+              "gold_equiv_size": 2
+            }
+          },
+          {
+            "id": "FZ-d06",
+            "subset": "FZ_dev",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": false,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/scheduler/_dispatch.py::dispatching_rows",
+                "concept::9-1-恢复",
+                "concept::异步作业"
+              ],
+              "gold_equiv_size": 3
+            }
+          },
+          {
+            "id": "FZ-d07",
+            "subset": "FZ_dev",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/scheduler/permissions.py::autocommit",
+                "concept::last-ok-commit-生产回路",
+                "concept::ledger-落盘"
+              ],
+              "gold_equiv_size": 3
+            }
+          },
+          {
+            "id": "FZ-d08",
+            "subset": "FZ_dev",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": true,
+              "anchors_top3": [
+                "concept::发送者约束",
+                "multi-agent-orch::src/orch/scheduler/permissions.py::audit_write_scope"
+              ],
+              "gold_equiv_size": 8
+            }
+          },
+          {
+            "id": "FZ-d09",
+            "subset": "FZ_dev",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": false,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event",
+                "concept::系统执行器",
+                "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields"
+              ],
+              "gold_equiv_size": 7
+            }
+          },
+          {
+            "id": "FZ-d10",
+            "subset": "FZ_dev",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": false,
+              "anchors_top3": [
+                "concept::热续接入调度层三门控",
+                "concept::find-informal-gate-生成形-corr-反解",
+                "concept::审计不再-fail-open-c-4"
+              ],
+              "gold_equiv_size": 6
+            }
+          },
+          {
+            "id": "FZ-t01",
+            "subset": "FZ_test",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "concept::视图组装",
+                "concept::用户界面-cli",
+                "concept::用户界面-cli-子集"
+              ],
+              "gold_equiv_size": 5
+            }
+          },
+          {
+            "id": "FZ-t02",
+            "subset": "FZ_test",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": true,
+              "anchors_top3": [
+                "concept::停机重启",
+                "multi-agent-orch::src/orch/store/__init__.py::_render_board",
+                "concept::迟到在途回复展示标记"
+              ],
+              "gold_equiv_size": 7
+            }
+          },
+          {
+            "id": "FZ-t03",
+            "subset": "FZ_test",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": false,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._send_json",
+                "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event",
+                "concept::mock-适配器"
+              ],
+              "gold_equiv_size": 4
+            }
+          },
+          {
+            "id": "FZ-t04",
+            "subset": "FZ_test",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": false,
+              "anchors_top3": [
+                "concept::用户界面-cli",
+                "concept::用户界面-cli-子集",
+                "multi-agent-orch::src/orch/cli/__init__.py"
+              ],
+              "gold_equiv_size": 7
+            }
+          },
+          {
+            "id": "FZ-t05",
+            "subset": "FZ_test",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": true,
+              "anchors_top3": [
+                "concept::适配层统一-invoke-接口",
+                "multi-agent-orch::src/orch/adapters/__init__.py::ApiAdapter.invoke",
+                "multi-agent-orch::src/orch/adapters/__init__.py"
+              ],
+              "gold_equiv_size": 12
+            }
+          },
+          {
+            "id": "FZ-t06",
+            "subset": "FZ_test",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields",
+                "concept::events端点投影补全",
+                "multi-agent-orch::src/orch/scheduler/core.py::_finalize_envelope"
+              ],
+              "gold_equiv_size": 1
+            }
+          },
+          {
+            "id": "FZ-t07",
+            "subset": "FZ_test",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/render/__init__.py::_summarize",
+                "multi-agent-orch::src/orch/render/__init__.py::_join_focus",
+                "multi-agent-orch::src/orch/render/__init__.py::_join_background"
+              ],
+              "gold_equiv_size": 3
+            }
+          },
+          {
+            "id": "FZ-t08",
+            "subset": "FZ_test",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/cli/main.py::_resolve_workspace",
+                "multi-agent-orch::src/orch/cli/main.py::_thread_dirs_for_metrics",
+                "multi-agent-orch::src/orch/scheduler/core.py::_role_worktree"
+              ],
+              "gold_equiv_size": 1
+            }
+          },
+          {
+            "id": "FZ-t09",
+            "subset": "FZ_test",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "concept::混沌-50-轮-100-硬门槛",
+                "multi-agent-orch::src/orch/render/__init__.py::_role_authored_ids",
+                "multi-agent-orch::commit::88ed2d74055b9e06f2eeec0f1e1fa4255724bded"
+              ],
+              "gold_equiv_size": 3
+            }
+          },
+          {
+            "id": "FZ-t10",
+            "subset": "FZ_test",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/store/__init__.py::Store.append_event",
+                "concept::run过程日志",
+                "multi-agent-orch::commit::8c38a0bd0d9053df0240cf2c12e297236a9b1594"
+              ],
+              "gold_equiv_size": 10
+            }
+          },
+          {
+            "id": "AMB-01",
+            "subset": "AMB",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": true,
+              "anchored": false,
+              "has_nd_field": false
+            }
+          },
+          {
+            "id": "AMB-02",
+            "subset": "AMB",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": true,
+              "anchored": false,
+              "has_nd_field": false
+            }
+          },
+          {
+            "id": "AMB-03",
+            "subset": "AMB",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": true,
+              "anchored": false,
+              "has_nd_field": false
+            }
+          },
+          {
+            "id": "AMB-04",
+            "subset": "AMB",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": false,
+              "has_nd_field": false
+            }
+          },
+          {
+            "id": "AMB-05",
+            "subset": "AMB",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": false,
+              "has_nd_field": false
+            }
+          },
+          {
+            "id": "AMB-06",
+            "subset": "AMB",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": false,
+              "has_nd_field": false
+            }
+          },
+          {
+            "id": "AMB-07",
+            "subset": "AMB",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": false,
+              "has_nd_field": false
+            }
+          },
+          {
+            "id": "AMB-08",
+            "subset": "AMB",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": false,
+              "has_nd_field": false
+            }
+          },
+          {
+            "id": "AMB-09",
+            "subset": "AMB",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": false,
+              "has_nd_field": false
+            }
+          },
+          {
+            "id": "AMB-10",
+            "subset": "AMB",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "pass": false,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": false,
+              "has_nd_field": false
+            }
+          },
+          {
+            "id": "PP-01",
+            "subset": "PP",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "has_premise_flags_field": false,
+              "premise_leak": false,
+              "suspect_corrected": false,
+              "mode": "bm25_only"
+            }
+          },
+          {
+            "id": "PP-02",
+            "subset": "PP",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "has_premise_flags_field": false,
+              "premise_leak": false,
+              "suspect_corrected": false,
+              "mode": "bm25_only"
+            }
+          },
+          {
+            "id": "PP-03",
+            "subset": "PP",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "has_premise_flags_field": false,
+              "premise_leak": false,
+              "suspect_corrected": true,
+              "mode": "bm25_only"
+            }
+          },
+          {
+            "id": "PP-04",
+            "subset": "PP",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "has_premise_flags_field": false,
+              "premise_leak": false,
+              "suspect_corrected": true,
+              "mode": "bm25_only"
+            }
+          },
+          {
+            "id": "PP-05",
+            "subset": "PP",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "has_premise_flags_field": false,
+              "premise_leak": false,
+              "suspect_corrected": false,
+              "mode": "bm25_only"
+            }
+          },
+          {
+            "id": "PP-06",
+            "subset": "PP",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "has_premise_flags_field": false,
+              "premise_leak": false,
+              "suspect_corrected": false,
+              "mode": "bm25_only"
+            }
+          },
+          {
+            "id": "PP-07",
+            "subset": "PP",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "has_premise_flags_field": false,
+              "premise_leak": false,
+              "suspect_corrected": true,
+              "mode": "bm25_only"
+            }
+          },
+          {
+            "id": "PP-08",
+            "subset": "PP",
+            "mode": "bm25_only",
+            "mode_class": "bm25_only",
+            "route_label": "bm25_only",
+            "bare_refusal": false,
+            "judge": {
+              "has_premise_flags_field": false,
+              "premise_leak": false,
+              "suspect_corrected": true,
+              "mode": "bm25_only"
+            }
+          }
+        ],
+        "B": [
+          {
+            "id": "L0-01",
+            "subset": "L0",
+            "mode": "overview",
+            "mode_class": "overview",
+            "route_label": "meta",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "mode_ok": true,
+              "facts_hit": 16,
+              "route_label": "meta"
+            }
+          },
+          {
+            "id": "L0-02",
+            "subset": "L0",
+            "mode": "overview",
+            "mode_class": "overview",
+            "route_label": "meta",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "mode_ok": true,
+              "facts_hit": 16,
+              "route_label": "meta"
+            }
+          },
+          {
+            "id": "L0-03",
+            "subset": "L0",
+            "mode": "overview",
+            "mode_class": "overview",
+            "route_label": "meta",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "mode_ok": true,
+              "facts_hit": 16,
+              "route_label": "meta"
+            }
+          },
+          {
+            "id": "L0-04",
+            "subset": "L0",
+            "mode": "overview",
+            "mode_class": "overview",
+            "route_label": "global",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "mode_ok": true,
+              "facts_hit": 16,
+              "route_label": "global"
+            }
+          },
+          {
+            "id": "L0-05",
+            "subset": "L0",
+            "mode": "overview",
+            "mode_class": "overview",
+            "route_label": "meta",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "mode_ok": true,
+              "facts_hit": 16,
+              "route_label": "meta"
+            }
+          },
+          {
+            "id": "L0-06",
+            "subset": "L0",
+            "mode": "overview",
+            "mode_class": "overview",
+            "route_label": "meta",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "mode_ok": true,
+              "facts_hit": 16,
+              "route_label": "meta"
+            }
+          },
+          {
+            "id": "L0-07",
+            "subset": "L0",
+            "mode": "overview",
+            "mode_class": "overview",
+            "route_label": "meta",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "mode_ok": true,
+              "facts_hit": 16,
+              "route_label": "meta"
+            }
+          },
+          {
+            "id": "L0-08",
+            "subset": "L0",
+            "mode": "overview",
+            "mode_class": "overview",
+            "route_label": "global",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "mode_ok": true,
+              "facts_hit": 16,
+              "route_label": "global"
+            }
+          },
+          {
+            "id": "L0-09",
+            "subset": "L0",
+            "mode": "overview",
+            "mode_class": "overview",
+            "route_label": "meta",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "mode_ok": true,
+              "facts_hit": 16,
+              "route_label": "meta"
+            }
+          },
+          {
+            "id": "L0-10",
+            "subset": "L0",
+            "mode": "overview",
+            "mode_class": "overview",
+            "route_label": "meta",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "mode_ok": true,
+              "facts_hit": 16,
+              "route_label": "meta"
+            }
+          },
+          {
+            "id": "FZ-d01",
+            "subset": "FZ_dev",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "concept::终止完善",
+                "multi-agent-orch::src/orch/scheduler/core.py::_handle_terminate",
+                "multi-agent-orch::src/orch/scheduler/_dispatch.py::_db_path"
+              ],
+              "gold_equiv_size": 6
+            }
+          },
+          {
+            "id": "FZ-d02",
+            "subset": "FZ_dev",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "concept::看门狗三级",
+                "concept::9-1-恢复",
+                "concept::异步版核心环"
+              ],
+              "gold_equiv_size": 8
+            }
+          },
+          {
+            "id": "FZ-d03",
+            "subset": "FZ_dev",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/scheduler/recover.py::recover",
+                "concept::崩溃恢复算法",
+                "concept::审计-g-解耦"
+              ],
+              "gold_equiv_size": 4
+            }
+          },
+          {
+            "id": "FZ-d04",
+            "subset": "FZ_dev",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": true,
+              "anchors_top3": [
+                "multi-agent-orch::commit::8c38a0bd0d9053df0240cf2c12e297236a9b1594",
+                "multi-agent-orch::src/orch/scheduler/_dispatch.py::session_rows",
+                "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event"
+              ],
+              "gold_equiv_size": 2
+            }
+          },
+          {
+            "id": "FZ-d05",
+            "subset": "FZ_dev",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/render/__init__.py::estimate_tokens",
+                "multi-agent-orch::src/orch/render/__init__.py::_join_focus",
+                "multi-agent-orch::src/orch/render/__init__.py::_join_background"
+              ],
+              "gold_equiv_size": 2
+            }
+          },
+          {
+            "id": "FZ-d06",
+            "subset": "FZ_dev",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": false,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/scheduler/_dispatch.py::dispatching_rows",
+                "concept::9-1-恢复",
+                "concept::异步作业"
+              ],
+              "gold_equiv_size": 3
+            }
+          },
+          {
+            "id": "FZ-d07",
+            "subset": "FZ_dev",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/scheduler/permissions.py::autocommit",
+                "concept::last-ok-commit-生产回路",
+                "concept::ledger-落盘"
+              ],
+              "gold_equiv_size": 3
+            }
+          },
+          {
+            "id": "FZ-d08",
+            "subset": "FZ_dev",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": true,
+              "anchors_top3": [
+                "concept::发送者约束",
+                "multi-agent-orch::src/orch/scheduler/permissions.py::audit_write_scope"
+              ],
+              "gold_equiv_size": 8
+            }
+          },
+          {
+            "id": "FZ-d09",
+            "subset": "FZ_dev",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": false,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event",
+                "concept::系统执行器",
+                "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields"
+              ],
+              "gold_equiv_size": 7
+            }
+          },
+          {
+            "id": "FZ-d10",
+            "subset": "FZ_dev",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": false,
+              "anchors_top3": [
+                "concept::热续接入调度层三门控",
+                "concept::find-informal-gate-生成形-corr-反解",
+                "concept::审计不再-fail-open-c-4"
+              ],
+              "gold_equiv_size": 6
+            }
+          },
+          {
+            "id": "FZ-t01",
+            "subset": "FZ_test",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "concept::视图组装",
+                "concept::用户界面-cli",
+                "concept::用户界面-cli-子集"
+              ],
+              "gold_equiv_size": 5
+            }
+          },
+          {
+            "id": "FZ-t02",
+            "subset": "FZ_test",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": true,
+              "anchors_top3": [
+                "concept::停机重启",
+                "multi-agent-orch::src/orch/store/__init__.py::_render_board",
+                "concept::迟到在途回复展示标记"
+              ],
+              "gold_equiv_size": 7
+            }
+          },
+          {
+            "id": "FZ-t03",
+            "subset": "FZ_test",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": false,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._send_json",
+                "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event",
+                "concept::mock-适配器"
+              ],
+              "gold_equiv_size": 4
+            }
+          },
+          {
+            "id": "FZ-t04",
+            "subset": "FZ_test",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": false,
+              "anchors_top3": [
+                "concept::用户界面-cli",
+                "concept::用户界面-cli-子集",
+                "multi-agent-orch::src/orch/cli/__init__.py"
+              ],
+              "gold_equiv_size": 7
+            }
+          },
+          {
+            "id": "FZ-t05",
+            "subset": "FZ_test",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": false,
+              "hit@3": true,
+              "anchors_top3": [
+                "concept::适配层统一-invoke-接口",
+                "multi-agent-orch::src/orch/adapters/__init__.py::ApiAdapter.invoke",
+                "multi-agent-orch::src/orch/adapters/__init__.py"
+              ],
+              "gold_equiv_size": 12
+            }
+          },
+          {
+            "id": "FZ-t06",
+            "subset": "FZ_test",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields",
+                "concept::events端点投影补全",
+                "multi-agent-orch::src/orch/scheduler/core.py::_finalize_envelope"
+              ],
+              "gold_equiv_size": 1
+            }
+          },
+          {
+            "id": "FZ-t07",
+            "subset": "FZ_test",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/render/__init__.py::_summarize",
+                "multi-agent-orch::src/orch/render/__init__.py::_join_focus",
+                "multi-agent-orch::src/orch/render/__init__.py::_join_background"
+              ],
+              "gold_equiv_size": 3
+            }
+          },
+          {
+            "id": "FZ-t08",
+            "subset": "FZ_test",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/cli/main.py::_resolve_workspace",
+                "multi-agent-orch::src/orch/cli/main.py::_thread_dirs_for_metrics",
+                "multi-agent-orch::src/orch/scheduler/core.py::_role_worktree"
+              ],
+              "gold_equiv_size": 1
+            }
+          },
+          {
+            "id": "FZ-t09",
+            "subset": "FZ_test",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "concept::混沌-50-轮-100-硬门槛",
+                "multi-agent-orch::src/orch/render/__init__.py::_role_authored_ids",
+                "multi-agent-orch::commit::88ed2d74055b9e06f2eeec0f1e1fa4255724bded"
+              ],
+              "gold_equiv_size": 3
+            }
+          },
+          {
+            "id": "FZ-t10",
+            "subset": "FZ_test",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "hit@1": true,
+              "hit@3": true,
+              "anchors_top3": [
+                "multi-agent-orch::src/orch/store/__init__.py::Store.append_event",
+                "concept::run过程日志",
+                "multi-agent-orch::commit::8c38a0bd0d9053df0240cf2c12e297236a9b1594"
+              ],
+              "gold_equiv_size": 10
+            }
+          },
+          {
+            "id": "AMB-01",
+            "subset": "AMB",
+            "mode": "symbol",
+            "mode_class": "symbol",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "predicted": "should_disambiguate",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": true,
+              "has_nd_field": true
+            }
+          },
+          {
+            "id": "AMB-02",
+            "subset": "AMB",
+            "mode": "symbol",
+            "mode_class": "symbol",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "predicted": "should_disambiguate",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": true,
+              "has_nd_field": true
+            }
+          },
+          {
+            "id": "AMB-03",
+            "subset": "AMB",
+            "mode": "symbol",
+            "mode_class": "symbol",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "predicted": "should_disambiguate",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": true,
+              "has_nd_field": true
+            }
+          },
+          {
+            "id": "AMB-04",
+            "subset": "AMB",
+            "mode": "symbol",
+            "mode_class": "symbol",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": true,
+              "has_nd_field": true
+            }
+          },
+          {
+            "id": "AMB-05",
+            "subset": "AMB",
+            "mode": "symbol",
+            "mode_class": "symbol",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": true,
+              "has_nd_field": true
+            }
+          },
+          {
+            "id": "AMB-06",
+            "subset": "AMB",
+            "mode": "symbol",
+            "mode_class": "symbol",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": true,
+              "has_nd_field": true
+            }
+          },
+          {
+            "id": "AMB-07",
+            "subset": "AMB",
+            "mode": "symbol",
+            "mode_class": "symbol",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": true,
+              "has_nd_field": true
+            }
+          },
+          {
+            "id": "AMB-08",
+            "subset": "AMB",
+            "mode": "symbol",
+            "mode_class": "symbol",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": true,
+              "has_nd_field": true
+            }
+          },
+          {
+            "id": "AMB-09",
+            "subset": "AMB",
+            "mode": "symbol",
+            "mode_class": "symbol",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": true,
+              "has_nd_field": true
+            }
+          },
+          {
+            "id": "AMB-10",
+            "subset": "AMB",
+            "mode": "symbol",
+            "mode_class": "symbol",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "pass": true,
+              "predicted": "should_autopick",
+              "over_ask": false,
+              "under_ask": false,
+              "anchored": true,
+              "has_nd_field": true
+            }
+          },
+          {
+            "id": "PP-01",
+            "subset": "PP",
+            "mode": "overview",
+            "mode_class": "overview",
+            "route_label": "global",
+            "bare_refusal": false,
+            "judge": {
+              "has_premise_flags_field": true,
+              "premise_leak": false,
+              "suspect_corrected": false,
+              "mode": "overview"
+            }
+          },
+          {
+            "id": "PP-02",
+            "subset": "PP",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "has_premise_flags_field": true,
+              "premise_leak": false,
+              "suspect_corrected": false,
+              "mode": "topic"
+            }
+          },
+          {
+            "id": "PP-03",
+            "subset": "PP",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "has_premise_flags_field": true,
+              "premise_leak": false,
+              "suspect_corrected": false,
+              "mode": "topic"
+            }
+          },
+          {
+            "id": "PP-04",
+            "subset": "PP",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "has_premise_flags_field": true,
+              "premise_leak": false,
+              "suspect_corrected": false,
+              "mode": "topic"
+            }
+          },
+          {
+            "id": "PP-05",
+            "subset": "PP",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "has_premise_flags_field": true,
+              "premise_leak": false,
+              "suspect_corrected": false,
+              "mode": "topic"
+            }
+          },
+          {
+            "id": "PP-06",
+            "subset": "PP",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "has_premise_flags_field": true,
+              "premise_leak": false,
+              "suspect_corrected": false,
+              "mode": "topic"
+            }
+          },
+          {
+            "id": "PP-07",
+            "subset": "PP",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "has_premise_flags_field": true,
+              "premise_leak": false,
+              "suspect_corrected": false,
+              "mode": "topic"
+            }
+          },
+          {
+            "id": "PP-08",
+            "subset": "PP",
+            "mode": "topic",
+            "mode_class": "topic",
+            "route_label": "entity_local",
+            "bare_refusal": false,
+            "judge": {
+              "has_premise_flags_field": true,
+              "premise_leak": false,
+              "suspect_corrected": false,
+              "mode": "topic"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "segment2_answer_accuracy": {
+    "main_by_layer": {
+      "A": {
+        "L1": {
+          "n_judged": 20,
+          "correct": 5,
+          "partial": 3,
+          "wrong": 12,
+          "correct_rate": 0.25,
+          "correct_or_partial_rate": 0.4,
+          "wrong_ids": [
+            "L1-01",
+            "L1-04",
+            "L1-05",
+            "L1-06",
+            "L1-07",
+            "L1-08",
+            "L1-10",
+            "L1-13",
+            "L1-14",
+            "L1-15",
+            "L1-16",
+            "L1-18"
+          ],
+          "error_ids": []
+        },
+        "L2": {
+          "n_judged": 30,
+          "correct": 0,
+          "partial": 5,
+          "wrong": 25,
+          "correct_rate": 0.0,
+          "correct_or_partial_rate": 0.1667,
+          "wrong_ids": [
+            "L2-01",
+            "L2-02",
+            "L2-03",
+            "L2-04",
+            "L2-05",
+            "L2-06",
+            "L2-07",
+            "L2-08",
+            "L2-09",
+            "L2-10",
+            "L2-11",
+            "L2-12",
+            "L2-13",
+            "L2-14",
+            "L2-15",
+            "L2-16",
+            "L2-17",
+            "L2-18",
+            "L2-19",
+            "L2-20",
+            "L2-21",
+            "L2-22",
+            "L2-23",
+            "L2-29",
+            "L2-30"
+          ],
+          "error_ids": []
+        },
+        "L3": {
+          "n_judged": 10,
+          "correct": 9,
+          "partial": 1,
+          "wrong": 0,
+          "correct_rate": 0.9,
+          "correct_or_partial_rate": 1.0,
+          "wrong_ids": [],
+          "error_ids": []
+        }
+      },
+      "B": {
+        "L1": {
+          "n_judged": 20,
+          "correct": 13,
+          "partial": 2,
+          "wrong": 5,
+          "correct_rate": 0.65,
+          "correct_or_partial_rate": 0.75,
+          "wrong_ids": [
+            "L1-07",
+            "L1-13",
+            "L1-14",
+            "L1-15",
+            "L1-16"
+          ],
+          "error_ids": []
+        },
+        "L2": {
+          "n_judged": 30,
+          "correct": 16,
+          "partial": 10,
+          "wrong": 4,
+          "correct_rate": 0.5333,
+          "correct_or_partial_rate": 0.8667,
+          "wrong_ids": [
+            "L2-18",
+            "L2-24",
+            "L2-29",
+            "L2-30"
+          ],
+          "error_ids": []
+        },
+        "L3": {
+          "n_judged": 10,
+          "correct": 5,
+          "partial": 4,
+          "wrong": 1,
+          "correct_rate": 0.5,
+          "correct_or_partial_rate": 0.9,
+          "wrong_ids": [
+            "L3-01"
+          ],
+          "error_ids": []
+        }
+      }
+    },
+    "group_delta": {
+      "L1": {
+        "correct_rate_A": 0.25,
+        "correct_rate_B": 0.65,
+        "delta_correct_B_minus_A": 0.4,
+        "correct_or_partial_A": 0.4,
+        "correct_or_partial_B": 0.75,
+        "delta_cp_B_minus_A": 0.35
+      },
+      "L2": {
+        "correct_rate_A": 0.0,
+        "correct_rate_B": 0.5333,
+        "delta_correct_B_minus_A": 0.5333,
+        "correct_or_partial_A": 0.1667,
+        "correct_or_partial_B": 0.8667,
+        "delta_cp_B_minus_A": 0.7
+      },
+      "L3": {
+        "correct_rate_A": 0.9,
+        "correct_rate_B": 0.5,
+        "delta_correct_B_minus_A": -0.4,
+        "correct_or_partial_A": 1.0,
+        "correct_or_partial_B": 0.9,
+        "delta_cp_B_minus_A": -0.1
+      }
+    },
+    "pp_correction_groupB": {
+      "n_judged": 8,
+      "correct": 7,
+      "partial": 1,
+      "wrong": 0,
+      "correction_rate": 0.875,
+      "correction_or_partial_rate": 1.0,
+      "wrong_ids": [],
+      "error_ids": []
+    }
+  },
+  "online_call_stats": {
+    "generation": {
+      "total": 128,
+      "error": 0,
+      "by_bucket": {
+        "main_A": {
+          "n": 60,
+          "ok": 60,
+          "error": 0,
+          "error_ids": []
+        },
+        "main_B": {
+          "n": 60,
+          "ok": 60,
+          "error": 0,
+          "error_ids": []
+        },
+        "pp_B": {
+          "n": 8,
+          "ok": 8,
+          "error": 0,
+          "error_ids": []
+        }
+      }
+    },
+    "judgement": {
+      "total": 128,
+      "error": 0,
+      "by_bucket": {
+        "main_A": {
+          "n": 60,
+          "ok": 60,
+          "error": 0,
+          "error_ids": []
+        },
+        "main_B": {
+          "n": 60,
+          "ok": 60,
+          "error": 0,
+          "error_ids": []
+        },
+        "pp_B": {
+          "n": 8,
+          "ok": 8,
+          "error": 0,
+          "error_ids": []
+        }
+      }
+    }
+  }
+}
