@@ -1,0 +1,300 @@
+================================================================================
+L1-01 [L1/fn_module] gold_n=1
+Q: 函数 _resolve_workspace 是在哪个源码文件里定义的？
+GOLD_ANSWER: 所属模块：src/orch/cli/main.py
+--- GROUP A | mode=bm25_only route=bm25_only ---
+ANSWER: 根据提供的仓库上下文，**无法确定**函数 `_resolve_workspace` 在哪个源码文件里定义。
+
+当前检索到的文档中出现的相关符号/路径包括：
+- `_db_path`（`src/orch/scheduler/_dispatch.py`）
+- `cmd_stop`、`_find_thread_dirs`、`_thread_dirs_for_metrics`、`_consume_stop_marker`（均在 `src/orch/cli/main.py`）
+- 以及若干概念条目（事务边界、多线程 workspace 等）
+
+其中**没有**出现 `_resolve_workspace` 的定义位置或任何提及。上下文不足以回答该问题，不能编造。
+VERDICT=wrong | REASON=未指出定义文件src/orch/cli/main.py，声称无法确定
+--- GROUP B | mode=symbol route=entity_local ---
+ANSWER: 根据仓库上下文，函数 `_resolve_workspace` 定义在源码文件 **`src/orch/cli/main.py`** 中。
+VERDICT=correct | REASON=准确指出定义文件为src/orch/cli/main.py，与标准答案完全一致
+================================================================================
+L1-07 [L1/fn_callers] gold_n=2
+Q: _apply_gate 的直接调用方是哪几个？
+GOLD_ANSWER: 直接调用方：cmd_approve、cmd_reject
+--- GROUP A | mode=bm25_only route=bm25_only ---
+ANSWER: 根据当前提供的仓库上下文，**无法确定 `_apply_gate` 的直接调用方**。
+
+上下文中出现的相关内容主要是：
+
+- `apply_gate_decision`（幂等化、只认 `gate_request` 的 corr 等）
+- `_find_informal_gate`（生成形 corr 反解）
+- `gate_decision`、spec §10 corr 缺省生成
+- 相关 commit（如 610b4127、355d43cd）
+
+**没有任何文档/概念/commit 片段列出 `_apply_gate` 本身，也没有写明谁直接调用它。**
+
+若要准确回答，需要能检索到定义/引用 `_apply_gate` 的源码（例如调用图、grep 引用处）。当前 BM25 上下文不足以作答，不能据此编造调用方列表。
+VERDICT=wrong | REASON=未答出直接调用方，仅称无法确定，属未答
+--- GROUP B | mode=overview route=structural ---
+ANSWER: 根据提供的仓库上下文，**未出现**任何关于 `_apply_gate` 函数（或其直接调用方）的信息，因此无法回答。
+VERDICT=wrong | REASON=未答出调用方，称无信息，与gold不符
+================================================================================
+L2-01 [L2/rev_calls_closure] gold_n=6
+Q: 如果动了 _handle_terminate 的实现，沿调用链往上三跳，会波及到哪些函数？
+GOLD_ANSWER: 受影响（反向调用闭包）函数：_dispatch_group_async、run_thread_async、run_workspace._run_one、_dispatch_group、_finish_interrupted_terminate、run_thread
+--- GROUP A | mode=bm25_only route=bm25_only ---
+ANSWER: **上下文不足以回答该问题。**
+
+当前提供的仓库上下文（BM25 Top-8 文档）中：
+
+- 仅出现与 “停机-重启-approve-terminate 控制流” 相关的概念、Commit 描述、FakeApiAdapter、FaultInjector、mock 适配器、ApiAdapter 等。
+- **没有**任何 `_handle_terminate` 的定义、实现、源码位置、调用关系或调用图信息。
+- 也没有任何函数调用链、上下游依赖或 AST/符号级数据可用于追踪 “往上三跳” 的调用者。
+
+因此无法确定动 `_handle_terminate` 后会波及到哪些上层函数（一跳、两跳或三跳）。
+
+如需准确回答，请补充：
+- `_handle_terminate` 所在文件/完整源码
+- 或调用图 / 符号索引 / 更多相关代码片段
+- 或允许使用完整代码库检索/静态分析工具
+
+在现有上下文下禁止编造调用链。
+VERDICT=wrong | REASON=未命中任何gold闭包成员，完全未作答
+--- GROUP B | mode=symbol route=entity_local ---
+ANSWER: 根据仓库上下文，`_handle_terminate` 的**向上调用链**只展开到 **depth=2**，第 3 跳未给出完整闭包。能确定的范围如下。
+
+## 第 1 跳（直接调用方）
+
+改 `_handle_terminate` 会直接波及：
+
+| 函数 | 模块（上下文） |
+|------|----------------|
+| `_dispatch_group_async` | `src/orch/scheduler/async_core.py` |
+| `_dispatch_group` | `src/orch/scheduler/core.py` |
+| `_finish_interrupted_terminate` | （与调度核心同属 scheduler；具体文件未单独标出，影响面标为 `core.py` / `async_core.py`） |
+
+这些是上下文中列出的**唯一直接调用方**。
+
+## 第 2 跳（间接调用方）
+
+通过上述直接调用方再往上，上下文给出的间接调用方：
+
+| 函数 | 说明（推断关系） |
+|------|------------------|
+| `run_thread_async` | 经 async 派发路径（如 `_dispatch_group_async`） |
+| `run_thread` | 经同步派发路径（如 `_dispatch_group`） |
+
+**说明：**  
+- 第 2 跳只显式列出这两个入口。  
+- `_finish_interrupted_terminate` 的上层调用方**未**在 depth=2 列表中单独展开，不能从现有上下文断定其第 2 跳完整集合。
+
+## 第 3 跳
+
+上下文写明：
+
+> 调用方闭包在 depth=2 处截断，尚有更上游调用方
+
+因此：
+
+- **第 3 跳具体函数名无法从当前图谱/影响面可靠列出**（禁止编造）。  
+- 可确定的只有：存在更上游调用方；影响模块仍主要落在  
+  - `src/orch/scheduler/core.py`  
+  - `src/orch/scheduler/async_core.py`  
+- 受影响 HTTP/API **端点**：上下文记为 **（无）**。
+
+## 汇总（“往上三跳”能答到什么程度）
+
+```
+_handle_terminate
+  ├─ [1] _dispatch_group_async  →  [2] run_thread_async  →  [3] ❓ 未展开
+  ├─ [1] _dispatch_group        →  [2] run_thread        →  [3] ❓ 未展开
+  └─ [1] _finish_interrupted_terminate → [2]/[3] ❓ 未展开
+```
+
+**结论：**  
+- 有把握的波及函数：**`_dispatch_group_async`、`_dispatch_group`、`_finish_interrupted_terminate`、`run_thread_async`、`run_thread`**。  
+- **第 3 跳**需要把 CALLS 反向 BFS 扩到 depth≥3（或查 `run_thread` / `run_thread_async` / `_finish_interrupted_terminate` 的调用方）才能补全；当前仓库上下文**不足以**给出第 3 跳函数清单。
+
+相关提交（改过终止路径、可作 diff 参考）：`6a9a32f7`、`7d182a97`、`30ffca3d` 等，但不等于调用图第 3 跳。
+VERDICT=correct | REASON=命中5/6闭包成员，仅缺run_workspace._run_one
+================================================================================
+L2-24 [L2/impact_modules] gold_n=3
+Q: ensure_worktrees 改动的影响会扩散到哪几个模块？
+GOLD_ANSWER: 波及模块：src/orch/cli/main.py、src/orch/scheduler/permissions.py、src/orch/web/server.py
+--- GROUP A | mode=bm25_only route=bm25_only ---
+ANSWER: 根据当前仓库上下文（BM25 Top-8），`ensure_worktrees` 的影响面可以从这些文档直接归纳出来；**没有完整调用图/符号索引**，因此只能写到「上下文能支撑的模块/装配点」，不能编造更多文件级依赖。
+
+## 结论：主要会扩散到这些地方
+
+### 1. **权限三件套 / permissions 层**
+- 与 `audit_write_scope`、`autocommit` 并称「权限三件套」。
+- `autocommit` 明确落在 `src/orch/scheduler/permissions.py`。
+- 改 `ensure_worktrees` 会直接牵动同一套权限装配（worktree 隔离 + 越权审计 + 自动提交）。
+
+### 2. **core（接入点）**
+- Commit/Concept 均写明：三件套「接入 core」。
+- core 侧如何调用/注入这三件套，会随 `ensure_worktrees` 行为变化一起受影响。
+
+### 3. **orch run / worktree 隔离装配（运行入口）**
+- `orch run` 在 config **有** `target_repo` 时调用 `ensure_worktrees` 建隔离 worktree，并做 **§8.2 审计接线**；**无**则回退现状。
+- real-cli / orch 多角色跑通路径也依赖这套装配。
+- 因此调度/CLI 入口侧的 worktree 装配逻辑会受影响。
+
+### 4. **§8.2 审计接线相关逻辑**
+- 文档反复把 `ensure_worktrees` 与 **§8.2 审计接线**绑在一起（有 `target_repo` 时建隔离 worktree + 审计接线）。
+- 审计范围/越权拦截（文档中的「§8.2 拦越权」）会随 worktree 路径/隔离结果变化。
+
+### 5. **（间接）验证钩子 verify（§8.3）**
+- 上下文里 verify 是独立概念（spec §8.3），**没有写死直接调用 `ensure_worktrees`**。
+- 只有在「跑在隔离 worktree + 审计路径上再做验证」的集成场景下，才可能间接受影响；单凭现有 Top-8 **不能断定是直接依赖模块**。
+
+### 6. **适配层**
+- 仅有「适配层」概念条目，**未说明与 `ensure_worktrees` 的调用关系**，不能据此算入确定影响面。
+
+---
+
+## 简要影响图（按上下文）
+
+| 层级 | 模块/能力 | 关系 |
+|------|-----------|------|
+| 权限 | `ensure_worktrees` / `audit_write_scope` / `autocommit` | 同套，改一动往往要一起看 |
+| 接入 | **core** | 三件套接入点 |
+| 运行 | **orch run**（+ real-cli 装配） | 按 `target_repo` 建隔离 worktree |
+| 安全 | **§8.2 审计接线** | 与 ensure 强绑定 |
+| 其它 | verify / 适配层 | 上下文不足，不宜算硬依赖 |
+
+---
+
+## 上下文不足处
+
+当前材料**没有**：
+- `ensure_worktrees` 的定义文件/签名  
+- 完整 import/调用链  
+- 测试清单或模块目录树  
+
+若要精确到「改动会 diff 到哪几个 `.py` / 哪几个 test」，需要再提供该函数定义处、`permissions` 与 `orch run` 的接线代码，或全库引用检索结果。
+
+**一句话**：按现有文档，`ensure_worktrees` 的影响主要沿 **权限三件套（含 permissions）→ core 接入 → orch run 的 worktree 隔离装配 → §8.2 审计接线** 扩散；其余模块仅能标为间接或未证实。
+VERDICT=partial | REASON=仅明确命中permissions.py；提及CLI入口但未点名main.py，完全漏掉web/server.py
+--- GROUP B | mode=overview route=structural ---
+ANSWER: **结论：当前仓库上下文不足以回答。**
+
+提供的仓库概览里没有出现 `ensure_worktrees` 的任何信息，包括：
+
+- 它定义在哪个模块/文件
+- 被谁调用（调用图 / 依赖边）
+- 与热点函数（如 `_dispatch_group`、`run_thread` 等）或核心概念（workspace、状态层、适配层等）的关联
+
+因此**无法依据现有上下文**推断改动会扩散到哪几个模块；若强行点名会属于编造。
+
+---
+
+**若要准确回答，需要补充例如：**
+
+1. `ensure_worktrees` 的定义位置与函数签名  
+2. 调用方列表（谁 import / 谁调用）  
+3. 图谱里与它相关的 `CALLS` / `IMPORTS` / `MODIFIES` 边  
+
+有上述信息后，才能列出受影响模块（例如调度层 `scheduler`、workspace 相关、store、CLI 等）并说明影响路径。
+VERDICT=wrong | REASON=未命中任何gold闭包模块，仅称信息不足无法回答
+================================================================================
+L3-01 [L3/design_provenance] gold_n=3
+Q: 为什么这个项目要给每次运行套一层权限保护——工作区隔离、写域审计再加自动留存？这套设计的依据是什么？
+GOLD_ANSWER: 设计概念：权限三件套；溯源提交（DESCRIBES，hash）：5c6bb736c8b0、c792c69e6047
+GOLD_ASPECTS: ensure_worktrees 建隔离 worktree | audit_write_scope 写域审计 | autocommit 自动提交 | 三件套接入 core（C-1/§8.1）
+--- GROUP A | mode=bm25_only route=bm25_only ---
+ANSWER: 根据当前仓库上下文（概念与函数检索结果），可以这样理解这套设计；更细的“为什么做产品决策”类说明在已给片段里并不完整。
+
+## 这套保护是什么
+
+项目把单次运行上的权限安全收成 **「权限三件套」**，并接入 core：
+
+| 组件 | 作用（上下文表述） |
+|------|-------------------|
+| **ensure_worktrees** | 为 `write_scope` 非空的角色建 **worktree 隔离**（独立工作目录/工作区） |
+| **audit_write_scope** | **写域审计**（与 §8.2 审计接线相关） |
+| **autocommit** | **自动提交保护**（自动留存） |
+
+配置里有 **target_repo** 时：`orch run` / 装配路径会 `ensure_worktrees` 建隔离 worktree，并做 §8.2 审计接线；**没有 target_repo 则回退现状**。
+
+因此“每次运行套一层”在实现叙事上，主要是：有目标库时隔离工作树 + 写域审计接线 + autocommit 留存，而不是无条件改写所有路径。
+
+## 设计依据（能从上下文直接推出的）
+
+上下文把这三件套明确标成：
+
+- **权限安全 / 防越权三件套**
+- **工作区隔离权限**
+- **自动提交保护**
+
+对应意图可以概括为三层：
+
+1. **工作区隔离（ensure_worktrees）**  
+   可写角色各自 worktree，避免多角色/多次运行直接改同一工作树、互相踩踏或越界写。
+
+2. **写域审计（audit_write_scope + §8.2）**  
+   在隔离之外再约束/记录“能写哪里”，对接防越权，而不是只靠目录分开。
+
+3. **自动留存（autocommit）**  
+   把运行结果落到可追溯的提交/留存上，形成“自动提交保护”，便于回滚、审计与复盘。
+
+三者一起，形成：**隔离执行面 → 审计写边界 → 自动固化结果** 的闭环，并挂在 core / orch 运行路径上（有 `target_repo` 时完整装配，否则回退）。
+
+## 上下文不足的部分（避免编造）
+
+已给 BM25 片段主要是概念标签与接线说明，**没有**展开例如：
+
+- 完整威胁模型或事故驱动的背景；
+- 为何选 git worktree 而不是别的隔离手段；
+- §8.2 审计的具体规则与失败策略；
+- autocommit 的触发条件、冲突处理、与人工 commit 的关系。
+
+若需要“依据文档原文”级别的设计说明，需要仓库中的设计/规格章节（例如权限三件套、§8.2、orch run 装配）正文；当前 Top 文档只到概念与函数摘要层。
+
+**一句话**：这套设计在仓库叙事里是 **防越权 + 工作区隔离 + 自动提交保护** 的权限三件套；有 `target_repo` 时用 worktree 隔离装配并接写域审计，再配合 autocommit 留存，保证每次运行有独立执行面、可审计写边界和可追溯结果。
+VERDICT=correct | REASON=讲清三件套设计理由并命中概念与全部要点，来源概念已指
+--- GROUP B | mode=overview route=global ---
+ANSWER: The provided repository context is insufficient to answer this question with a grounded rationale.
+
+What the context *does* show:
+- Multi-thread **workspace** execution appears in `async_core.py` (as “§9.3 多线程 workspace 运行”).
+- A **state layer** (`store`) handles event logs, dispatch tables, blackboards, session tables, and other persistence (spec §4).
+- Scheduler core / async core implement the main loop, verification hooks, and termination checklist (spec §5 / §8).
+- There is a chaos harness (mock layer) and render/store/adapter separation, but **no** description of “权限保护”, “工作区隔离”, “写域审计”, or “自动留存” as a deliberate protection layer around each run, nor any design basis, threat model, or spec section that justifies wrapping every run that way.
+
+Because the given overview, modules, hot functions, and concepts do not contain the design rationale (or even a clear implementation description) for that specific combination of protections, I cannot invent one. If you can supply the relevant spec sections, design docs, or code comments that discuss workspace isolation / write-domain audit / retention, I can reason from those.
+VERDICT=wrong | REASON=未讲清设计理由与来源，未触及权限三件套或提交哈希，答非所问
+================================================================================
+L3-05 [L3/design_provenance] gold_n=2
+Q: 门禁决策的应用为什么要做成幂等的？
+GOLD_ANSWER: 设计概念：apply_gate_decision幂等化；溯源提交（DESCRIBES，hash）：610b412788ce
+GOLD_ASPECTS: 重复调用只生效一次 | 与恢复路径同 target pending 合并同批 | 对应 §9.1/§16
+--- GROUP A | mode=bm25_only route=bm25_only ---
+ANSWER: **原因：将 `apply_gate_decision` 做成幂等，是为了“重复调用不重复生效、多次执行结果一样”，从而防止门禁决策被重复应用（重复请求只生效一次）。**
+
+具体依据仓库中的相关概念与能力：
+
+- **核心目标**：`apply_gate_decision` 幂等化的直接定义就是——重复调用不重复生效、多次执行结果一致、防止决策重复应用、重复请求只生效一次。
+- **恢复与查表复用**：按 `corr` 定位已有 `gate_decision` 事件（`_find_gate_decision`），恢复时只查表；`_find_informal_gate` 按生成形 `corr` 只查表反解（事件存在且 `to` 含 human），`gate_decision` 的回填 / mark_done / resume / 幂等都复用原路径。这样在恢复场景下不会重新应用决策。
+- **崩溃/重发模拟**：`_IdempotentMockAdapter` 用于模拟崩溃恢复后重发不重做，进一步印证幂等是为了在重试/恢复场景下避免副作用重复。
+
+**总结**：门禁决策一旦应用（放行/拒绝等）会改变系统状态；若不幂等，网络重试、调度重发、崩溃恢复后的重复调用会导致决策被多次生效，产生错误副作用。做成幂等后，靠 `corr` 查已有事件 + 复用原路径，保证“只生效一次、结果一致”。
+VERDICT=correct | REASON=讲清重复调用只生效一次理由，并指明apply_gate_decision幂等化概念
+--- GROUP B | mode=topic route=entity_local ---
+ANSWER: 根据仓库上下文，**门禁决策应用（`apply_gate_decision`）做成幂等**的核心原因与**恢复路径**和**崩溃/重试安全**直接相关，而非普通业务逻辑需求。
+
+### 主要动机（来自相关概念与提交）
+- **恢复路径与 target pending 合并**（提交 `610b4127`，m4/T5 R-a）：  
+  将恢复路径与正常 target pending 路径合并，同时对 `apply_gate_decision` 做幂等化，以修复 §9.1 / §16.10。  
+  幂等保证在恢复场景下重复调用（或与正常路径交叉）时，结果一致、不会重复执行特权/副作用。
+
+- **崩溃恢复后重发不重做**：  
+  仓库中有 `_IdempotentMockAdapter`（`src/orch/chaos/__init__.py`），专门模拟“崩溃恢复后重发不重做”。门禁决策应用必须幂等，才能在混沌/恢复测试中安全重放 envelope 或 gate_decision，而不重复 mark_done、resume 或执行系统操作。相关测试达到 **50 轮 100% 通过**。
+
+- **非正式门禁 / corr 反解路径的复用**（`_find_informal_gate` + `apply_gate_decision`）：  
+  按生成形 corr 查表反解（事件存在且 to 含 human），gate_decision 的回填、mark_done、resume 走**幂等复用原路径**。  
+  这样任意 `to=human` 的挂起信封在 approve 时都能安全恢复，即使 corr 缺省生成或多次触发，也不会产生重复状态变更。
+
+### 总结
+做成幂等，是为了让 `apply_gate_decision`（签名：`apply_gate_decision(store, config, adapters, *, corr, approve, sender='human')`）在**调度恢复、崩溃重发、非正式门禁反解**等场景下可安全重复调用，保证状态只推进一次，并与正常 pending 路径统一。这属于调度核心环 + 恢复机制（§5/§9/§10 相关）的韧性要求。
+
+上下文未提供更细的源码注释或设计文档原文解释“为什么”，以上均直接来自命中的概念描述、函数定位与相关提交信息。
+VERDICT=correct | REASON=讲清幂等理由并指出来源(概念+提交610b4127)，覆盖合并恢复路径、重复只生效一次及§9.1/§16

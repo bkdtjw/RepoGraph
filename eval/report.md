@@ -67,7 +67,7 @@
 | PP 泄漏率 | 0.0 | 0.0 | 图中本无 redis/postgres 等技术名，两组均不泄漏 |
 | 裸拒率 | 0 | 0 | 均不裸拒 |
 
-> 来源：`eval/d2_results.json` → `segment1_program_assertions.set48_existing_assertions.{A,B}`；组 B 与独立门禁 `eval/gate_report.json`（@HEAD `c971078` 复跑）**逐项一致**（L0 1.0 / FZ_dev 0.7 / FZ_test 0.8 / AMB 1.0 / leak 0 / bare 0），两套 harness 交叉验证。
+> 来源：`eval/d2_results.json` → `segment1_program_assertions.set48_existing_assertions.{A,B}`；组 B 与独立门禁 `eval/gate_report.json`（@HEAD `b7206bb` / tag `phase-d-20260723` 复跑，Phase D Verify 于冻结点补跑）**逐项一致**（L0 1.0 / FZ_dev 0.7 / FZ_test 0.8 / AMB 1.0 / leak 0 / bare 0），两套 harness 交叉验证。
 > **PP 说明**：离线 `PP_suspect_correction`（否定词+真值锚共现代理，组 A 0.5 / 组 B 0.0）是**弱代理非真指标**——真实 PP 纠正只在端到端在线测（组 B 0.875，§4）；组 A 无生成层前提闸门、无在线 PP 跑，故不以离线代理作组间 PP 结论。
 
 ### v0.1 失败基线（B-1/B-2/B-3）· 红 → 终态

@@ -1,0 +1,53 @@
+# 审查报告
+
+## 维度 1：两组口径隔离
+
+**未见 blocker/major 问题。**
+
+- `baseline_bm25.py` 仅调用 `topic_recall`（纯 BM25 倒排）+ `_doc_text`/`_doc_name`（节点自身字段），无任何边遍历/闭包/符号链接。`node.get("path")` (L86) 是节点固有属性，非图结构展开。
+- `run_d2.py:131-136` 分派干净：A→`build_bm25_context`，B→`build_repo_context`，无交叉。
+- mode/route_label 恒为 `"bm25_only"`（L106-107），不在图谱模式集 {symbol,topic,llm,overview,global,out_of_scope} 中，不会触发 gate 的图谱模式逻辑。
+
+- **nit** | `run_d2.py:197` | `json.load(open(GRAPH,...))` 未用 `with`，文件句柄泄漏。建议改为 `with open(...) as f: g = json.load(f)`。
+
+## 维度 2：程序断言逻辑
+
+- **major** | `run_d2.py:169,179-181` | `entity_recall_token` 对 Function/Class 取 qualname 叶名（如 `"get"`, `"set"`, `"add"`），`context_has_entity` 用 `tok in context_text` 纯子串匹配。6000 字符上下文中短叶名极易误命中（假阳性），导致两组 `mean_gold_recall` 和 `hit@min1` 同向虚高。`d1_goldcheck.py:89` 的 `distinctive()` 排除了 `{"invoke","__init__","run","main","check"}`，但 `entity_recall_token` **无任何排除**。建议：对 ≤4 字符叶名改用完整 qualname 匹配，或引入词边界正则。
+
+- **minor** | `run_d2.py:173` vs `d1_goldcheck.py:96` vs `run_d2.py:153` | Commit 短 sha 截断长度不一致：recall_token=8，distinctive/display=12。因 8 是 12 的前缀，不会造成假阴性，但 8 位 hex 在长文本中碰撞概率高于 12 位（假阳性风险略增）。建议统一为 12。
+
+- **未见问题**：`layer_summary`（L235-250）分母/分子正确；`judge48`（L258-296）各 subset rate 分母为该 subset 题数，正确。
+
+## 维度 3：统计加总
+
+**未见 blocker/major 问题。**
+
+- `layer_answer_acc`（L642-660）：分母 = `ok AND verdict` 有效题，error 不入分母，符合契约。correct+partial+wrong = n_judged，自洽。
+- `group_delta`（L664-677）：纯差值，正确。
+- `pp`（L680-691）：同模式，正确。
+- `online_call_stats`（L693-705）：gen 计全量记录（含 error），judge 区分 ok/error，total = Σ buckets，自洽。
+- `load_done`（L100-107）：同 id 后写覆盖 → dict 天然去重；`run_gen` L431 `if rid in done: continue` 保证已成功者不重写，正常流程无重复。
+
+- **nit** | `run_d2.py:429` | `load_done` 在 128 次循环内每次重读文件，O(n²) IO。建议提到循环外、增量更新。
+
+## 维度 4：d1_goldcheck
+
+- **minor** | `d1_goldcheck.py:53-65` | `module_of` 只处理 Function→Module 和 Function→Class→Module（深度 2）。若图谱存在 Function→Class→Class→Module 嵌套则漏算。建议改为沿 `contains_parent` 递归上溯直到 Module 或无父节点。
+
+- **minor** | `d1_goldcheck.py:225` | `blast_radius` 属性与 `len(gold_entities)` 比较，隐含假设 blast_radius 不含自身（因 `expected_gold` L140 排除 v=0）。若 `metrics.py` 定义含自身，则恒差 1 但 `br is not None` 守卫使其静默通过。建议显式断言 `br == len(gold) + 1` 或 `br == len(gold)` 并注明口径。
+
+- 其余 subtype 直接边重算与图谱语义一致；闭包 BFS（L68-81）正确；泄漏检查保守（宁可误报）；分布/split/去重断言完备。**未见 blocker。**
+
+## 维度 5：真实性风险
+
+- **major** | `run_d2.py:744` | `findings["PP_端到端"]` 中硬编码 `"(7/8)"`。若实际纠正率非 7/8，产物文本自相矛盾（如 `correct=0.750(7/8)`）。建议删除硬编码分数，仅保留 `%.3f` 格式化值。
+
+- **minor** | `run_d2.py:715` | `findings` 键名 `"L1_L2_图谱决胜"` 预设结论。若数据反转（如 B 在 L2 因 depth=2 下界反而低于 A），键名与数值矛盾。建议改为中性键名（如 `"L1_L2_comparison"`）或根据 delta 符号动态选文案。
+
+- **minor** | 分母稀释风险 | error 不入分母（L647）。若组 B 因上下文更长导致 API 超时率显著高于组 A，则 B 的 rate 基于"幸存"子集计算，可能偏高。当前已透明报告 `error_ids`，可审计，但建议在 `findings` 或 `meta` 中加一句 "两组 error 率差异 < X% 时结论稳健" 的守卫断言。
+
+- 未见伪造绿的路径：`call_api` 失败返回 `ok=False`，绝不填充假 text；`parse_verdict` 失败返回 `(None,None)` → 标 error 不计入 correct。`min_score=0.0` 强化基线（反稻草人）。depth=2 下界诚实标注。
+
+## 总体结论
+
+代码整体工程质量高、口径隔离干净、统计自洽、诚实性设计（反稻草人/下界标注/error 透明）到位；需修复的 **2 个 major**：①`entity_recall_token` 短叶名子串误命中会虚高离线召回指标，②`findings` 硬编码 "(7/8)" 可能与实际产物矛盾。其余为 minor/nit 级改进。

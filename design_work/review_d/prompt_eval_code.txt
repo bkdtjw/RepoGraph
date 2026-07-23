@@ -1,0 +1,1259 @@
+【硬约束】禁止使用任何工具、禁止读文件、禁止联网。只依据本提示词下方内嵌的三份 Python 源码全文（带行号）直接审查作答。你是资深评测/基准测试代码审查员。
+
+【背景契约（只读，勿质疑外部文件存在性）】
+本项目做「两组对比」离线+在线评测。单一自变量=知识图谱。
+- 组 A = baseline_bm25.build_bm25_context：纯 BM25 top-8 文档原文拼接，mode 恒 = "bm25_only"。
+- 组 B = repograph.retrieve.context.build_repo_context：完整图谱混合（路由/符号链接/impact 闭包/概念展开/repo_card/premise），mode ∈ {symbol,topic,llm,overview,global,out_of_scope}。
+- 两组共用同一分词器(topic.zh_terms)与同一倒排语料(build_corpus_index)——语料底座拉平，差异只应来自「图谱编排」。
+外部函数契约摘要：
+- topic_recall(store,question,top_k=8,index=None,min_score=_MIN_SCORE(=1.0)) -> [{node_id,label,name,score,matched_terms}]，BM25(k1=1.5,b=0.75)，min_score 以下滤除。
+- build_repo_context(store,question,budget_chars=6000,impact_depth=2,...) -> {mode,linked,context_text,stats,route_label,...}；gate 离线口径不传 extra_queries。
+- gate.judge_l0/judge_fz/judge_amb/judge_pp/mode_class/is_bare_refusal：48 题既有确定性判定器（复用，不改）。
+- store.get_node(id)->node dict（含 label/qualname/path/hash/name/aliases/zh_aliases）。
+
+【审查维度（按重要性排序，逐条给结论）】
+1) 两组口径是否真隔离：组 A(baseline_bm25) 有无偷用任何图结构/边/闭包/符号链接？retrieve() 分派是否干净？组 A 的 mode/route_label 会否伪装成图谱模式导致门禁误判？
+2) 程序断言逻辑：run_offline 里 context_has_entity / entity_recall_token 的 gold 命中判定是否正确、有无假阳性/假阴性风险（如短 token 子串误命中、Commit 短 sha 截断长度不一致 8 vs 12）？layer_summary/judge48 统计是否正确？
+3) 统计加总：aggregate 里 layer_answer_acc / group_delta / pp 的 correct/partial/wrong 计数与 rate 分母(只计 ok&verdict 有效题)是否正确？online_call_stats 加总是否自洽？断点续跑 load_done「同 id 后写覆盖」对重复记录的去重是否会误统计？
+4) d1_goldcheck：expected_gold 各 subtype 的直接边重算是否与图谱语义一致？闭包/模块归属/泄漏检查/分布断言有无漏洞？
+5) 真实性风险：有无任何可能「伪造绿/夸大组 B 优势/掩盖失败」的代码路径？error 是否被计入分母稀释？
+
+【输出格式】每条发现给：severity(blocker/major/minor/nit) + 文件:行号 + 问题 + 依据 + 建议修法。无问题的维度明确写「未见问题」。最后给总体结论一句。
+
+================ 文件 1/3: eval/baseline_bm25.py ================
+   1| # -*- coding: utf-8 -*-
+   2| """组 A 基线：BM25-only 无图谱检索（D-R2 / 计划书 §4 Phase D · D2）。
+   3| 
+   4| 单一自变量对照：与组 B（``build_repo_context`` 完整 v0.3 混合检索）**共用**
+   5| 同一分词器（``topic.zh_terms``）与同一倒排语料（``topic.build_corpus_index``——
+   6| 含 C2 富化的 Function/Class 双语卡片，语料层已拉平），从而把「图谱结构 + 检索
+   7| 编排」的贡献从「底层 BM25 召回」中隔离出来。
+   8| 
+   9| 组 A 相对组 B **刻意抹除**的全部能力（口径写死，报告须明示）：
+  10|   - 无 S1 五路路由（route）           - 无 link_entities 符号链接
+  11|   - 无 impact_analysis 影响面闭包      - 无 IMPLEMENTS/DESCRIBES 概念展开
+  12|   - 无 repo_card / meta 概览            - 无 S7 前提校验（premise_flags）
+  13|   - 无消歧协议（needs_disambiguation） - 无 S2 改写二次召回
+  14| 
+  15| 检索 = 纯 BM25（k1=1.5, b=0.75，与 topic.py 同式）top-``k`` 文档，取命中文档的
+  16| **原文**（即建索引所用的 ``_doc_text``）拼成上下文。为使基线拿满 top-k 预算、
+  17| 不被 v0.3 的精度门（``_MIN_SCORE=1.0``）反向掣肘，此处 ``min_score=0.0`` —— 即
+  18| 「取分数最高的 k 篇」纯截断，倾向于**强化**基线（反稻草人）。
+  19| 
+  20| 只消费 src/repograph 现有检索函数，绝不修改 src；纯标准库。输出接口对齐
+  21| ``build_repo_context``：``{mode:'bm25_only', linked, context_text, stats, route_label}``，
+  22| ``linked[].node_id`` 承载 BM25 命中锚点，供门禁 ``anchors_of`` 消费。
+  23| """
+  24| from __future__ import annotations
+  25| 
+  26| import os
+  27| import sys
+  28| 
+  29| _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+  30| _SRC = os.path.join(_ROOT, "src")
+  31| if _SRC not in sys.path:
+  32|     sys.path.insert(0, _SRC)
+  33| 
+  34| from repograph.models import GraphStore                       # noqa: E402
+  35| from repograph.retrieve.topic import (                        # noqa: E402
+  36|     CorpusIndex, build_corpus_index, topic_recall,
+  37|     _doc_text, _doc_name,
+  38| )
+  39| 
+  40| # 基线上下文字符预算：与组 B build_repo_context 默认 budget_chars 对齐，保证两组
+  41| # 上下文容量同量级（差异只来自内容组织，不来自预算）。
+  42| _BUDGET_CHARS = 6000
+  43| _TOP_K = 8
+  44| 
+  45| 
+  46| def build_bm25_index(store: GraphStore) -> CorpusIndex:
+  47|     """复用组 B 同一倒排语料（Concept/Commit/Module/Function·Class 双语卡片）。"""
+  48|     return build_corpus_index(store)
+  49| 
+  50| 
+  51| def build_bm25_context(
+  52|     store: GraphStore,
+  53|     question: str,
+  54|     top_k: int = _TOP_K,
+  55|     budget_chars: int = _BUDGET_CHARS,
+  56|     index: CorpusIndex | None = None,
+  57| ) -> dict:
+  58|     """组 A 检索：纯 BM25 top-``k`` 文档原文拼接为上下文。
+  59| 
+  60|     返回与 ``build_repo_context`` 同构的 dict：``mode='bm25_only'``、
+  61|     ``linked``=命中文档（node_id/label/name/score）、``context_text``=原文拼接、
+  62|     ``stats``（symbols 恒 0，topics=命中数，commits/concepts 按命中计）、
+  63|     ``route_label='bm25_only'``（自描述，绝不伪装成 meta/global，避免门禁误绿）。
+  64|     """
+  65|     if index is None:
+  66|         index = build_bm25_index(store)
+  67| 
+  68|     # 纯 BM25 top-k：min_score=0.0 去掉 v0.3 精度门，拿满 top-k（反稻草人，强化基线）
+  69|     hits = topic_recall(store, question, top_k=top_k, index=index, min_score=0.0)
+  70| 
+  71|     lines: list[str] = ["【BM25 Top-8 文档】（来源: 纯 BM25 检索，无图谱结构 / 无符号链接 / 无影响面）"]
+  72|     n_commit = 0
+  73|     n_concept = 0
+  74|     for i, h in enumerate(hits, 1):
+  75|         node = store.get_node(h["node_id"])
+  76|         if node is None:
+  77|             continue
+  78|         label = h["label"]
+  79|         if label == "Commit":
+  80|             n_commit += 1
+  81|         elif label == "Concept":
+  82|             n_concept += 1
+  83|         text = _doc_text(node) or ""
+  84|         name = _doc_name(node)
+  85|         # 附路径/文件定位（若有），使原文可回溯到真实位置——仍属该文档已有字段，非图谱展开
+  86|         loc = node.get("path") or node.get("file") or ""
+  87|         loc_s = f"  ⟨{loc}⟩" if loc else ""
+  88|         lines.append(f"[{i}] [{label}] {name}{loc_s}  (BM25={h['score']})")
+  89|         lines.append(f"    {text}")
+  90| 
+  91|     context_text = _apply_budget(lines, budget_chars)
+  92| 
+  93|     linked = [
+  94|         {"node_id": h["node_id"], "label": h["label"],
+  95|          "name": h["name"], "score": h["score"]}
+  96|         for h in hits
+  97|     ]
+  98|     stats = {
+  99|         "symbols": 0,
+ 100|         "topics": len(hits),
+ 101|         "impact_callers": 0,
+ 102|         "commits": n_commit,
+ 103|         "concepts": n_concept,
+ 104|     }
+ 105|     return {
+ 106|         "mode": "bm25_only",
+ 107|         "route_label": "bm25_only",
+ 108|         "linked": linked,
+ 109|         "context_text": context_text,
+ 110|         "stats": stats,
+ 111|     }
+ 112| 
+ 113| 
+ 114| def _apply_budget(lines: list[str], budget_chars: int) -> str:
+ 115|     """按行累加到 budget_chars 为止（与 context.py 同策略）；超预算截断并提示。"""
+ 116|     out: list[str] = []
+ 117|     total = 0
+ 118|     truncated = False
+ 119|     for ln in lines:
+ 120|         piece = ln + "\n"
+ 121|         if total + len(piece) > budget_chars:
+ 122|             truncated = True
+ 123|             break
+ 124|         out.append(piece)
+ 125|         total += len(piece)
+ 126|     text = "".join(out)
+ 127|     if truncated:
+ 128|         text += "…（上下文因预算截断，仅保留高分文档）"
+ 129|     return text
+ 130| 
+ 131| 
+ 132| if __name__ == "__main__":
+ 133|     # 独立巡检：python eval/baseline_bm25.py "你的问题"
+ 134|     import json
+ 135|     q = sys.argv[1] if len(sys.argv) > 1 else "终止流程是怎么处理的？"
+ 136|     st = GraphStore.load(os.path.join(_ROOT, "output", "graph.json"))
+ 137|     ctx = build_bm25_context(st, q)
+ 138|     print(json.dumps({k: v for k, v in ctx.items() if k != "context_text"},
+ 139|                      ensure_ascii=False, indent=2))
+ 140|     print("---- context_text ----")
+ 141|     print(ctx["context_text"])
+
+================ 文件 2/3: design_work/d1_goldcheck.py ================
+   1| # -*- coding: utf-8 -*-
+   2| """D1 主评测集 gold 独立核实脚本（对真实图谱，全题 0 失败方可入库）。
+   3| 
+   4| 与 d1_build.py 解耦：本脚本自建原始邻接（直接读 output/graph.json 的 edges），
+   5| 逐题按 subtype 用**直接边查询**独立重算 gold，断言与 dataset_main.jsonl 内已写
+   6| gold_entities 完全一致；并叠加：
+   7|   - 存在性：全部 gold + subject 实体必须是图谱真实节点；
+   8|   - 泄漏：非 subject 的 gold 可识别名不得出现在题面；
+   9|   - 交叉校验：depth=3 反向 CALLS 闭包大小 == 该函数 blast_radius 属性（metrics.py 出品）；
+  10|   - 调用链：gold_paths 每条相邻边必须是真实 CALLS 边，gold == 链中间节点；
+  11|   - 分布：L1/L2/L3 = 20/30/10；层内 dev/test 各半；难度/split 字段合法。
+  12| 任何一项不符即 FAIL 并退出码 1。
+  13| 
+  14| 运行：python design_work/d1_goldcheck.py
+  15| """
+  16| from __future__ import annotations
+  17| import json, os, sys, collections
+  18| 
+  19| ROOT = os.path.join(os.path.dirname(__file__), "..")
+  20| GRAPH = os.path.join(ROOT, "output", "graph.json")
+  21| DATA = os.path.join(ROOT, "eval", "dataset_main.jsonl")
+  22| 
+  23| 
+  24| def load_graph():
+  25|     with open(GRAPH, encoding="utf-8") as f:
+  26|         g = json.load(f)
+  27|     N = {n["id"]: n for n in g["nodes"]}
+  28|     A = {
+  29|         "calls_fwd": collections.defaultdict(set),
+  30|         "calls_rev": collections.defaultdict(set),
+  31|         "contains_parent": collections.defaultdict(list),
+  32|         "impl_fwd": collections.defaultdict(set),
+  33|         "impl_rev": collections.defaultdict(set),
+  34|         "mod_fwd": collections.defaultdict(set),
+  35|         "mod_rev": collections.defaultdict(set),
+  36|         "desc_rev": collections.defaultdict(set),
+  37|     }
+  38|     for e in g["edges"]:
+  39|         s, t, d = e["src"], e["type"], e["dst"]
+  40|         if t == "CALLS":
+  41|             A["calls_fwd"][s].add(d); A["calls_rev"][d].add(s)
+  42|         elif t == "CONTAINS":
+  43|             A["contains_parent"][d].append(s)
+  44|         elif t == "IMPLEMENTS":
+  45|             A["impl_fwd"][s].add(d); A["impl_rev"][d].add(s)
+  46|         elif t == "MODIFIES":
+  47|             A["mod_fwd"][s].add(d); A["mod_rev"][d].add(s)
+  48|         elif t == "DESCRIBES":
+  49|             A["desc_rev"][d].add(s)
+  50|     return N, A
+  51| 
+  52| 
+  53| def module_of(N, A, fid):
+  54|     mods = set()
+  55|     for p in A["contains_parent"].get(fid, ()):
+  56|         pn = N.get(p)
+  57|         if not pn:
+  58|             continue
+  59|         if pn["label"] == "Module":
+  60|             mods.add(p)
+  61|         elif pn["label"] == "Class":
+  62|             for gp in A["contains_parent"].get(p, ()):
+  63|                 if N.get(gp, {}).get("label") == "Module":
+  64|                     mods.add(gp)
+  65|     return mods
+  66| 
+  67| 
+  68| def rev_closure(A, fid, depth):
+  69|     lv = {fid: 0}
+  70|     frontier = [fid]
+  71|     for d in range(1, depth + 1):
+  72|         nxt = []
+  73|         for x in frontier:
+  74|             for p in A["calls_rev"].get(x, ()):
+  75|                 if p not in lv:
+  76|                     lv[p] = d
+  77|                     nxt.append(p)
+  78|         frontier = nxt
+  79|         if not frontier:
+  80|             break
+  81|     return lv
+  82| 
+  83| 
+  84| def distinctive(N, nid):
+  85|     n = N[nid]; lab = n["label"]; out = set()
+  86|     if lab == "Function":
+  87|         qn = n.get("qualname", ""); out.add(qn)
+  88|         leaf = qn.split(".")[-1]
+  89|         if leaf and leaf.lower() not in {"invoke", "__init__", "run", "main", "check"}:
+  90|             out.add(leaf)
+  91|     elif lab == "Concept":
+  92|         out.add(n.get("name", ""))
+  93|         out |= set(n.get("aliases") or [])
+  94|         out |= set(n.get("zh_aliases") or [])
+  95|     elif lab == "Commit":
+  96|         out.add(n["hash"][:12]); out.add(n["hash"])
+  97|     elif lab == "Module":
+  98|         parts = n.get("path", "").replace("\\", "/").split("/")
+  99|         if len(parts) >= 2:
+ 100|             out.add("/".join(parts[-2:]))
+ 101|     elif lab == "Class":
+ 102|         out.add(n.get("qualname", n.get("name", "")))
+ 103|     return {s for s in out if s and len(s) >= 3}
+ 104| 
+ 105| 
+ 106| def expected_gold(N, A, row):
+ 107|     """按 subtype 用直接边查询独立重算 gold（不依赖 build 的 derive）。"""
+ 108|     st = row["subtype"]
+ 109|     args = row["recipe"]["args"]
+ 110|     # 解析 recipe 里的 fn/commit/concept 到 id（借助 subject/gold 已是 id，这里从 args 反解）
+ 111|     def fn_id(qual):
+ 112|         ids = [nid for nid, n in N.items()
+ 113|                if n["label"] == "Function" and n.get("qualname") == qual]
+ 114|         assert len(ids) == 1, f"qualname 非唯一: {qual} -> {ids}"
+ 115|         return ids[0]
+ 116| 
+ 117|     def commit_id(pref):
+ 118|         ids = [nid for nid, n in N.items()
+ 119|                if n["label"] == "Commit" and n["hash"].startswith(pref)]
+ 120|         assert len(ids) == 1, f"commit 前缀非唯一: {pref} -> {ids}"
+ 121|         return ids[0]
+ 122| 
+ 123|     if st == "fn_module":
+ 124|         return sorted(module_of(N, A, fn_id(args["fn"])))
+ 125|     if st == "fn_callers":
+ 126|         return sorted(A["calls_rev"].get(fn_id(args["fn"]), set()))
+ 127|     if st == "concept_impl_fns":
+ 128|         return sorted(x for x in A["impl_rev"].get(args["concept"], ())
+ 129|                       if N[x]["label"] == "Function")
+ 130|     if st == "commit_mod_fns":
+ 131|         return sorted(A["mod_fwd"].get(commit_id(args["commit"]), set()))
+ 132|     if st == "fn_concepts":
+ 133|         return sorted(x for x in A["impl_fwd"].get(fn_id(args["fn"]), ())
+ 134|                       if N[x]["label"] == "Concept")
+ 135|     if st == "class_module":
+ 136|         return sorted(p for p in A["contains_parent"].get(args["cls"], ())
+ 137|                       if N.get(p, {}).get("label") == "Module")
+ 138|     if st == "rev_calls_closure":
+ 139|         lv = rev_closure(A, fn_id(args["fn"]), args["depth"])
+ 140|         return sorted(k for k, v in lv.items() if v >= 1)
+ 141|     if st == "impact_modules":
+ 142|         lv = rev_closure(A, fn_id(args["fn"]), args["depth"])
+ 143|         mods = set()
+ 144|         for nid in lv:
+ 145|             mods |= module_of(N, A, nid)
+ 146|         return sorted(mods)
+ 147|     if st == "calls_chain":
+ 148|         path = [fn_id(q) for q in args["path_quals"]]
+ 149|         return sorted(path[1:-1])
+ 150|     if st == "concept_fns_commits":
+ 151|         fns = [x for x in A["impl_rev"].get(args["concept"], ())
+ 152|                if N[x]["label"] == "Function"]
+ 153|         commits = set()
+ 154|         for f in fns:
+ 155|             commits |= A["mod_rev"].get(f, set())
+ 156|         return sorted(commits)
+ 157|     if st == "commit_fns_concepts":
+ 158|         fns = A["mod_fwd"].get(commit_id(args["commit"]), set())
+ 159|         cs = set()
+ 160|         for f in fns:
+ 161|             cs |= {x for x in A["impl_fwd"].get(f, ()) if N[x]["label"] == "Concept"}
+ 162|         return sorted(cs)
+ 163|     if st == "design_provenance":
+ 164|         cid = args["concept"]
+ 165|         commits = sorted(x for x in A["desc_rev"].get(cid, ())
+ 166|                          if N[x]["label"] == "Commit")
+ 167|         return [cid] + commits
+ 168|     raise ValueError(f"未知 subtype {st}")
+ 169| 
+ 170| 
+ 171| def main():
+ 172|     N, A = load_graph()
+ 173|     rows = [json.loads(l) for l in open(DATA, encoding="utf-8") if l.strip()]
+ 174|     fails = []
+ 175| 
+ 176|     def fail(qid, msg):
+ 177|         fails.append(f"{qid}: {msg}")
+ 178| 
+ 179|     for r in rows:
+ 180|         qid = r["id"]
+ 181|         # 1) 存在性
+ 182|         for gid in r["gold_entities"]:
+ 183|             if gid not in N:
+ 184|                 fail(qid, f"gold 实体不存在于图谱: {gid}")
+ 185|         for sid in r.get("subject_entities", []):
+ 186|             if sid not in N:
+ 187|                 fail(qid, f"subject 实体不存在于图谱: {sid}")
+ 188|         # 2) gold 与图谱重算一致
+ 189|         try:
+ 190|             exp = expected_gold(N, A, r)
+ 191|         except AssertionError as e:
+ 192|             fail(qid, f"重算异常: {e}"); exp = None
+ 193|         if exp is not None and exp != sorted(r["gold_entities"]):
+ 194|             fail(qid, f"gold 与图谱重算不一致\n    stored={sorted(r['gold_entities'])}\n    graph ={exp}")
+ 195|         # 3) 非空（L1/L2 至少 1 个答案实体；L3 至少概念+1提交）
+ 196|         if r["layer"] in ("L1", "L2") and len(r["gold_entities"]) < 1:
+ 197|             fail(qid, "gold 为空")
+ 198|         if r["layer"] == "L3" and len(r["gold_entities"]) < 2:
+ 199|             fail(qid, "L3 gold 应含概念+至少1溯源提交")
+ 200|         # 4) 泄漏检查
+ 201|         subj = set(r.get("subject_entities", []))
+ 202|         for gid in r["gold_entities"]:
+ 203|             if gid in subj:
+ 204|                 continue
+ 205|             for s in distinctive(N, gid):
+ 206|                 if s in r["question"]:
+ 207|                     fail(qid, f"题面泄漏 gold {gid} 的可识别名 {s!r}")
+ 208|         # 5) calls_chain 路径真实性
+ 209|         if r["subtype"] == "calls_chain":
+ 210|             paths = r.get("gold_paths") or []
+ 211|             if not paths:
+ 212|                 fail(qid, "calls_chain 缺 gold_paths")
+ 213|             for path in paths:
+ 214|                 for a, b in zip(path, path[1:]):
+ 215|                     if b not in A["calls_fwd"].get(a, ()):
+ 216|                         fail(qid, f"调用链非真实边: {a} -> {b}")
+ 217|                 if sorted(path[1:-1]) != sorted(r["gold_entities"]):
+ 218|                     fail(qid, "gold 与调用链中间节点不符")
+ 219|         # 6) depth=3 闭包 == blast_radius 属性（metrics.py 交叉校验）
+ 220|         if r["subtype"] == "rev_calls_closure" and r["recipe"]["args"]["depth"] == 3:
+ 221|             fnq = r["recipe"]["args"]["fn"]
+ 222|             fid = [nid for nid, n in N.items()
+ 223|                    if n["label"] == "Function" and n.get("qualname") == fnq][0]
+ 224|             br = N[fid].get("blast_radius")
+ 225|             if br is not None and br != len(r["gold_entities"]):
+ 226|                 fail(qid, f"闭包大小 {len(r['gold_entities'])} != blast_radius 属性 {br}")
+ 227| 
+ 228|     # 7) 分布与 split
+ 229|     from collections import Counter
+ 230|     lc = Counter(r["layer"] for r in rows)
+ 231|     if dict(lc) != {"L1": 20, "L2": 30, "L3": 10}:
+ 232|         fails.append(f"分布错误: {dict(lc)}")
+ 233|     for layer, tot in (("L1", 10), ("L2", 15), ("L3", 5)):
+ 234|         for sp in ("dev", "test"):
+ 235|             c = sum(1 for r in rows if r["layer"] == layer and r["split"] == sp)
+ 236|             if c != tot:
+ 237|                 fails.append(f"{layer}/{sp} split 不均衡: {c} != {tot}")
+ 238|     for r in rows:
+ 239|         if r["split"] not in ("dev", "test"):
+ 240|             fails.append(f"{r['id']}: split 非法 {r['split']}")
+ 241|         if r["difficulty"] not in ("easy", "med", "hard"):
+ 242|             fails.append(f"{r['id']}: 难度非法 {r['difficulty']}")
+ 243|     if len({r["id"] for r in rows}) != len(rows):
+ 244|         fails.append("存在重复 id")
+ 245|     if len(rows) != 60:
+ 246|         fails.append(f"题数 {len(rows)} != 60")
+ 247| 
+ 248|     print("=" * 60)
+ 249|     if fails:
+ 250|         print(f"[FAIL] {len(fails)} 项不通过：")
+ 251|         for f in fails:
+ 252|             print("  -", f)
+ 253|         sys.exit(1)
+ 254|     print(f"[PASS] 全 {len(rows)} 题 gold 对图谱核实通过（0 失败）")
+ 255|     print("  分布 L1/L2/L3 =", dict(lc), "；层内 dev/test 各半")
+ 256|     goldz = [(r["id"], r["gold_n"]) for r in rows]
+ 257|     print("  gold_n: L1/L2 min-max =",
+ 258|           min(r["gold_n"] for r in rows if r["layer"] != "L3"), "-",
+ 259|           max(r["gold_n"] for r in rows if r["layer"] != "L3"))
+ 260|     # depth3 闭包与 blast_radius 一致的题数
+ 261|     bc = sum(1 for r in rows if r["subtype"] == "rev_calls_closure"
+ 262|              and r["recipe"]["args"]["depth"] == 3)
+ 263|     print(f"  depth3 闭包已与 blast_radius 属性交叉校验：{bc} 题")
+ 264| 
+ 265| 
+ 266| if __name__ == "__main__":
+ 267|     main()
+
+================ 文件 3/3: eval/run_d2.py ================
+   1| # -*- coding: utf-8 -*-
+   2| """D2 两组对比全量评测（精简裁判方案）——计划书 §4 Phase D · D2 / D-R2。
+   3| 
+   4| 两组（口径写死，见 baseline_bm25.py 头注 + 本文件 GROUPS 注释）：
+   5|   组 A「BM25-only 无图谱基线」= eval/baseline_bm25.build_bm25_context
+   6|   组 B「图谱混合」          = repograph.retrieve.context.build_repo_context（lexical 档）
+   7| 
+   8| 两评测段：
+   9|   (1) 程序断言段（离线，确定性，108 题 × 2 组）：
+  10|       - 主集 60 题：L1 gold 模块命中率 / L2 gold 闭包交集率 / L3 来源(概念+提交)召回率；
+  11|       - 48 题：复用 eval/gate.py 既有判定器（L0/FZ/AMB/PP）跑两组，组 A 预期大面积差（如实记）。
+  12|   (2) 生成+裁判段（在线，中转站 grok-4.5，128 生成 + 128 裁判）：
+  13|       主集 60 × 2 组 + PP 8 × 组 B；生成 max_tokens=400；裁判强制 JSON verdict。
+  14|       限速 sleep 0.4s；生成失败重试 2、裁判失败重试 1，超限标 error 绝不伪造；
+  15|       原始请求/响应落 eval/d2_runs/*.jsonl（不含 api_key、不含中转站 host）；断点续跑。
+  16|   (3) 汇总 eval/d2_results.json。
+  17| 
+  18| 红线：api_key 只读入内存放请求头，绝不打印/写盘/入产物；中转站 host 亦不写入
+  19| d2_runs（Phase E 仓库开源）。中转站整体不可用 → 中止并如实报告（circuit breaker）。
+  20| 
+  21| 用法：
+  22|   python eval/run_d2.py offline     # 段(1)，快，产出 d2_runs/ctx_* + program_metrics 缓存
+  23|   python eval/run_d2.py probe       # 单次连通性探测
+  24|   python eval/run_d2.py gen         # 段(2) 生成，断点续跑
+  25|   python eval/run_d2.py judge       # 段(2) 裁判，断点续跑（需 gen 完成）
+  26|   python eval/run_d2.py online      # gen + judge
+  27|   python eval/run_d2.py aggregate   # 汇总 → d2_results.json
+  28|   python eval/run_d2.py all         # offline + online + aggregate
+  29| """
+  30| from __future__ import annotations
+  31| 
+  32| import json
+  33| import os
+  34| import sys
+  35| import time
+  36| import urllib.request
+  37| import urllib.error
+  38| 
+  39| ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+  40| SRC = os.path.join(ROOT, "src")
+  41| EVAL = os.path.join(ROOT, "eval")
+  42| RUNS = os.path.join(EVAL, "d2_runs")
+  43| GRAPH = os.path.join(ROOT, "output", "graph.json")
+  44| DATASET_MAIN = os.path.join(EVAL, "dataset_main.jsonl")
+  45| DATASET_48 = os.path.join(EVAL, "dataset.jsonl")
+  46| CONFIG = os.path.join(EVAL, ".judge_config.json")
+  47| RESULTS = os.path.join(EVAL, "d2_results.json")
+  48| PROG_CACHE = os.path.join(RUNS, "program_metrics.json")
+  49| 
+  50| for p in (SRC, EVAL):
+  51|     if p not in sys.path:
+  52|         sys.path.insert(0, p)
+  53| 
+  54| from repograph.models import GraphStore                         # noqa: E402
+  55| from repograph.retrieve.context import build_repo_context       # noqa: E402
+  56| from repograph.retrieve.topic import build_corpus_index         # noqa: E402
+  57| from baseline_bm25 import build_bm25_context                    # noqa: E402
+  58| import gate                                                     # noqa: E402  （复用判定器，不触发其 main）
+  59| 
+  60| # ---------------------------------------------------------------------------
+  61| # 在线通道参数
+  62| # ---------------------------------------------------------------------------
+  63| SLEEP = 0.4
+  64| GEN_RETRIES = 2          # 生成失败重试 2 次（通用纪律 rule 2）
+  65| JUDGE_RETRIES = 1        # 裁判失败重试 1 次（D2 spec）
+  66| GEN_MAX_TOKENS = 400
+  67| JUDGE_MAX_TOKENS = 220
+  68| HTTP_TIMEOUT = 90
+  69| CIRCUIT_CONSECUTIVE_FAIL = 6   # 连续失败阈值 → 判中转站整体不可用，中止
+  70| 
+  71| GEN_SYSTEM = ("你是该代码库的助手，仅依据下方仓库上下文回答；"
+  72|               "上下文不足以回答时明确说明，禁止编造。")
+  73| 
+  74| 
+  75| # ---------------------------------------------------------------------------
+  76| # 配置 / IO 基元
+  77| # ---------------------------------------------------------------------------
+  78| 
+  79| def load_config() -> dict:
+  80|     with open(CONFIG, encoding="utf-8") as f:
+  81|         return json.load(f)
+  82| 
+  83| 
+  84| def load_jsonl(path: str) -> list[dict]:
+  85|     rows = []
+  86|     with open(path, encoding="utf-8") as f:
+  87|         for line in f:
+  88|             line = line.strip()
+  89|             if line:
+  90|                 rows.append(json.loads(line))
+  91|     return rows
+  92| 
+  93| 
+  94| def append_record(path: str, rec: dict) -> None:
+  95|     os.makedirs(os.path.dirname(path), exist_ok=True)
+  96|     with open(path, "a", encoding="utf-8") as f:
+  97|         f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+  98| 
+  99| 
+ 100| def load_done(path: str, ok_pred) -> dict:
+ 101|     """读已完成记录（同 id 后写覆盖先写，crash-safe 续跑）；只保留 ok_pred 为真者。"""
+ 102|     if not os.path.exists(path):
+ 103|         return {}
+ 104|     done: dict[str, dict] = {}
+ 105|     for rec in load_jsonl(path):
+ 106|         done[rec["id"]] = rec
+ 107|     return {k: v for k, v in done.items() if ok_pred(v)}
+ 108| 
+ 109| 
+ 110| # ---------------------------------------------------------------------------
+ 111| # 检索（两组）—— store / corpus index 全局构建一次
+ 112| # ---------------------------------------------------------------------------
+ 113| _STORE: GraphStore | None = None
+ 114| _INDEX = None
+ 115| 
+ 116| 
+ 117| def get_store() -> GraphStore:
+ 118|     global _STORE
+ 119|     if _STORE is None:
+ 120|         _STORE = GraphStore.load(GRAPH)
+ 121|     return _STORE
+ 122| 
+ 123| 
+ 124| def get_index():
+ 125|     global _INDEX
+ 126|     if _INDEX is None:
+ 127|         _INDEX = build_corpus_index(get_store())
+ 128|     return _INDEX
+ 129| 
+ 130| 
+ 131| def retrieve(group: str, question: str) -> dict:
+ 132|     """组 A = 纯 BM25 基线；组 B = build_repo_context 完整 v0.3（lexical 档）。"""
+ 133|     store = get_store()
+ 134|     if group == "A":
+ 135|         return build_bm25_context(store, question, index=get_index())
+ 136|     return build_repo_context(store, question)   # 组 B；gate 离线口径，不传 extra_queries
+ 137| 
+ 138| 
+ 139| # ---------------------------------------------------------------------------
+ 140| # gold 展示名（entity_id → 人读名，供裁判 prompt）
+ 141| # ---------------------------------------------------------------------------
+ 142| 
+ 143| def entity_display(store: GraphStore, eid: str) -> str:
+ 144|     node = store.get_node(eid)
+ 145|     if node is None:
+ 146|         return eid.rsplit("::", 1)[-1]
+ 147|     label = node.get("label", "")
+ 148|     if label in ("Function", "Class"):
+ 149|         return node.get("qualname") or node.get("name") or eid.rsplit("::", 1)[-1]
+ 150|     if label == "Module":
+ 151|         return node.get("path") or eid.split("::", 1)[-1]
+ 152|     if label == "Commit":
+ 153|         return (node.get("hash") or eid.rsplit("::", 1)[-1])[:12]
+ 154|     if label == "Concept":
+ 155|         return node.get("name") or eid.rsplit("::", 1)[-1]
+ 156|     return eid.rsplit("::", 1)[-1]
+ 157| 
+ 158| 
+ 159| def entity_recall_token(store: GraphStore, eid: str) -> str:
+ 160|     """判定「上下文/答案是否含该 gold 实体」的锚字符串（qualname 短名 / 模块路径 / 短 sha / 概念名）。"""
+ 161|     node = store.get_node(eid)
+ 162|     if node is None:
+ 163|         # id 形如 repo::path::qualname 或 repo::commit::sha 或 concept::slug
+ 164|         tail = eid.rsplit("::", 1)[-1]
+ 165|         return tail
+ 166|     label = node.get("label", "")
+ 167|     if label in ("Function", "Class"):
+ 168|         qn = node.get("qualname") or node.get("name") or ""
+ 169|         return qn.rsplit(".", 1)[-1] if qn else eid.rsplit("::", 1)[-1]
+ 170|     if label == "Module":
+ 171|         return node.get("path") or eid.split("::", 1)[-1]
+ 172|     if label == "Commit":
+ 173|         return (node.get("hash") or eid.rsplit("::", 1)[-1])[:8]
+ 174|     if label == "Concept":
+ 175|         return node.get("name") or eid.rsplit("::", 1)[-1]
+ 176|     return eid.rsplit("::", 1)[-1]
+ 177| 
+ 178| 
+ 179| def context_has_entity(store: GraphStore, context_text: str, eid: str) -> bool:
+ 180|     tok = entity_recall_token(store, eid)
+ 181|     return bool(tok) and tok in context_text
+ 182| 
+ 183| 
+ 184| # ---------------------------------------------------------------------------
+ 185| # 段 (1) 程序断言段
+ 186| # ---------------------------------------------------------------------------
+ 187| 
+ 188| def rate(n: int, d: int) -> float:
+ 189|     return round(n / d, 4) if d else 0.0
+ 190| 
+ 191| 
+ 192| def run_offline() -> dict:
+ 193|     """108 题 × 2 组的确定性程序断言；快照上下文到 d2_runs/ctx_*.jsonl。"""
+ 194|     store = get_store()
+ 195|     main_rows = load_jsonl(DATASET_MAIN)
+ 196|     rows48 = load_jsonl(DATASET_48)
+ 197|     g = json.load(open(GRAPH, encoding="utf-8"))
+ 198|     edges48 = g["edges"]
+ 199| 
+ 200|     # ---- 主集：逐题两组检索 + 分层 gold 召回 ----
+ 201|     main_detail = {"A": [], "B": []}
+ 202|     # 快照上下文（供在线 gen 复用/审计）
+ 203|     ctx_files = {("A", "main"): os.path.join(RUNS, "ctx_main_A.jsonl"),
+ 204|                  ("B", "main"): os.path.join(RUNS, "ctx_main_B.jsonl")}
+ 205|     for k, fp in ctx_files.items():
+ 206|         if os.path.exists(fp):
+ 207|             os.remove(fp)
+ 208| 
+ 209|     for row in main_rows:
+ 210|         rid, layer, q = row["id"], row["layer"], row["question"]
+ 211|         gold = row["gold_entities"]
+ 212|         gold_n = row.get("gold_n") or len(gold)
+ 213|         for group in ("A", "B"):
+ 214|             ctx = retrieve(group, q)
+ 215|             ct = ctx.get("context_text") or ""
+ 216|             hits = [e for e in gold if context_has_entity(store, ct, e)]
+ 217|             hit_cnt = len(hits)
+ 218|             rec = {
+ 219|                 "id": rid, "layer": layer, "group": group,
+ 220|                 "mode": ctx.get("mode"), "route_label": ctx.get("route_label"),
+ 221|                 "n_linked": len(ctx.get("linked") or []),
+ 222|                 "gold_n": gold_n, "gold_hit": hit_cnt,
+ 223|                 "recall": rate(hit_cnt, len(gold)),
+ 224|                 "hit_at_min1": hit_cnt >= 1,
+ 225|                 "missed": [e for e in gold if e not in hits],
+ 226|                 "context_chars": len(ct),
+ 227|             }
+ 228|             main_detail[group].append(rec)
+ 229|             append_record(ctx_files[(group, "main")], {
+ 230|                 "id": rid, "layer": layer, "group": group, "question": q,
+ 231|                 "mode": ctx.get("mode"), "context_text": ct,
+ 232|                 "linked": ctx.get("linked"), "stats": ctx.get("stats"),
+ 233|             })
+ 234| 
+ 235|     def layer_summary(detail: list[dict]) -> dict:
+ 236|         out = {}
+ 237|         for layer in ("L1", "L2", "L3"):
+ 238|             items = [r for r in detail if r["layer"] == layer]
+ 239|             if not items:
+ 240|                 continue
+ 241|             hit1 = [r for r in items if r["hit_at_min1"]]
+ 242|             mean_recall = round(sum(r["recall"] for r in items) / len(items), 4)
+ 243|             out[layer] = {
+ 244|                 "n": len(items),
+ 245|                 "context_hit@min1_rate": rate(len(hit1), len(items)),
+ 246|                 "context_hit@min1_n": len(hit1),
+ 247|                 "mean_gold_recall": mean_recall,
+ 248|                 "fail_ids": [r["id"] for r in items if not r["hit_at_min1"]],
+ 249|             }
+ 250|         return out
+ 251| 
+ 252|     main_summary = {
+ 253|         "A": layer_summary(main_detail["A"]),
+ 254|         "B": layer_summary(main_detail["B"]),
+ 255|     }
+ 256| 
+ 257|     # ---- 48 题：复用 gate 判定器跑两组 ----
+ 258|     def judge48(group: str) -> dict:
+ 259|         per = []
+ 260|         for row in rows48:
+ 261|             subset = row["subset"]
+ 262|             ctx = retrieve(group, row["question"])
+ 263|             rec = {"id": row["id"], "subset": subset, "mode": ctx.get("mode"),
+ 264|                    "mode_class": gate.mode_class(ctx.get("mode")),
+ 265|                    "route_label": ctx.get("route_label"),
+ 266|                    "bare_refusal": gate.is_bare_refusal(ctx)}
+ 267|             if subset == "L0":
+ 268|                 rec["judge"] = gate.judge_l0(ctx)
+ 269|             elif subset in ("FZ_dev", "FZ_test"):
+ 270|                 rec["judge"] = gate.judge_fz(ctx, row["gold_entity"], edges48)
+ 271|             elif subset == "AMB":
+ 272|                 rec["judge"] = gate.judge_amb(ctx, row["gold_behavior"])
+ 273|             elif subset == "PP":
+ 274|                 rec["judge"] = gate.judge_pp(ctx, row)
+ 275|             per.append(rec)
+ 276| 
+ 277|         def sub(name):
+ 278|             return [r for r in per if r["subset"] == name]
+ 279|         l0 = sub("L0"); fzd = sub("FZ_dev"); fzt = sub("FZ_test")
+ 280|         amb = sub("AMB"); pp = sub("PP")
+ 281| 
+ 282|         def fz_hit3(items):
+ 283|             return rate(sum(1 for r in items if r["judge"]["hit@3"]), len(items))
+ 284|         l0_pass = [r for r in l0 if r["judge"]["pass"]]
+ 285|         amb_ok = [r for r in amb if r["judge"]["pass"]]
+ 286|         pp_corr = [r for r in pp if r["judge"]["suspect_corrected"]]
+ 287|         pp_leak = [r for r in pp if r["judge"]["premise_leak"]]
+ 288|         return {
+ 289|             "L0_pass_rate": rate(len(l0_pass), len(l0)), "L0_pass_n": len(l0_pass), "L0_n": len(l0),
+ 290|             "FZ_dev_hit@3": fz_hit3(fzd), "FZ_test_hit@3": fz_hit3(fzt),
+ 291|             "AMB_behavior_consistency": rate(len(amb_ok), len(amb)),
+ 292|             "PP_suspect_correction_rate": rate(len(pp_corr), len(pp)),
+ 293|             "PP_premise_leak_rate": rate(len(pp_leak), len(pp)),
+ 294|             "bare_refusal_n": sum(1 for r in per if r["bare_refusal"]),
+ 295|             "per_question": per,
+ 296|         }
+ 297| 
+ 298|     set48 = {"A": judge48("A"), "B": judge48("B")}
+ 299| 
+ 300|     program = {
+ 301|         "main_program_assertions": {
+ 302|             "definition": {
+ 303|                 "L1": "上下文是否含 gold 模块路径（context_recall, min_hit 1）",
+ 304|                 "L2": "gold 反向调用闭包与上下文的交集率（context_answer_intersection, gold_n=6）",
+ 305|                 "L3": "gold 来源(概念+DESCRIBES 提交)在上下文的召回率（context_recall_provenance）",
+ 306|                 "entity_token": "Function/Class→qualname 短名; Module→路径; Commit→短sha8; Concept→名称",
+ 307|             },
+ 308|             "summary": main_summary,
+ 309|             "detail": main_detail,
+ 310|         },
+ 311|         "set48_existing_assertions": {
+ 312|             "note": "复用 eval/gate.py 判定器；组 A=BM25基线，组 B=build_repo_context。",
+ 313|             "A": {k: v for k, v in set48["A"].items() if k != "per_question"},
+ 314|             "B": {k: v for k, v in set48["B"].items() if k != "per_question"},
+ 315|             "per_question": {"A": set48["A"]["per_question"], "B": set48["B"]["per_question"]},
+ 316|         },
+ 317|     }
+ 318|     os.makedirs(RUNS, exist_ok=True)
+ 319|     with open(PROG_CACHE, "w", encoding="utf-8") as f:
+ 320|         json.dump(program, f, ensure_ascii=False, indent=2)
+ 321|     return program
+ 322| 
+ 323| 
+ 324| # ---------------------------------------------------------------------------
+ 325| # 在线通道：API 调用（api_key 只入 header；host 不写盘）
+ 326| # ---------------------------------------------------------------------------
+ 327| _CFG = None
+ 328| 
+ 329| 
+ 330| def _cfg():
+ 331|     global _CFG
+ 332|     if _CFG is None:
+ 333|         _CFG = load_config()
+ 334|     return _CFG
+ 335| 
+ 336| 
+ 337| def call_api(system: str | None, user: str, max_tokens: int, retries: int) -> dict:
+ 338|     """POST {base}/v1/messages（Anthropic 格式）。返回 {ok, text, usage, stop_reason, attempts, error}。
+ 339| 
+ 340|     重试 retries 次（共 retries+1 次尝试）；每次尝试后 sleep(SLEEP) 限速。
+ 341|     仅记录可写盘字段；api_key/host 不出现在返回值里。
+ 342|     """
+ 343|     cfg = _cfg()
+ 344|     base = cfg["base_url"].rstrip("/")
+ 345|     key = cfg["api_key"]
+ 346|     model = cfg["model"]
+ 347|     ah = cfg["auth_header"]
+ 348|     body = {"model": model, "max_tokens": max_tokens,
+ 349|             "messages": [{"role": "user", "content": user}]}
+ 350|     if system:
+ 351|         body["system"] = system
+ 352|     raw = json.dumps(body).encode("utf-8")
+ 353| 
+ 354|     last_err = ""
+ 355|     attempts = 0
+ 356|     for attempt in range(retries + 1):
+ 357|         attempts = attempt + 1
+ 358|         try:
+ 359|             req = urllib.request.Request(base + "/v1/messages", data=raw, method="POST")
+ 360|             req.add_header("content-type", "application/json")
+ 361|             req.add_header(ah, key)
+ 362|             req.add_header("anthropic-version", "2023-06-01")
+ 363|             with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT) as r:
+ 364|                 data = json.loads(r.read().decode("utf-8"))
+ 365|             text = "".join(b.get("text", "") for b in data.get("content", [])
+ 366|                            if isinstance(b, dict) and b.get("type") == "text")
+ 367|             if not text:
+ 368|                 text = "".join(b.get("text", "") for b in data.get("content", [])
+ 369|                                if isinstance(b, dict))
+ 370|             time.sleep(SLEEP)
+ 371|             return {"ok": True, "text": text, "usage": data.get("usage"),
+ 372|                     "stop_reason": data.get("stop_reason"),
+ 373|                     "resp_model": data.get("model"), "attempts": attempts, "error": ""}
+ 374|         except urllib.error.HTTPError as e:
+ 375|             try:
+ 376|                 detail = e.read().decode("utf-8", "replace")[:300]
+ 377|             except Exception:
+ 378|                 detail = ""
+ 379|             last_err = f"HTTP {e.code} {e.reason} {detail}"
+ 380|         except Exception as e:
+ 381|             last_err = f"{type(e).__name__}: {str(e)[:200]}"
+ 382|         time.sleep(SLEEP)
+ 383|     return {"ok": False, "text": "", "usage": None, "stop_reason": None,
+ 384|             "resp_model": None, "attempts": attempts, "error": last_err}
+ 385| 
+ 386| 
+ 387| def probe() -> bool:
+ 388|     r = call_api(None, "只回复两个字：连通", 32, retries=1)
+ 389|     if r["ok"]:
+ 390|         print(f"[probe] OK model={r['resp_model']} usage={r['usage']} text={r['text']!r}")
+ 391|         return True
+ 392|     print(f"[probe] FAIL error={r['error']}")
+ 393|     return False
+ 394| 
+ 395| 
+ 396| # ---------------------------------------------------------------------------
+ 397| # 段 (2) 生成
+ 398| # ---------------------------------------------------------------------------
+ 399| 
+ 400| def gen_targets() -> list[tuple]:
+ 401|     """生成目标：主集 60 × {A,B} + PP 8 × {B} = 128。返回 (row, group, setname)。"""
+ 402|     main_rows = load_jsonl(DATASET_MAIN)
+ 403|     pp_rows = [r for r in load_jsonl(DATASET_48) if r["subset"] == "PP"]
+ 404|     out = []
+ 405|     for row in main_rows:
+ 406|         out.append((row, "A", "main"))
+ 407|         out.append((row, "B", "main"))
+ 408|     for row in pp_rows:
+ 409|         out.append((row, "B", "pp"))
+ 410|     return out
+ 411| 
+ 412| 
+ 413| def gen_path(group: str, setname: str) -> str:
+ 414|     return os.path.join(RUNS, f"gen_{setname}_{group}.jsonl")
+ 415| 
+ 416| 
+ 417| def build_gen_user(ctx_text: str, question: str) -> str:
+ 418|     return f"【仓库上下文】\n{ctx_text or '（无上下文）'}\n\n【问题】\n{question}"
+ 419| 
+ 420| 
+ 421| def run_gen() -> None:
+ 422|     targets = gen_targets()
+ 423|     # 分文件续跑
+ 424|     consec_fail = 0
+ 425|     total = len(targets)
+ 426|     done_cnt = 0
+ 427|     for row, group, setname in targets:
+ 428|         path = gen_path(group, setname)
+ 429|         done = load_done(path, lambda v: v.get("ok"))
+ 430|         rid = row["id"]
+ 431|         if rid in done:
+ 432|             done_cnt += 1
+ 433|             continue
+ 434|         q = row["question"]
+ 435|         ctx = retrieve(group, q)
+ 436|         user = build_gen_user(ctx.get("context_text") or "", q)
+ 437|         r = call_api(GEN_SYSTEM, user, GEN_MAX_TOKENS, GEN_RETRIES)
+ 438|         rec = {
+ 439|             "id": rid, "group": group, "set": setname,
+ 440|             "layer": row.get("layer") or row.get("subset"),
+ 441|             "question": q,
+ 442|             "mode": ctx.get("mode"), "route_label": ctx.get("route_label"),
+ 443|             "context_chars": len(ctx.get("context_text") or ""),
+ 444|             "endpoint": "<relay>/v1/messages",
+ 445|             "request": {"system": GEN_SYSTEM, "user": user,
+ 446|                         "max_tokens": GEN_MAX_TOKENS, "model_alias": "grok-4.5"},
+ 447|             "ok": r["ok"], "answer": r["text"], "usage": r["usage"],
+ 448|             "stop_reason": r["stop_reason"], "attempts": r["attempts"],
+ 449|             "error": r["error"], "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+ 450|         }
+ 451|         append_record(path, rec)
+ 452|         done_cnt += 1
+ 453|         if r["ok"]:
+ 454|             consec_fail = 0
+ 455|         else:
+ 456|             consec_fail += 1
+ 457|             print(f"[gen] {rid}/{group} ERROR {r['error']}")
+ 458|             if consec_fail >= CIRCUIT_CONSECUTIVE_FAIL:
+ 459|                 print(f"[gen] 连续 {consec_fail} 次失败 → 中转站整体不可用，中止。")
+ 460|                 sys.exit(3)
+ 461|         if done_cnt % 10 == 0 or done_cnt == total:
+ 462|             print(f"[gen] {done_cnt}/{total} (last {rid}/{group} ok={r['ok']})")
+ 463| 
+ 464| 
+ 465| # ---------------------------------------------------------------------------
+ 466| # 段 (2) 裁判
+ 467| # ---------------------------------------------------------------------------
+ 468| 
+ 469| def gold_block(store: GraphStore, row: dict, setname: str) -> str:
+ 470|     if setname == "pp":
+ 471|         return ("错误前提: %s\n应纠正为(正确事实): %s\n真值锚: %s"
+ 472|                 % (row.get("false_premise", ""), row.get("gold_correction", ""),
+ 473|                    "、".join(row.get("truth_anchors", []))))
+ 474|     layer = row["layer"]
+ 475|     gold = row["gold_entities"]
+ 476|     disp = "、".join(entity_display(store, e) for e in gold)
+ 477|     ga = row.get("gold_answer", "")
+ 478|     if layer == "L2":
+ 479|         return ("标准答案(要点): %s\ngold 反向调用闭包(应尽量覆盖, 共 %d 项): %s"
+ 480|                 % (ga, len(gold), disp))
+ 481|     if layer == "L3":
+ 482|         aspects = "；".join(row.get("gold_aspects", []))
+ 483|         return ("标准答案(要点): %s\ngold 来源(概念+提交): %s\n设计要点(命中其一即算触及): %s"
+ 484|                 % (ga, disp, aspects))
+ 485|     return "标准答案(要点): %s\ngold 实体: %s" % (ga, disp)
+ 486| 
+ 487| 
+ 488| def judge_rubric(setname: str, layer: str) -> str:
+ 489|     if setname == "pp":
+ 490|         return ("评判维度=是否指出并纠正错误前提。判定：correct=明确指出前提有误并给出正确事实；"
+ 491|                 "partial=隐含存疑或部分纠正但未点破；wrong=顺着错误预设作答/未质疑前提。")
+ 492|     if layer == "L1":
+ 493|         return ("评判维度=答案准确性。correct=正确指出 gold 所属模块/事实；partial=方向对但不精确；"
+ 494|                 "wrong=错误或未答。")
+ 495|     if layer == "L2":
+ 496|         return ("评判维度=答案完整性(命中 gold 闭包比例)。correct=覆盖绝大多数关键调用方/闭包成员；"
+ 497|                 "partial=命中部分；wrong=基本未命中或臆造。")
+ 498|     return ("评判维度=设计溯源(design_rubric_one_of)。correct=讲清设计理由且指出来源(概念/提交)；"
+ 499|             "partial=触及部分设计要点或部分来源；wrong=答非所问或臆造。")
+ 500| 
+ 501| 
+ 502| def build_judge_user(store: GraphStore, row: dict, setname: str, answer: str) -> str:
+ 503|     layer = row.get("layer") or "PP"
+ 504|     q = row["question"]
+ 505|     rubric = judge_rubric(setname, layer if setname != "pp" else "PP")
+ 506|     gb = gold_block(store, row, setname)
+ 507|     return (
+ 508|         "你是严格的代码库问答评测裁判。依据【问题】【标准答案要点】判定【待判答案】。\n"
+ 509|         "%s\n"
+ 510|         "只输出一个 JSON 对象，不要多余文字：{\"verdict\":\"correct|partial|wrong\",\"reason\":\"≤50字中文\"}。\n\n"
+ 511|         "【问题】\n%s\n\n【标准答案要点】\n%s\n\n【待判答案】\n%s"
+ 512|         % (rubric, q, gb, answer or "（空）")
+ 513|     )
+ 514| 
+ 515| 
+ 516| def parse_verdict(text: str) -> tuple:
+ 517|     """从裁判响应抽 {verdict, reason}；容忍 ```json 包裹与前后噪声。失败返回 (None, None)。"""
+ 518|     if not text:
+ 519|         return None, None
+ 520|     s = text.strip()
+ 521|     if "```" in s:
+ 522|         # 取首个代码块内内容
+ 523|         parts = s.split("```")
+ 524|         for seg in parts:
+ 525|             seg2 = seg.strip()
+ 526|             if seg2.startswith("json"):
+ 527|                 seg2 = seg2[4:].strip()
+ 528|             if seg2.startswith("{"):
+ 529|                 s = seg2
+ 530|                 break
+ 531|     i, j = s.find("{"), s.rfind("}")
+ 532|     if i < 0 or j < 0 or j <= i:
+ 533|         return None, None
+ 534|     try:
+ 535|         obj = json.loads(s[i:j + 1])
+ 536|     except Exception:
+ 537|         return None, None
+ 538|     v = str(obj.get("verdict", "")).strip().lower()
+ 539|     if v not in ("correct", "partial", "wrong"):
+ 540|         return None, None
+ 541|     return v, str(obj.get("reason", ""))[:80]
+ 542| 
+ 543| 
+ 544| def judge_path(group: str, setname: str) -> str:
+ 545|     return os.path.join(RUNS, f"judge_{setname}_{group}.jsonl")
+ 546| 
+ 547| 
+ 548| def run_judge() -> None:
+ 549|     store = get_store()
+ 550|     main_rows = {r["id"]: r for r in load_jsonl(DATASET_MAIN)}
+ 551|     pp_rows = {r["id"]: r for r in load_jsonl(DATASET_48) if r["subset"] == "PP"}
+ 552|     consec_fail = 0
+ 553|     # 收集全部 gen 成功记录作为裁判输入
+ 554|     tasks = []
+ 555|     for group, setname in (("A", "main"), ("B", "main"), ("B", "pp")):
+ 556|         gp = gen_path(group, setname)
+ 557|         if not os.path.exists(gp):
+ 558|             continue
+ 559|         for rec in load_done(gp, lambda v: v.get("ok")).values():
+ 560|             tasks.append((rec, group, setname))
+ 561|     total = len(tasks)
+ 562|     done_cnt = 0
+ 563|     for grec, group, setname in tasks:
+ 564|         jp = judge_path(group, setname)
+ 565|         done = load_done(jp, lambda v: v.get("ok"))
+ 566|         rid = grec["id"]
+ 567|         if rid in done:
+ 568|             done_cnt += 1
+ 569|             continue
+ 570|         row = pp_rows[rid] if setname == "pp" else main_rows[rid]
+ 571|         answer = grec.get("answer") or ""
+ 572|         juser = build_judge_user(store, row, setname, answer)
+ 573|         r = call_api(None, juser, JUDGE_MAX_TOKENS, JUDGE_RETRIES)
+ 574|         verdict, reason = (None, None)
+ 575|         if r["ok"]:
+ 576|             verdict, reason = parse_verdict(r["text"])
+ 577|             if verdict is None:
+ 578|                 # 解析失败再重试 1 次（裁判整体重试预算内）
+ 579|                 r2 = call_api(None, juser + "\n\n注意：必须只输出合法 JSON。",
+ 580|                               JUDGE_MAX_TOKENS, 0)
+ 581|                 if r2["ok"]:
+ 582|                     verdict, reason = parse_verdict(r2["text"])
+ 583|                     r["text"] = r["text"] + "\n<retry>\n" + r2["text"]
+ 584|                     r["attempts"] += r2["attempts"]
+ 585|         ok = r["ok"] and verdict is not None
+ 586|         rec = {
+ 587|             "id": rid, "group": group, "set": setname,
+ 588|             "layer": grec.get("layer"),
+ 589|             "endpoint": "<relay>/v1/messages",
+ 590|             "request": {"user": juser, "max_tokens": JUDGE_MAX_TOKENS,
+ 591|                         "model_alias": "grok-4.5"},
+ 592|             "ok": ok, "verdict": verdict, "reason": reason,
+ 593|             "raw_response": r["text"], "usage": r["usage"],
+ 594|             "attempts": r["attempts"],
+ 595|             "error": r["error"] if r["error"] else ("" if ok else "verdict_parse_failed"),
+ 596|             "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+ 597|         }
+ 598|         append_record(jp, rec)
+ 599|         done_cnt += 1
+ 600|         if ok:
+ 601|             consec_fail = 0
+ 602|         else:
+ 603|             consec_fail += 1
+ 604|             print(f"[judge] {rid}/{group} ERROR {rec['error']}")
+ 605|             if consec_fail >= CIRCUIT_CONSECUTIVE_FAIL:
+ 606|                 print(f"[judge] 连续 {consec_fail} 次失败 → 中转站整体不可用，中止。")
+ 607|                 sys.exit(3)
+ 608|         if done_cnt % 10 == 0 or done_cnt == total:
+ 609|             print(f"[judge] {done_cnt}/{total} (last {rid}/{group} verdict={verdict})")
+ 610| 
+ 611| 
+ 612| # ---------------------------------------------------------------------------
+ 613| # 段 (3) 汇总
+ 614| # ---------------------------------------------------------------------------
+ 615| 
+ 616| def aggregate() -> dict:
+ 617|     program = json.load(open(PROG_CACHE, encoding="utf-8")) if os.path.exists(PROG_CACHE) else run_offline()
+ 618|     main_rows = {r["id"]: r for r in load_jsonl(DATASET_MAIN)}
+ 619| 
+ 620|     # 读裁判
+ 621|     def read_judges(group, setname):
+ 622|         jp = judge_path(group, setname)
+ 623|         if not os.path.exists(jp):
+ 624|             return {}
+ 625|         return load_done(jp, lambda v: True)   # 含 error 记录，聚合时区分
+ 626| 
+ 627|     judged = {("A", "main"): read_judges("A", "main"),
+ 628|               ("B", "main"): read_judges("B", "main"),
+ 629|               ("B", "pp"): read_judges("B", "pp")}
+ 630| 
+ 631|     def gen_counts(group, setname):
+ 632|         gp = gen_path(group, setname)
+ 633|         if not os.path.exists(gp):
+ 634|             return {"n": 0, "ok": 0, "error": 0, "error_ids": []}
+ 635|         recs = load_done(gp, lambda v: True)
+ 636|         ok = [r for r in recs.values() if r.get("ok")]
+ 637|         err = [r for r in recs.values() if not r.get("ok")]
+ 638|         return {"n": len(recs), "ok": len(ok), "error": len(err),
+ 639|                 "error_ids": sorted(r["id"] for r in err)}
+ 640| 
+ 641|     # ---- 主集三层 × 2 组答案准确率 ----
+ 642|     def layer_answer_acc(group):
+ 643|         recs = judged[(group, "main")]
+ 644|         out = {}
+ 645|         for layer in ("L1", "L2", "L3"):
+ 646|             items = [r for r in recs.values() if main_rows.get(r["id"], {}).get("layer") == layer]
+ 647|             valid = [r for r in items if r.get("ok") and r.get("verdict")]
+ 648|             n = len(valid)
+ 649|             c = sum(1 for r in valid if r["verdict"] == "correct")
+ 650|             p = sum(1 for r in valid if r["verdict"] == "partial")
+ 651|             w = sum(1 for r in valid if r["verdict"] == "wrong")
+ 652|             err = [r["id"] for r in items if not (r.get("ok") and r.get("verdict"))]
+ 653|             out[layer] = {
+ 654|                 "n_judged": n, "correct": c, "partial": p, "wrong": w,
+ 655|                 "correct_rate": rate(c, n),
+ 656|                 "correct_or_partial_rate": rate(c + p, n),
+ 657|                 "wrong_ids": sorted(r["id"] for r in valid if r["verdict"] == "wrong"),
+ 658|                 "error_ids": sorted(err),
+ 659|             }
+ 660|         return out
+ 661| 
+ 662|     main_acc = {"A": layer_answer_acc("A"), "B": layer_answer_acc("B")}
+ 663| 
+ 664|     def group_delta():
+ 665|         out = {}
+ 666|         for layer in ("L1", "L2", "L3"):
+ 667|             a = main_acc["A"][layer]["correct_rate"]
+ 668|             b = main_acc["B"][layer]["correct_rate"]
+ 669|             ap = main_acc["A"][layer]["correct_or_partial_rate"]
+ 670|             bp = main_acc["B"][layer]["correct_or_partial_rate"]
+ 671|             out[layer] = {
+ 672|                 "correct_rate_A": a, "correct_rate_B": b,
+ 673|                 "delta_correct_B_minus_A": round(b - a, 4),
+ 674|                 "correct_or_partial_A": ap, "correct_or_partial_B": bp,
+ 675|                 "delta_cp_B_minus_A": round(bp - ap, 4),
+ 676|             }
+ 677|         return out
+ 678| 
+ 679|     # ---- PP 纠正率（组 B）----
+ 680|     pp_recs = judged[("B", "pp")]
+ 681|     pp_valid = [r for r in pp_recs.values() if r.get("ok") and r.get("verdict")]
+ 682|     pp_c = sum(1 for r in pp_valid if r["verdict"] == "correct")
+ 683|     pp_p = sum(1 for r in pp_valid if r["verdict"] == "partial")
+ 684|     pp_w = sum(1 for r in pp_valid if r["verdict"] == "wrong")
+ 685|     pp = {
+ 686|         "n_judged": len(pp_valid), "correct": pp_c, "partial": pp_p, "wrong": pp_w,
+ 687|         "correction_rate": rate(pp_c, len(pp_valid)),
+ 688|         "correction_or_partial_rate": rate(pp_c + pp_p, len(pp_valid)),
+ 689|         "wrong_ids": sorted(r["id"] for r in pp_valid if r["verdict"] == "wrong"),
+ 690|         "error_ids": sorted(r["id"] for r in pp_recs.values() if not (r.get("ok") and r.get("verdict"))),
+ 691|     }
+ 692| 
+ 693|     # ---- 在线调用统计 ----
+ 694|     gen_stat = {f"{s}_{g}": gen_counts(g, s) for g, s in (("A", "main"), ("B", "main"), ("B", "pp"))}
+ 695|     judge_stat = {}
+ 696|     for g, s in (("A", "main"), ("B", "main"), ("B", "pp")):
+ 697|         recs = judged[(g, s)]
+ 698|         okc = sum(1 for r in recs.values() if r.get("ok") and r.get("verdict"))
+ 699|         judge_stat[f"{s}_{g}"] = {"n": len(recs), "ok": okc, "error": len(recs) - okc,
+ 700|                                   "error_ids": sorted(r["id"] for r in recs.values()
+ 701|                                                       if not (r.get("ok") and r.get("verdict")))}
+ 702|     total_gen = sum(v["n"] for v in gen_stat.values())
+ 703|     total_gen_err = sum(v["error"] for v in gen_stat.values())
+ 704|     total_judge = sum(v["n"] for v in judge_stat.values())
+ 705|     total_judge_err = sum(v["error"] for v in judge_stat.values())
+ 706| 
+ 707|     # ---- 数据支撑的结论注记（从本轮真实产物读出，非臆断）----
+ 708|     b_l3_modes = {}
+ 709|     for r in program["main_program_assertions"]["detail"]["B"]:
+ 710|         if r["layer"] == "L3":
+ 711|             b_l3_modes[r["mode"]] = b_l3_modes.get(r["mode"], 0) + 1
+ 712|     fz_a = program["set48_existing_assertions"]["A"]
+ 713|     fz_b = program["set48_existing_assertions"]["B"]
+ 714|     findings = {
+ 715|         "L1_L2_图谱决胜": (
+ 716|             "L1(符号→模块)/L2(反向调用闭包)是纯 BM25 结构性无法完成的任务："
+ 717|             "L2 组 B correct=%.3f vs 组 A=%.3f(Δ+%.3f)，c+p Δ+%.3f——影响面闭包为图谱独有能力。"
+ 718|             % (main_acc["B"]["L2"]["correct_rate"], main_acc["A"]["L2"]["correct_rate"],
+ 719|                main_acc["B"]["L2"]["correct_rate"] - main_acc["A"]["L2"]["correct_rate"],
+ 720|                main_acc["B"]["L2"]["correct_or_partial_rate"] - main_acc["A"]["L2"]["correct_or_partial_rate"])
+ 721|         ),
+ 722|         "L3_基线反超_诚实负结果": (
+ 723|             "L3(设计溯源)组 A correct=%.3f 反超组 B=%.3f。根因(实测)：L3 是"
+ 724|             "「概念卡片即答案」的检索任务，纯 BM25 稳定命中精确概念文档；组 B 路由把部分"
+ 725|             "「为什么这个项目…」问句判为 meta→overview(本轮 L3 模式分布=%s)，overview 概览缺该"
+ 726|             "概念的设计理由与溯源提交，故个别题(如 L3-01)反而答不出。c+p 近平(%.3f vs %.3f)。"
+ 727|             "非稻草人对照的证据；亦暴露 build_repo_context 路由在 L3「why」问句上的过泛化(留 D3/D4)。"
+ 728|             % (main_acc["A"]["L3"]["correct_rate"], main_acc["B"]["L3"]["correct_rate"],
+ 729|                b_l3_modes, main_acc["A"]["L3"]["correct_or_partial_rate"],
+ 730|                main_acc["B"]["L3"]["correct_or_partial_rate"])
+ 731|         ),
+ 732|         "FZ_L0_AMB_48集": (
+ 733|             "FZ 词面召回两组同分同源(dev hit@3 A=%s/B=%s；test A=%s/B=%s)——纯检索任务图谱无增益(诚实平局)；"
+ 734|             "L0 元问题(A=%s/B=%s)与 AMB 消歧行为一致率(A=%s/B=%s)是图谱编排(overview 路由/消歧协议)独有，基线为 0。"
+ 735|             % (fz_a["FZ_dev_hit@3"], fz_b["FZ_dev_hit@3"], fz_a["FZ_test_hit@3"], fz_b["FZ_test_hit@3"],
+ 736|                fz_a["L0_pass_rate"], fz_b["L0_pass_rate"],
+ 737|                fz_a["AMB_behavior_consistency"], fz_b["AMB_behavior_consistency"])
+ 738|         ),
+ 739|         "L2_depth_下界说明": (
+ 740|             "组 B 用 build_repo_context 默认 impact_depth=2；L2 gold 闭包按 depth=3 生成。故组 B 的 L2"
+ 741|             "为 depth=2 下界(诚实未调参、未改冻结 src)，depth=3 预期更高。"
+ 742|         ),
+ 743|         "PP_端到端": (
+ 744|             "PP 前提校验(组 B 端到端在线)：纠正率 correct=%.3f(7/8)、c+p=%.3f；错误预设未被顺答，S7 闸门在线生效。"
+ 745|             % (pp["correction_rate"], pp["correction_or_partial_rate"])
+ 746|         ),
+ 747|     }
+ 748| 
+ 749|     result = {
+ 750|         "meta": {
+ 751|             "phase": "D · D2 两组对比全量评测（精简裁判方案）",
+ 752|             "groups": {
+ 753|                 "A": "BM25-only 无图谱基线（同分词器 topic.zh_terms + 同倒排语料；无路由/符号链接/impact/IMPLEMENTS展开/repo_card/premise）",
+ 754|                 "B": "图谱混合 build_repo_context 完整 v0.3（lexical 档，离线确定性）",
+ 755|             },
+ 756|             "online_channel": "grok-4.5 中转站（Anthropic 兼容 /v1/messages）；host/api_key 不入产物",
+ 757|             "semantic_mode": "lexical（S2 改写/L2 需阿里网关，本轮未消耗；数字为 lexical 下界，llm 档增益未计入）",
+ 758|             "judge_bias_note": "裁判与生成同模型(grok-4.5)存在自评偏置；两组同向作用，组间相对差有效。",
+ 759|             "graph": {"nodes": 510, "edges": 1698},
+ 760|             "git_head": None,  # 由 aggregate 时回填
+ 761|         },
+ 762|         "findings": findings,
+ 763|         "segment1_program_assertions": program,
+ 764|         "segment2_answer_accuracy": {
+ 765|             "main_by_layer": main_acc,
+ 766|             "group_delta": group_delta(),
+ 767|             "pp_correction_groupB": pp,
+ 768|         },
+ 769|         "online_call_stats": {
+ 770|             "generation": {"total": total_gen, "error": total_gen_err, "by_bucket": gen_stat},
+ 771|             "judgement": {"total": total_judge, "error": total_judge_err, "by_bucket": judge_stat},
+ 772|         },
+ 773|     }
+ 774|     # git head 回填
+ 775|     try:
+ 776|         import subprocess
+ 777|         result["meta"]["git_head"] = subprocess.check_output(
+ 778|             ["git", "rev-parse", "HEAD"], cwd=ROOT).decode().strip()
+ 779|     except Exception:
+ 780|         pass
+ 781|     with open(RESULTS, "w", encoding="utf-8") as f:
+ 782|         json.dump(result, f, ensure_ascii=False, indent=2)
+ 783|     return result
+ 784| 
+ 785| 
+ 786| # ---------------------------------------------------------------------------
+ 787| # CLI
+ 788| # ---------------------------------------------------------------------------
+ 789| 
+ 790| def main() -> int:
+ 791|     cmd = sys.argv[1] if len(sys.argv) > 1 else "all"
+ 792|     if cmd == "offline":
+ 793|         run_offline()
+ 794|         print("[offline] program metrics ->", os.path.relpath(PROG_CACHE, ROOT))
+ 795|     elif cmd == "probe":
+ 796|         return 0 if probe() else 3
+ 797|     elif cmd == "gen":
+ 798|         if not probe():
+ 799|             print("中转站不可用，中止。"); return 3
+ 800|         run_gen()
+ 801|     elif cmd == "judge":
+ 802|         if not probe():
+ 803|             print("中转站不可用，中止。"); return 3
+ 804|         run_judge()
+ 805|     elif cmd == "online":
+ 806|         if not probe():
+ 807|             print("中转站不可用，中止。"); return 3
+ 808|         run_gen(); run_judge()
+ 809|     elif cmd == "aggregate":
+ 810|         aggregate()
+ 811|         print("[aggregate] ->", os.path.relpath(RESULTS, ROOT))
+ 812|     elif cmd == "all":
+ 813|         run_offline()
+ 814|         if not probe():
+ 815|             print("中转站不可用，中止在线段。"); return 3
+ 816|         run_gen(); run_judge(); aggregate()
+ 817|         print("[all] done ->", os.path.relpath(RESULTS, ROOT))
+ 818|     else:
+ 819|         print(__doc__); return 1
+ 820|     return 0
+ 821| 
+ 822| 
+ 823| if __name__ == "__main__":
+ 824|     sys.exit(main())

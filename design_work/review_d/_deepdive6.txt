@@ -1,0 +1,307 @@
+#####################################################
+### L1-01  layer=L1
+QUESTION: 函数 _resolve_workspace 是在哪个源码文件里定义的？
+GOLD: ""
+--- GROUP A  mode=bm25_only  ctx_chars=1193 ---
+[A] VERDICT=wrong  reason=未指出定义文件src/orch/cli/main.py，声称无法确定
+[A] ANSWER: 根据提供的仓库上下文，**无法确定**函数 `_resolve_workspace` 在哪个源码文件里定义。
+
+当前检索到的文档中出现的相关符号/路径包括：
+- `_db_path`（`src/orch/scheduler/_dispatch.py`）
+- `cmd_stop`、`_find_thread_dirs`、`_thread_dirs_for_metrics`、`_consume_stop_marker`（均在 `src/orch/cli/main.py`）
+- 以及若干概念条目（事务边界、多线程 workspace 等）
+
+其中**没有**出现 `_resolve_workspace` 的定义位置或任何提及。上下文不足以回答该问题，不能编造。
+--- GROUP B  mode=symbol  ctx_chars=1292 ---
+[B] VERDICT=correct  reason=准确指出定义文件为src/orch/cli/main.py，与标准答案完全一致
+[B] ANSWER: 根据仓库上下文，函数 `_resolve_workspace` 定义在源码文件 **`src/orch/cli/main.py`** 中。
+
+#####################################################
+### L1-13  layer=L1
+QUESTION: 提交 9ae57374 到底改了哪些函数？
+GOLD: ""
+--- GROUP A  mode=bm25_only  ctx_chars=739 ---
+[A] VERDICT=wrong  reason=未答出_classify与render_view，声称无法回答
+[A] ANSWER: 根据当前提供的仓库上下文，**无法回答**「提交 `9ae57374` 到底改了哪些函数」。
+
+### 原因
+仓库上下文里只有与 **autocommit / 权限三件套 / last_ok_commit** 等相关的概念与片段，例如：
+
+- `autocommit`（概念与 `src/orch/scheduler/permissions.py` 中的函数说明）
+- `last_ok_commit` 生产回路
+- 权限三件套：`ensure_worktrees`、`audit_write_scope`、`autocommit`
+
+其中**没有**：
+
+- 该 commit 的 log / message  
+- diff / patch  
+- 变更文件列表  
+- 被修改的函数名  
+
+因此不能从现有材料推断 `9ae57374` 改了哪些函数；编造具体函数名也不合适。
+
+### 你可以本地这样查
+在仓库根目录执行：
+
+```bash
+# 看提交说明与涉及文件
+git show 9ae57374 --stat
+
+# 看完整 diff（含函数级变更）
+git show 9ae57374
+
+# 若只关心某路径
+git show 9ae57374 -- src/
+
+# 用 -W 尽量带上完整函数上下文（git 版本支持时）
+git show 9ae57374 -W
+```
+
+若你把 `git show 9ae57374` 的输出（或 `--stat` + 相关 diff）贴过来，我可以根据 diff 帮你整理：**改了哪些文件、哪些函数被增/删/改**。
+--- GROUP B  mode=topic  ctx_chars=2010 ---
+[B] VERDICT=wrong  reason=未答出改动函数，称无提交信息；标准为_classify、render_view
+[B] ANSWER: **结论：当前仓库上下文里没有提交 `9ae57374` 的信息，无法据此判断它改了哪些函数。**
+
+上下文里出现的相关提交只有例如：
+
+| SHA | 说明（上下文） |
+|-----|----------------|
+| `051a4a4d` | last_ok_commit 生产回路（autocommit sha 落 store…） |
+| `c792c69e` | M2 验收合入：权限三件套等 |
+| `5c6bb736` | 权限三件套 ensure_worktrees / audit_write_scope / autocommit + 接入 core |
+
+以及符号层面的 `autocommit`、`audit_write_scope`、`ensure_worktrees`、`_last_ok_commit`、`run_thread` 等，都**没有**关联到 `9ae57374`。
+
+按约定不能编造 diff 或函数列表。若要准确回答，需要在本仓库里查该提交，例如：
+
+```bash
+git show 9ae57374 --stat
+git show 9ae57374 --name-only
+# 或看函数级改动
+git show 9ae57374 -p -- '*.py'
+```
+
+把 `git show 9ae57374` 的输出（或完整 SHA）贴过来，我可以再根据实际 diff 列出改动的函数。
+
+#####################################################
+### L2-03  layer=L2
+QUESTION: ensure_worktrees 一旦改坏，三跳以内哪些函数会受影响？
+GOLD: ""
+--- GROUP A  mode=bm25_only  ctx_chars=1420 ---
+[A] VERDICT=wrong  reason=未命中任一gold闭包成员，仅臆测orch run/_role_worktree等
+[A] ANSWER: 根据当前仓库上下文，**无法给出严格的「三跳以内」函数影响清单**，原因是：BM25 片段只描述了概念、提交说明和个别符号，**没有调用图、没有 `ensure_worktrees` 的定义/调用点源码、也没有完整的依赖边**。下面仅基于已有上下文能确定的关系说明；超出部分不编造。
+
+## 上下文里能确定的关系
+
+### 1. 与 `ensure_worktrees` 同属「权限三件套」并接入 core
+- **`ensure_worktrees` / `audit_write_scope` / `autocommit`** 被描述为一套权限能力，并**接入 core**（§8.1 / §8.2 / §4.5 相关提交说明）。
+- 若 `ensure_worktrees` 改坏，最直接相关的是：
+  - **隔离 worktree 是否建成功**
+  - **§8.2 审计接线是否生效**
+  - 进而可能连带影响同套的 **`audit_write_scope`、`autocommit` 所依赖的「有合法隔离工作区」前提**（上下文称它们为三件套，但未给出具体谁调谁）。
+
+### 2. 运行入口侧：`orch run` 的 worktree 隔离装配
+- 提交与概念文档写明：`config` 有 **`target_repo`** 时，**`ensure_worktrees`** 建隔离 worktree 并做 §8.2 审计接线；无则回退现状。
+- 因此 **`orch run` 路径上的 worktree 隔离装配** 会直接受 `ensure_worktrees` 行为影响（成功/失败/回退语义）。
+
+### 3. 一跳消费侧线索：`_role_worktree`
+- 符号 **`_role_worktree`**（`src/orch/scheduler/core.py`）：按 role 从 **`config['worktrees']`** 取 worktree。
+- 上下文**未写明** `config['worktrees']` 一定由 `ensure_worktrees` 写入，但从「`ensure_worktrees` 建隔离 worktree」的描述，**合理推断**是：  
+  **`ensure_worktrees` →（写 `config['worktrees']`）→ `_role_worktree`**  
+  这最多算「数据依赖上的 1～2 跳」，**不是已证实的调用边**。
+
+## 三跳以内「可能」受影响的范围（仅推断，非调用图结论）
+
+| 跳数（推断） | 符号/能力 | 依据强度 |
+|-------------|-----------|----------|
+| 0 | `ensure_worktrees` 自身 | 直接 |
+| 1（入口/装配） | `orch run` 的 worktree 隔离装配逻辑 | 提交/概念文档明确接线 |
+| 1（套件） | `audit_write_scope`、`autocommit`（作为权限三件套与 core 接入） | 概念级并列，无调用细节 |
+| 1～2（数据消费） | `_role_worktree`（读 `config['worktrees']`） | 有符号与读取方式，无写入边证明 |
+| 更远 | 多角色写代码、§8.2 拦越权、协商返工、合并 main 等端到端流程 | 提交叙述的产品路径，**不是函数级三跳图** |
+
+## 结论与缺口
+
+- **能肯定**：`ensure_worktrees` 改坏会直接影响「有 `target_repo` 时的隔离 worktree + §8.2 审计接线」，并牵动权限三件套与 core 接入、`orch run` 隔离装配。
+- **不能肯定**：三跳以内的**具体函数名列表**（例如谁调用 `ensure_worktrees`、它内部调谁、谁再调 `_role_worktree` / `audit_write_scope` / `autocommit`）。
+- **上下文不足**：缺少 `ensure_worktrees` 实现、调用方、以及 `core` 内调度链路的源码/调用图。
+
+若要严谨回答「三跳以内哪些函数」，需要补充至少其一：  
+`ensure_worktrees` 定义与引用搜索、`src/orch/scheduler/core.py` 相关片段、或仓库内的调用图/影响面分析工具输出。当前仅凭 BM25 片段**不能**编造完整函数清单。
+--- GROUP B  mode=symbol  ctx_chars=1201 ---
+[B] VERDICT=partial  reason=命中3/4闭包，缺_make_handler.Handler._route_api
+[B] ANSWER: 根据仓库上下文里的 **CALLS 反向 BFS（depth=2）**，`ensure_worktrees` 改坏后，**已知**会受影响的调用链如下。
+
+## 调用影响（反向，从被调到调用方）
+
+| 跳数 | 函数 | 说明 |
+|------|------|------|
+| **1 跳** | `_build_adapters_from_config` | **直接调用方** |
+| **2 跳** | `cmd_run` | 经 `_build_adapters_from_config` 间接依赖 |
+| **2 跳** | `_ep_thread_run` | 同上 |
+
+## 受影响模块
+
+- `src/orch/scheduler/permissions.py`（`ensure_worktrees` 自身所在）
+- `src/orch/cli/main.py`（含 `cmd_run` 一侧）
+- `src/orch/web/server.py`（含 `_ep_thread_run` 一侧）
+
+受影响端点：上下文写明为 **（无）**。
+
+## 关于「三跳以内」的缺口
+
+上下文明确写了：
+
+> 调用方闭包在 **depth=2** 处截断，**尚有更上游调用方**
+
+因此：
+
+- **1–2 跳**：可确定为上面列出的 `_build_adapters_from_config` → `cmd_run` / `_ep_thread_run`
+- **第 3 跳**：图谱未展开，**无法从现有上下文列出具体函数名**；只能判断存在更上游调用方，但名称未知
+
+若需要完整的三跳列表，需要在仓库上把 CALLS 反向 BFS 扩到 depth≥3（或再查 `_build_adapters_from_config` / `cmd_run` / `_ep_thread_run` 的调用方）。当前给定图谱不足以编造第 3 跳函数名。
+
+## 相关背景（非调用图，仅供定位）
+
+- 属 **权限三件套** 之一（worktree 隔离，§8.1），与 `audit_write_scope`、`autocommit` 一并接入 core
+- 相关提交：`5c6bb736`（m2/T3 引入）、`c792c69e`（M2 验收合入）
+
+**结论（严格按上下文）**：`ensure_worktrees` 改坏，三跳以内**已能点名**的受影响函数是 **`_build_adapters_from_config`（1 跳）** 以及 **`cmd_run`、`_ep_thread_run`（2 跳）**；第 3 跳及更上游存在但未在 depth=2 闭包中列出。
+
+#####################################################
+### L2-18  layer=L2
+QUESTION: render_view 最终会调到 _summarize，这条链上中间经过哪些函数？
+GOLD: ""
+--- GROUP A  mode=bm25_only  ctx_chars=1817 ---
+[A] VERDICT=wrong  reason=未命中_classify与_bg_line，声称无法还原链
+[A] ANSWER: 根据当前提供的仓库上下文，**无法完整、可靠地还原 `render_view` → `_summarize` 的中间调用链**。
+
+## 上下文里能确认的片段
+
+| 环节 | 说明 | 来源 |
+|------|------|------|
+| 入口侧 | `_assemble_view`（`src/orch/scheduler/core.py`）会调用 `render.render_view` 组装完整四层视图 | [2] |
+| 终点侧 | `_summarize` 用于背景压缩；`bg_orig` / `bg_summarized` 按同口径 body token 统计 | [4][6] |
+| 相关模块 | render 相关逻辑在 `src/orch/render/`（如 `__init__.py` 中有 `_role_authored_ids` 等） | [1] |
+
+也就是说，上下文只保证：
+
+- **调度侧**：`_assemble_view` → `render.render_view`
+- **渲染侧**：存在 `_summarize`，并参与背景摘要与压缩比指标
+
+**没有**给出 `render_view` 内部实现，也没有列出它到 `_summarize` 之间经过哪些函数（例如是否经 `_assemble_*`、背景层构建、`render_delta` 路径等）。
+
+## 结论
+
+在仅有这批 BM25 片段的前提下：
+
+- **不能**列出 `render_view` 最终调到 `_summarize` 时的完整中间函数序列；
+- 若要精确回答，需要直接查看 `src/orch/render/` 中 `render_view` 的实现及其调用的背景/摘要相关函数（以及 `test_render` 中对 `_summarize` 的覆盖）。
+
+如果你能补充 `render_view` / `_summarize` 相关源码片段，或扩大检索范围（例如 `src/orch/render` 下定义与引用），可以再据此画出完整调用链。
+--- GROUP B  mode=overview  ctx_chars=1480 ---
+[B] VERDICT=wrong  reason=未命中任何闭包成员，未给出中间函数
+[B] ANSWER: 仓库上下文未给出 `render_view` → `_summarize` 的调用链细节，正在尝试查找公开源码以还原中间函数。
+
+#####################################################
+### L3-01  layer=L3
+QUESTION: 为什么这个项目要给每次运行套一层权限保护——工作区隔离、写域审计再加自动留存？这套设计的依据是什么？
+GOLD: ""
+--- GROUP A  mode=bm25_only  ctx_chars=1621 ---
+[A] VERDICT=correct  reason=讲清三件套设计理由并命中概念与全部要点，来源概念已指
+[A] ANSWER: 根据当前仓库上下文（概念与函数检索结果），可以这样理解这套设计；更细的“为什么做产品决策”类说明在已给片段里并不完整。
+
+## 这套保护是什么
+
+项目把单次运行上的权限安全收成 **「权限三件套」**，并接入 core：
+
+| 组件 | 作用（上下文表述） |
+|------|-------------------|
+| **ensure_worktrees** | 为 `write_scope` 非空的角色建 **worktree 隔离**（独立工作目录/工作区） |
+| **audit_write_scope** | **写域审计**（与 §8.2 审计接线相关） |
+| **autocommit** | **自动提交保护**（自动留存） |
+
+配置里有 **target_repo** 时：`orch run` / 装配路径会 `ensure_worktrees` 建隔离 worktree，并做 §8.2 审计接线；**没有 target_repo 则回退现状**。
+
+因此“每次运行套一层”在实现叙事上，主要是：有目标库时隔离工作树 + 写域审计接线 + autocommit 留存，而不是无条件改写所有路径。
+
+## 设计依据（能从上下文直接推出的）
+
+上下文把这三件套明确标成：
+
+- **权限安全 / 防越权三件套**
+- **工作区隔离权限**
+- **自动提交保护**
+
+对应意图可以概括为三层：
+
+1. **工作区隔离（ensure_worktrees）**  
+   可写角色各自 worktree，避免多角色/多次运行直接改同一工作树、互相踩踏或越界写。
+
+2. **写域审计（audit_write_scope + §8.2）**  
+   在隔离之外再约束/记录“能写哪里”，对接防越权，而不是只靠目录分开。
+
+3. **自动留存（autocommit）**  
+   把运行结果落到可追溯的提交/留存上，形成“自动提交保护”，便于回滚、审计与复盘。
+
+三者一起，形成：**隔离执行面 → 审计写边界 → 自动固化结果** 的闭环，并挂在 core / orch 运行路径上（有 `target_repo` 时完整装配，否则回退）。
+
+## 上下文不足的部分（避免编造）
+
+已给 BM25 片段主要是概念标签与接线说明，**没有**展开例如：
+
+- 完整威胁模型或事故驱动的背景；
+- 为何选 git worktree 而不是别的隔离手段；
+- §8.2 审计的具体规则与失败策略；
+- autocommit 的触发条件、冲突处理、与人工 commit 的关系。
+
+若需要“依据文档原文”级别的设计说明，需要仓库中的设计/规格章节（例如权限三件套、§8.2、orch run 装配）正文；当前 Top 文档只到概念与函数摘要层。
+
+**一句话**：这套设计在仓库叙事里是 **防越权 + 工作区隔离 + 自动提交保护** 的权限三件套；有 `target_repo` 时用 worktree 隔离装配并接写域审计，再配合 autocommit 留存，保证每次运行有独立执行面、可审计写边界和可追溯结果。
+--- GROUP B  mode=overview  ctx_chars=1480 ---
+[B] VERDICT=wrong  reason=未讲清设计理由与来源，未触及权限三件套或提交哈希，答非所问
+[B] ANSWER: The provided repository context is insufficient to answer this question with a grounded rationale.
+
+What the context *does* show:
+- Multi-thread **workspace** execution appears in `async_core.py` (as “§9.3 多线程 workspace 运行”).
+- A **state layer** (`store`) handles event logs, dispatch tables, blackboards, session tables, and other persistence (spec §4).
+- Scheduler core / async core implement the main loop, verification hooks, and termination checklist (spec §5 / §8).
+- There is a chaos harness (mock layer) and render/store/adapter separation, but **no** description of “权限保护”, “工作区隔离”, “写域审计”, or “自动留存” as a deliberate protection layer around each run, nor any design basis, threat model, or spec section that justifies wrapping every run that way.
+
+Because the given overview, modules, hot functions, and concepts do not contain the design rationale (or even a clear implementation description) for that specific combination of protections, I cannot invent one. If you can supply the relevant spec sections, design docs, or code comments that discuss workspace isolation / write-domain audit / retention, I can reason from those.
+
+#####################################################
+### L3-05  layer=L3
+QUESTION: 门禁决策的应用为什么要做成幂等的？
+GOLD: ""
+--- GROUP A  mode=bm25_only  ctx_chars=1414 ---
+[A] VERDICT=correct  reason=讲清重复调用只生效一次理由，并指明apply_gate_decision幂等化概念
+[A] ANSWER: **原因：将 `apply_gate_decision` 做成幂等，是为了“重复调用不重复生效、多次执行结果一样”，从而防止门禁决策被重复应用（重复请求只生效一次）。**
+
+具体依据仓库中的相关概念与能力：
+
+- **核心目标**：`apply_gate_decision` 幂等化的直接定义就是——重复调用不重复生效、多次执行结果一致、防止决策重复应用、重复请求只生效一次。
+- **恢复与查表复用**：按 `corr` 定位已有 `gate_decision` 事件（`_find_gate_decision`），恢复时只查表；`_find_informal_gate` 按生成形 `corr` 只查表反解（事件存在且 `to` 含 human），`gate_decision` 的回填 / mark_done / resume / 幂等都复用原路径。这样在恢复场景下不会重新应用决策。
+- **崩溃/重发模拟**：`_IdempotentMockAdapter` 用于模拟崩溃恢复后重发不重做，进一步印证幂等是为了在重试/恢复场景下避免副作用重复。
+
+**总结**：门禁决策一旦应用（放行/拒绝等）会改变系统状态；若不幂等，网络重试、调度重发、崩溃恢复后的重复调用会导致决策被多次生效，产生错误副作用。做成幂等后，靠 `corr` 查已有事件 + 复用原路径，保证“只生效一次、结果一致”。
+--- GROUP B  mode=topic  ctx_chars=2565 ---
+[B] VERDICT=correct  reason=讲清幂等理由并指出来源(概念+提交610b4127)，覆盖合并恢复路径、重复只生效一次及§9.1/§16
+[B] ANSWER: 根据仓库上下文，**门禁决策应用（`apply_gate_decision`）做成幂等**的核心原因与**恢复路径**和**崩溃/重试安全**直接相关，而非普通业务逻辑需求。
+
+### 主要动机（来自相关概念与提交）
+- **恢复路径与 target pending 合并**（提交 `610b4127`，m4/T5 R-a）：  
+  将恢复路径与正常 target pending 路径合并，同时对 `apply_gate_decision` 做幂等化，以修复 §9.1 / §16.10。  
+  幂等保证在恢复场景下重复调用（或与正常路径交叉）时，结果一致、不会重复执行特权/副作用。
+
+- **崩溃恢复后重发不重做**：  
+  仓库中有 `_IdempotentMockAdapter`（`src/orch/chaos/__init__.py`），专门模拟“崩溃恢复后重发不重做”。门禁决策应用必须幂等，才能在混沌/恢复测试中安全重放 envelope 或 gate_decision，而不重复 mark_done、resume 或执行系统操作。相关测试达到 **50 轮 100% 通过**。
+
+- **非正式门禁 / corr 反解路径的复用**（`_find_informal_gate` + `apply_gate_decision`）：  
+  按生成形 corr 查表反解（事件存在且 to 含 human），gate_decision 的回填、mark_done、resume 走**幂等复用原路径**。  
+  这样任意 `to=human` 的挂起信封在 approve 时都能安全恢复，即使 corr 缺省生成或多次触发，也不会产生重复状态变更。
+
+### 总结
+做成幂等，是为了让 `apply_gate_decision`（签名：`apply_gate_decision(store, config, adapters, *, corr, approve, sender='human')`）在**调度恢复、崩溃重发、非正式门禁反解**等场景下可安全重复调用，保证状态只推进一次，并与正常 pending 路径统一。这属于调度核心环 + 恢复机制（§5/§9/§10 相关）的韧性要求。
+
+上下文未提供更细的源码注释或设计文档原文解释“为什么”，以上均直接来自命中的概念描述、函数定位与相关提交信息。

@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import time
 import urllib.request
@@ -176,9 +177,39 @@ def entity_recall_token(store: GraphStore, eid: str) -> str:
     return eid.rsplit("::", 1)[-1]
 
 
+_IDENT_CH = re.compile(r"[A-Za-z0-9_]")
+
+
+def _has_identifier_token(tok: str, text: str) -> bool:
+    """标识符词边界匹配：``tok`` 两侧不得为 ``[A-Za-z0-9_]``。
+
+    防短叶名（如 ``invoke``）被更长标识符（``invoker``…）子串误命中而虚高召回。
+    """
+    if not tok:
+        return False
+    for m in re.finditer(re.escape(tok), text):
+        s, e = m.start(), m.end()
+        before_ok = s == 0 or not _IDENT_CH.match(text[s - 1])
+        after_ok = e == len(text) or not _IDENT_CH.match(text[e])
+        if before_ok and after_ok:
+            return True
+    return False
+
+
 def context_has_entity(store: GraphStore, context_text: str, eid: str) -> bool:
+    # DR-01（2026-07-23 Phase D 独立核验补审硬化）：Function/Class 叶名走标识符
+    # 词边界匹配，Module 路径 / Commit 短 sha / Concept 名保持原子串（含分隔符或
+    # 足够长，已证零误命中）。本轮冻结数据集 60 题全部 gold Fn/Class 叶名 ≥6 字符，
+    # 词边界与原子串在 6/6 层×组格逐格 byte-identical（见 design_work/verify-d.md），
+    # 故此硬化对已冻结 d2_results.json 数字零影响，冻结产物不重算。
     tok = entity_recall_token(store, eid)
-    return bool(tok) and tok in context_text
+    if not tok:
+        return False
+    node = store.get_node(eid)
+    label = node.get("label", "") if node else ""
+    if label in ("Function", "Class"):
+        return _has_identifier_token(tok, context_text)
+    return tok in context_text
 
 
 # ---------------------------------------------------------------------------
@@ -194,7 +225,8 @@ def run_offline() -> dict:
     store = get_store()
     main_rows = load_jsonl(DATASET_MAIN)
     rows48 = load_jsonl(DATASET_48)
-    g = json.load(open(GRAPH, encoding="utf-8"))
+    with open(GRAPH, encoding="utf-8") as _gf:   # DR-03：with 管理句柄，避免文件句柄泄漏
+        g = json.load(_gf)
     edges48 = g["edges"]
 
     # ---- 主集：逐题两组检索 + 分层 gold 召回 ----
@@ -741,10 +773,18 @@ def aggregate() -> dict:
             "为 depth=2 下界(诚实未调参、未改冻结 src)，depth=3 预期更高。"
         ),
         "PP_端到端": (
-            "PP 前提校验(组 B 端到端在线)：纠正率 correct=%.3f(7/8)、c+p=%.3f；错误预设未被顺答，S7 闸门在线生效。"
-            % (pp["correction_rate"], pp["correction_or_partial_rate"])
+            # DR-02：分数从 pp 计数派生，去硬编码 "(7/8)"，防重跑时文本与数值自相矛盾。
+            "PP 前提校验(组 B 端到端在线)：纠正率 correct=%.3f(%d/%d)、c+p=%.3f；错误预设未被顺答，S7 闸门在线生效。"
+            % (pp["correction_rate"], pp["correct"], pp["n_judged"], pp["correction_or_partial_rate"])
         ),
     }
+
+    # DR-04（2026-07-23 Phase D 独立核验补审）：图规模从真实 graph.json 动态读，去硬编码
+    # 510/1698，防图谱更新后 meta 失真（对齐 DR-02 去硬编码原则）。本轮真实图谱恰为
+    # nodes=510/edges=1698，与原硬编码逐值一致，故对已冻结 d2_results.json 零影响。
+    with open(GRAPH, encoding="utf-8") as _gf:
+        _graph = json.load(_gf)
+    graph_meta = {"nodes": len(_graph["nodes"]), "edges": len(_graph["edges"])}
 
     result = {
         "meta": {
@@ -756,7 +796,7 @@ def aggregate() -> dict:
             "online_channel": "grok-4.5 中转站（Anthropic 兼容 /v1/messages）；host/api_key 不入产物",
             "semantic_mode": "lexical（S2 改写/L2 需阿里网关，本轮未消耗；数字为 lexical 下界，llm 档增益未计入）",
             "judge_bias_note": "裁判与生成同模型(grok-4.5)存在自评偏置；两组同向作用，组间相对差有效。",
-            "graph": {"nodes": 510, "edges": 1698},
+            "graph": graph_meta,   # DR-04：动态读自 output/graph.json（本轮=510/1698）
             "git_head": None,  # 由 aggregate 时回填
         },
         "findings": findings,

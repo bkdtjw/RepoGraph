@@ -1,0 +1,49 @@
+# 审查报告
+
+## 维度 1：两组口径隔离
+
+**未见 blocker/major 问题。**
+
+- `baseline_bm25.py` 仅调用 `topic_recall`（纯 BM25）+ `store.get_node` 读节点自身字段（path/file），无任何边遍历/闭包/符号链接。
+- `run_d2.py:131-136` 分派干净：A→`build_bm25_context`，B→`build_repo_context`，无交叉。
+- mode/route_label 恒为 `"bm25_only"`（baseline_bm25.py:106-107），不会与图谱模式 {symbol,topic,llm,overview,global,out_of_scope} 混淆，门禁无误判风险。
+
+## 维度 2：程序断言逻辑
+
+| severity | 位置 | 问题 | 依据 | 建议 |
+|----------|------|------|------|------|
+| **major** | run_d2.py:169 | Function/Class 的 recall token 取 qualname 叶名（`rsplit(".",1)[-1]`），无常见短名过滤 | d1_goldcheck.py:89 已列 {"invoke","__init__","run","main","check"} 为高碰撞名，但 `entity_recall_token` 未做同等过滤；叶名 "run"/"get" 在任意上下文中几乎必然子串命中 → **假阳性**，虚增组 A/B 的 context_hit | 复用 distinctive 的黑名单或要求 token≥5 字符 |
+| **major** | run_d2.py:174-176 | Concept recall token = `node["name"]`，无最小长度守卫 | 若概念名≤2 字（如"网关"2字、"锁"1字），`tok in context_text` 几乎恒真 → 假阳性 | 加 `len(tok)>=3` 守卫，或退化为 eid 尾段 |
+| **minor** | run_d2.py:173 vs d1_goldcheck.py:96 vs run_d2.py:153 | Commit 短 sha 截断长度不一致：recall token=8, distinctive/display=12 | 8 字符 hex 碰撞概率极低（~4×10⁹ 空间），实际风险小，但口径不统一增加审计困惑 | 统一为 12 或统一为 8 |
+| **nit** | run_d2.py:235-250 | `layer_summary` / `judge48` 统计逻辑 | 分母正确（items 按 layer 过滤），rate 分母为 len(items)/len(subset)，未见错误 | — |
+
+## 维度 3：统计加总
+
+| severity | 位置 | 问题 | 依据 | 建议 |
+|----------|------|------|------|------|
+| **未见问题** | run_d2.py:642-660 | `layer_answer_acc` 分母 = `valid`（ok∧verdict），error 单独列 `error_ids` 不入分母 | c+p+w 必 == n（verdict 三值互斥），error 不稀释 | — |
+| **未见问题** | run_d2.py:693-705 | `online_call_stats` 加总 | total = Σ by_bucket，error = n - ok，自洽 | — |
+| **未见问题** | run_d2.py:100-107 | `load_done` 同 id 后写覆盖 | run_gen/run_judge 在循环内先 load_done 再 append，正常流不产生重复；crash 后续跑以最后一条为准，error 记录不满足 ok_pred 会被重试覆盖 | — |
+
+## 维度 4：d1_goldcheck
+
+| severity | 位置 | 问题 | 依据 | 建议 |
+|----------|------|------|------|------|
+| **minor** | d1_goldcheck.py:53-65 | `module_of` 仅上溯 2 层（Fn→Class→Module） | 若图谱存在 Fn→Class→Class→Module 的 3 层嵌套则漏算；Python 典型 2 层足够，但非通用保证 | 改为 while 循环向上直到 Module 或无 parent |
+| **minor** | d1_goldcheck.py:206 | 泄漏检查用 `s in question` 子串匹配 | "process" in "processing" 为 True → 可能误报泄漏（保守方向，不会放过真泄漏，但增加人工复核量） | 加词边界检查或 `re.search(r'\b'+re.escape(s)+r'\b', q)` |
+| **nit** | d1_goldcheck.py:220-226 | blast_radius 交叉校验依赖 metrics.py 的语义（含/不含自身） | rev_closure 返回 depth≥1（不含自身）；若 blast_radius 含自身则 off-by-1 | 在注释中锁定 blast_radius 定义或加 `br in (len, len+1)` 容差 |
+| **未见问题** | d1_goldcheck.py:106-168 | 各 subtype 直接边重算 | 逐条核对：fn_module/fn_callers/concept_impl_fns/commit_mod_fns/fn_concepts/class_module/rev_calls_closure/impact_modules/calls_chain/concept_fns_commits/commit_fns_concepts/design_provenance 均与图谱边语义一致 | — |
+
+## 维度 5：真实性风险
+
+| severity | 位置 | 问题 | 依据 | 建议 |
+|----------|------|------|------|------|
+| **blocker** | run_d2.py:744 | findings 字符串中硬编码 `"(7/8)"` | 若实际 pp_valid≠8 或 correct≠7（如 1 条 judge error → 7 valid 6 correct），插值 `%.3f` 显示 0.857 但括号仍写 "(7/8)" → **产物自相矛盾，伪造绿** | 改为 `"(%d/%d)" % (pp_c, len(pp_valid))` |
+| **minor** | run_d2.py:759 | `"graph": {"nodes": 510, "edges": 1698}` 硬编码 | 图谱更新后此元数据失真，虽非指标但影响可复现审计 | 从 `g["nodes"]`/`g["edges"]` 动态取 len |
+| **未见问题** | 全局 | error 是否计入分母稀释 | 已确认 layer_answer_acc / pp 均只以 valid 为分母，error 独立列出 | — |
+| **未见问题** | 全局 | api_key / host 泄漏 | call_api 返回值不含 key/host；rec 写盘字段不含 key；endpoint 写死 `"<relay>/v1/messages"` | — |
+| **未见问题** | 全局 | 伪造绿路径 | circuit breaker 连续 6 失败即 sys.exit(3)；gen 失败 ok=False 不进入 judge；judge parse 失败 verdict=None → ok=False → 不入 valid 分母 | — |
+
+## 总体结论
+
+代码整体工程质量高、隔离干净、error 处理诚实；**唯一 blocker** 是 `run_d2.py:744` 硬编码 "(7/8)" 可使产物数据自相矛盾（伪造绿），须立即修为动态插值；两个 major（recall token 短名/短概念无守卫）会在程序断言段引入系统性假阳性、同时虚增两组命中率（对组间差影响较小但绝对值不可信），建议加黑名单+最小长度过滤后重跑 offline 段。
