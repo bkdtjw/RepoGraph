@@ -2,7 +2,7 @@
   "meta": {
     "phase": "A (治理与再基线) · 任务 A4 门禁基线",
     "git": {
-      "head": "e711122b8b0ea10ef81fcfe92eb0dab54bee6422",
+      "head": "c97107801cf5a7f1c765c3f0d0a969163183ca67",
       "tags_at_head": [],
       "expected_tag": "rebaseline-20260723",
       "tag_bound": false
@@ -112,10 +112,10 @@
       "b3_red": false
     },
     "主集三层准确率": {
-      "threshold": "较 v0.1 下降 ≤3pt",
+      "threshold": "较 v0.1 下降 ≤3pt → 降级为「v0.2 首测基线记录」",
       "effective": "Phase D",
-      "status": "PENDING",
-      "note": "主集 V4 未落地，无对照"
+      "status": "BASELINE-REC(v0.2)",
+      "note": "v0.1 主集从未物化（V4/D-P3 核实：eval/ 原无任何 L1/L2/L3 集），「较 v0.1 下降 ≤3pt」无对照可比，本门禁条降级为 v0.2 首测基线记录（非 pass/fail）；Phase D D2 两组三层准确率见 eval/report.md §1（本 gate 仅跑 48 题，不含主集 60 题）"
     },
     "路由准确率(48题标注)": {
       "threshold": "≥ 0.9",

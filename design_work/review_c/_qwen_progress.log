@@ -16,3 +16,5 @@ FAIL J_context_route glm rc=124 300s
 RETRY K1_server_rewrite_premise glm rc=124 empty=yes wait60
 FAIL K1_server_rewrite_premise glm rc=124 300s
 RETRY K2_server_event_focus glm rc=124 empty=yes wait60
+FAIL K2_server_event_focus glm rc=124 301s
+RETRY L_server_apichat glm rc=124 empty=yes wait60

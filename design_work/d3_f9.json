@@ -1,0 +1,954 @@
+{
+  "meta": {
+    "purpose": "D3 F9 定量：FZ 失败题词面不可达占比 = 向量层缺失代价",
+    "entry": "build_repo_context (离线 lexical) + topic_recall(min_score=0) 全量排名",
+    "graph": {
+      "nodes": 510,
+      "edges": 1698,
+      "corpus_docs": 363
+    },
+    "min_score_prod": 1.0,
+    "gold_equiv_rule": "gold + IMPLEMENTS/DESCRIBES 1-hop（与 gate.judge_fz 一致）",
+    "classifier": "词面不可达=gold_equiv 无任一语料文档与查询词元有交集(BM25 结构性不可达); 排序失利=有交集但最优排名>3 或分数<min_score; 其他=残余"
+  },
+  "F9": {
+    "subset": "FZ_test (frozen held-out, n=10)",
+    "hit@3": 0.8,
+    "n_fail": 2,
+    "fail_ids": [
+      "FZ-t03",
+      "FZ-t04"
+    ],
+    "lexically_unreachable_ids": [
+      "FZ-t03",
+      "FZ-t04"
+    ],
+    "rank_loss_ids": [],
+    "F9_lexically_unreachable_share_of_fails": 1.0,
+    "F9_lexically_unreachable_share_of_fztest": 0.2,
+    "reading": "FZ-test 失败题 100% 归因于词面不可达（0 排序失利、0 其他）；冻结留出集上向量层缺失的净代价 = 2/10 = 0.2（BM25 结构性够不到、只有语义近邻可召回的题占比），其余 8/10 由 lexical 路径 hit@3。"
+  },
+  "fz_test": {
+    "summary": {
+      "n": 10,
+      "hit@3_n": 8,
+      "hit@3": 0.8,
+      "n_fail": 2,
+      "fail_ids": [
+        "FZ-t03",
+        "FZ-t04"
+      ],
+      "cls_counts": {
+        "词面不可达": 2,
+        "排序失利": 0,
+        "其他": 0
+      },
+      "unreachable_ids": [
+        "FZ-t03",
+        "FZ-t04"
+      ],
+      "rank_loss_ids": [],
+      "unreachable_share_of_fails": 1.0,
+      "unreachable_share_of_subset": 0.2
+    },
+    "per_question": [
+      {
+        "id": "FZ-t01",
+        "question": "把界面那几块拼装出来显示",
+        "gold_entity": "concept::视图组装",
+        "gold_equiv_size": 5,
+        "gold_equiv_in_corpus": [
+          "concept::视图组装",
+          "multi-agent-orch::src/orch/render/__init__.py",
+          "multi-agent-orch::src/orch/render/__init__.py::render_delta",
+          "multi-agent-orch::src/orch/render/__init__.py::render_event_third_person",
+          "multi-agent-orch::src/orch/render/__init__.py::render_view"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": true,
+        "hit@3": true,
+        "top3_anchors": [
+          "concept::视图组装",
+          "concept::用户界面-cli",
+          "concept::用户界面-cli-子集"
+        ],
+        "n_q_terms": 29,
+        "gold_equiv_ranked": [
+          {
+            "node_id": "concept::视图组装",
+            "rank_1based": 1,
+            "score": 12.1949,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "拼装",
+              "显示",
+              "界面"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/render/__init__.py::render_event_third_person",
+            "rank_1based": 18,
+            "score": 2.4176,
+            "surfaced_top8_minscore": false,
+            "lexical_intersection": [
+              "显示"
+            ]
+          }
+        ],
+        "best_equiv_rank_1based": 1,
+        "best_equiv_score": 12.1949,
+        "classification": "pass"
+      },
+      {
+        "id": "FZ-t02",
+        "question": "大家共用的留言板重新拼一遍",
+        "gold_entity": "concept::黑板投影与rebuild",
+        "gold_equiv_size": 7,
+        "gold_equiv_in_corpus": [
+          "concept::黑板投影与rebuild",
+          "multi-agent-orch::commit::4ecabcb3b0baae62b81f819628a36932905a7d67",
+          "multi-agent-orch::src/orch/store/__init__.py::Store._write_board",
+          "multi-agent-orch::src/orch/store/__init__.py::_render_board",
+          "multi-agent-orch::src/orch/store/__init__.py::apply_blackboard_ops"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": false,
+        "hit@3": true,
+        "top3_anchors": [
+          "concept::停机重启",
+          "multi-agent-orch::src/orch/store/__init__.py::_render_board",
+          "concept::迟到在途回复展示标记"
+        ],
+        "n_q_terms": 32,
+        "gold_equiv_ranked": [
+          {
+            "node_id": "multi-agent-orch::src/orch/store/__init__.py::_render_board",
+            "rank_1based": 2,
+            "score": 5.1853,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "重新"
+            ]
+          }
+        ],
+        "best_equiv_rank_1based": 2,
+        "best_equiv_score": 5.1853,
+        "classification": "pass"
+      },
+      {
+        "id": "FZ-t03",
+        "question": "喊了暂停之后系统怎么响应",
+        "gold_entity": "concept::stop-标志消费",
+        "gold_equiv_size": 4,
+        "gold_equiv_in_corpus": [
+          "concept::stop-标志消费",
+          "multi-agent-orch::commit::ca6e02fcc8566aa484e3cd2e6a7e329c46c98a73",
+          "multi-agent-orch::src/orch/cli/main.py::_consume_stop_marker",
+          "multi-agent-orch::src/orch/cli/main.py::cmd_stop"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": false,
+        "hit@3": false,
+        "top3_anchors": [
+          "multi-agent-orch::src/orch/web/server.py::_make_handler.Handler._send_json",
+          "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event",
+          "concept::mock-适配器"
+        ],
+        "n_q_terms": 29,
+        "gold_equiv_ranked": [],
+        "best_equiv_rank_1based": null,
+        "best_equiv_score": 0.0,
+        "classification": "词面不可达"
+      },
+      {
+        "id": "FZ-t04",
+        "question": "回话来晚了怎么在界面上打个记号",
+        "gold_entity": "concept::迟到在途回复展示标记",
+        "gold_equiv_size": 7,
+        "gold_equiv_in_corpus": [
+          "concept::迟到在途回复展示标记",
+          "multi-agent-orch::commit::1795d6682259c7de56e0a1baad00f3754fb0907c",
+          "multi-agent-orch::src/orch/cli/main.py::_late_after_id",
+          "multi-agent-orch::src/orch/cli/main.py::_render_replay_line",
+          "multi-agent-orch::src/orch/cli/main.py::_render_replay_lines",
+          "multi-agent-orch::src/orch/cli/main.py::cmd_replay"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": false,
+        "hit@3": false,
+        "top3_anchors": [
+          "concept::用户界面-cli",
+          "concept::用户界面-cli-子集",
+          "multi-agent-orch::src/orch/cli/__init__.py"
+        ],
+        "n_q_terms": 38,
+        "gold_equiv_ranked": [],
+        "best_equiv_rank_1based": null,
+        "best_equiv_score": 0.0,
+        "classification": "词面不可达"
+      },
+      {
+        "id": "FZ-t05",
+        "question": "把各种杂牌后端捏成统一一个样子调用",
+        "gold_entity": "concept::适配层",
+        "gold_equiv_size": 12,
+        "gold_equiv_in_corpus": [
+          "concept::适配层",
+          "multi-agent-orch::src/orch/adapters/__init__.py",
+          "multi-agent-orch::src/orch/adapters/__init__.py::ApiAdapter.invoke",
+          "multi-agent-orch::src/orch/adapters/__init__.py::CliAdapter.__init__",
+          "multi-agent-orch::src/orch/adapters/__init__.py::CliAdapter.invoke",
+          "multi-agent-orch::src/orch/adapters/__init__.py::FakeApiAdapter.__init__",
+          "multi-agent-orch::src/orch/adapters/__init__.py::FakeApiAdapter.invoke",
+          "multi-agent-orch::src/orch/adapters/__init__.py::FakeCliAdapter.__init__",
+          "multi-agent-orch::src/orch/adapters/__init__.py::FakeCliAdapter.invoke"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": false,
+        "hit@3": true,
+        "top3_anchors": [
+          "concept::适配层统一-invoke-接口",
+          "multi-agent-orch::src/orch/adapters/__init__.py::ApiAdapter.invoke",
+          "multi-agent-orch::src/orch/adapters/__init__.py"
+        ],
+        "n_q_terms": 43,
+        "gold_equiv_ranked": [
+          {
+            "node_id": "concept::适配层",
+            "rank_1based": 17,
+            "score": 4.4139,
+            "surfaced_top8_minscore": false,
+            "lexical_intersection": [
+              "调用"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/adapters/__init__.py",
+            "rank_1based": 3,
+            "score": 10.9105,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "后端",
+              "统一"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/adapters/__init__.py::ApiAdapter.invoke",
+            "rank_1based": 2,
+            "score": 12.4115,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "后端",
+              "统一",
+              "调用"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/adapters/__init__.py::CliAdapter.__init__",
+            "rank_1based": 23,
+            "score": 3.9461,
+            "surfaced_top8_minscore": false,
+            "lexical_intersection": [
+              "后端"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/adapters/__init__.py::CliAdapter.invoke",
+            "rank_1based": 6,
+            "score": 7.9159,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "后端",
+              "调用"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/adapters/__init__.py::FakeApiAdapter.__init__",
+            "rank_1based": 22,
+            "score": 4.0962,
+            "surfaced_top8_minscore": false,
+            "lexical_intersection": [
+              "后端"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/adapters/__init__.py::FakeApiAdapter.invoke",
+            "rank_1based": 14,
+            "score": 4.9134,
+            "surfaced_top8_minscore": false,
+            "lexical_intersection": [
+              "调用"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/adapters/__init__.py::FakeCliAdapter.__init__",
+            "rank_1based": 35,
+            "score": 2.3671,
+            "surfaced_top8_minscore": false,
+            "lexical_intersection": [
+              "后端"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/adapters/__init__.py::FakeCliAdapter.invoke",
+            "rank_1based": 27,
+            "score": 3.2028,
+            "surfaced_top8_minscore": false,
+            "lexical_intersection": [
+              "调用"
+            ]
+          }
+        ],
+        "best_equiv_rank_1based": 2,
+        "best_equiv_score": 12.4115,
+        "classification": "pass"
+      },
+      {
+        "id": "FZ-t06",
+        "question": "只留本人填的内容，机器补的字段一律不认",
+        "gold_entity": "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields",
+        "gold_equiv_size": 1,
+        "gold_equiv_in_corpus": [
+          "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": true,
+        "hit@3": true,
+        "top3_anchors": [
+          "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields",
+          "concept::events端点投影补全",
+          "multi-agent-orch::src/orch/scheduler/core.py::_finalize_envelope"
+        ],
+        "n_q_terms": 41,
+        "gold_equiv_ranked": [
+          {
+            "node_id": "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields",
+            "rank_1based": 1,
+            "score": 15.0078,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "内容",
+              "只留",
+              "字段"
+            ]
+          }
+        ],
+        "best_equiv_rank_1based": 1,
+        "best_equiv_score": 15.0078,
+        "classification": "pass"
+      },
+      {
+        "id": "FZ-t07",
+        "question": "把老长一段正文压成一行短的",
+        "gold_entity": "multi-agent-orch::src/orch/render/__init__.py::_summarize",
+        "gold_equiv_size": 3,
+        "gold_equiv_in_corpus": [
+          "concept::bg-orig-与-bg-summarized-同口径-body-token",
+          "concept::背景压缩比采-bg-orig-原文-body",
+          "multi-agent-orch::src/orch/render/__init__.py::_summarize"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": true,
+        "hit@3": true,
+        "top3_anchors": [
+          "multi-agent-orch::src/orch/render/__init__.py::_summarize",
+          "multi-agent-orch::src/orch/render/__init__.py::_join_focus",
+          "multi-agent-orch::src/orch/render/__init__.py::_join_background"
+        ],
+        "n_q_terms": 33,
+        "gold_equiv_ranked": [
+          {
+            "node_id": "concept::bg-orig-与-bg-summarized-同口径-body-token",
+            "rank_1based": 4,
+            "score": 7.7347,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "正文"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/render/__init__.py::_summarize",
+            "rank_1based": 1,
+            "score": 14.6778,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "一行",
+              "压成",
+              "正文"
+            ]
+          }
+        ],
+        "best_equiv_rank_1based": 1,
+        "best_equiv_score": 14.6778,
+        "classification": "pass"
+      },
+      {
+        "id": "FZ-t08",
+        "question": "把干活的目录路径算出来",
+        "gold_entity": "multi-agent-orch::src/orch/cli/main.py::_resolve_workspace",
+        "gold_equiv_size": 1,
+        "gold_equiv_in_corpus": [
+          "multi-agent-orch::src/orch/cli/main.py::_resolve_workspace"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": true,
+        "hit@3": true,
+        "top3_anchors": [
+          "multi-agent-orch::src/orch/cli/main.py::_resolve_workspace",
+          "multi-agent-orch::src/orch/cli/main.py::_thread_dirs_for_metrics",
+          "multi-agent-orch::src/orch/scheduler/core.py::_role_worktree"
+        ],
+        "n_q_terms": 26,
+        "gold_equiv_ranked": [
+          {
+            "node_id": "multi-agent-orch::src/orch/cli/main.py::_resolve_workspace",
+            "rank_1based": 1,
+            "score": 10.6192,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "目录",
+              "路径"
+            ]
+          }
+        ],
+        "best_equiv_rank_1based": 1,
+        "best_equiv_score": 10.6192,
+        "classification": "pass"
+      },
+      {
+        "id": "FZ-t09",
+        "question": "那个要反复跑很多遍必须全绿才算过的压测",
+        "gold_entity": "concept::混沌-50-轮-100-硬门槛",
+        "gold_equiv_size": 3,
+        "gold_equiv_in_corpus": [
+          "concept::混沌-50-轮-100-硬门槛",
+          "multi-agent-orch::commit::3a6235e8ebbba31b92c1c0747196eb615f97f4e6",
+          "multi-agent-orch::src/orch/chaos/__init__.py::ChaosHarness.run"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": true,
+        "hit@3": true,
+        "top3_anchors": [
+          "concept::混沌-50-轮-100-硬门槛",
+          "multi-agent-orch::src/orch/render/__init__.py::_role_authored_ids",
+          "multi-agent-orch::commit::88ed2d74055b9e06f2eeec0f1e1fa4255724bded"
+        ],
+        "n_q_terms": 50,
+        "gold_equiv_ranked": [
+          {
+            "node_id": "concept::混沌-50-轮-100-硬门槛",
+            "rank_1based": 1,
+            "score": 18.8636,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "必须",
+              "必须全",
+              "须全"
+            ]
+          }
+        ],
+        "best_equiv_rank_1based": 1,
+        "best_equiv_score": 18.8636,
+        "classification": "pass"
+      },
+      {
+        "id": "FZ-t10",
+        "question": "存事件和进度落盘的那一层",
+        "gold_entity": "concept::状态层",
+        "gold_equiv_size": 10,
+        "gold_equiv_in_corpus": [
+          "concept::状态层",
+          "multi-agent-orch::src/orch/store/__init__.py",
+          "multi-agent-orch::src/orch/store/__init__.py::Store.__init__",
+          "multi-agent-orch::src/orch/store/__init__.py::Store.append_event",
+          "multi-agent-orch::src/orch/store/__init__.py::apply_blackboard_ops"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": true,
+        "hit@3": true,
+        "top3_anchors": [
+          "multi-agent-orch::src/orch/store/__init__.py::Store.append_event",
+          "concept::run过程日志",
+          "multi-agent-orch::commit::8c38a0bd0d9053df0240cf2c12e297236a9b1594"
+        ],
+        "n_q_terms": 29,
+        "gold_equiv_ranked": [
+          {
+            "node_id": "concept::状态层",
+            "rank_1based": 34,
+            "score": 2.8624,
+            "surfaced_top8_minscore": false,
+            "lexical_intersection": [
+              "事件"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/store/__init__.py",
+            "rank_1based": 38,
+            "score": 2.6874,
+            "surfaced_top8_minscore": false,
+            "lexical_intersection": [
+              "事件"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/store/__init__.py::Store.append_event",
+            "rank_1based": 1,
+            "score": 15.1647,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "事件",
+              "事件和",
+              "件和"
+            ]
+          }
+        ],
+        "best_equiv_rank_1based": 1,
+        "best_equiv_score": 15.1647,
+        "classification": "pass"
+      }
+    ]
+  },
+  "fz_dev": {
+    "summary": {
+      "n": 10,
+      "hit@3_n": 7,
+      "hit@3": 0.7,
+      "n_fail": 3,
+      "fail_ids": [
+        "FZ-d06",
+        "FZ-d09",
+        "FZ-d10"
+      ],
+      "cls_counts": {
+        "词面不可达": 2,
+        "排序失利": 1,
+        "其他": 0
+      },
+      "unreachable_ids": [
+        "FZ-d06",
+        "FZ-d09"
+      ],
+      "rank_loss_ids": [
+        "FZ-d10"
+      ],
+      "unreachable_share_of_fails": 0.6667,
+      "unreachable_share_of_subset": 0.2
+    },
+    "per_question": [
+      {
+        "id": "FZ-d01",
+        "question": "那个把活儿叫停之后负责收尾扫尾的一摊在哪",
+        "gold_entity": "multi-agent-orch::src/orch/scheduler/core.py::_handle_terminate",
+        "gold_equiv_size": 6,
+        "gold_equiv_in_corpus": [
+          "concept::5-4终止保留既有pending",
+          "concept::async-终止兜底与-upsert-session-作废-sid",
+          "concept::停机-重启-approve-terminate控制流",
+          "concept::终止完善",
+          "concept::终止清单",
+          "multi-agent-orch::src/orch/scheduler/core.py::_handle_terminate"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": true,
+        "hit@3": true,
+        "top3_anchors": [
+          "concept::终止完善",
+          "multi-agent-orch::src/orch/scheduler/core.py::_handle_terminate",
+          "multi-agent-orch::src/orch/scheduler/_dispatch.py::_db_path"
+        ],
+        "n_q_terms": 52,
+        "gold_equiv_ranked": [
+          {
+            "node_id": "concept::终止完善",
+            "rank_1based": 1,
+            "score": 5.4904,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "收尾"
+            ]
+          },
+          {
+            "node_id": "concept::终止清单",
+            "rank_1based": 7,
+            "score": 4.0866,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "收尾"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/scheduler/core.py::_handle_terminate",
+            "rank_1based": 2,
+            "score": 5.4713,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "收尾"
+            ]
+          }
+        ],
+        "best_equiv_rank_1based": 1,
+        "best_equiv_score": 5.4904,
+        "classification": "pass"
+      },
+      {
+        "id": "FZ-d02",
+        "question": "谁在旁边盯着别人干活会不会卡住",
+        "gold_entity": "concept::看门狗三级",
+        "gold_equiv_size": 8,
+        "gold_equiv_in_corpus": [
+          "concept::看门狗三级",
+          "multi-agent-orch::commit::6a9a32f7c8c597ade8699d59fbb766c939d81a91",
+          "multi-agent-orch::src/orch/scheduler/watchdog.py",
+          "multi-agent-orch::src/orch/scheduler/watchdog.py::_defect_pair_counts",
+          "multi-agent-orch::src/orch/scheduler/watchdog.py::_loop_limit",
+          "multi-agent-orch::src/orch/scheduler/watchdog.py::_raise_gate",
+          "multi-agent-orch::src/orch/scheduler/watchdog.py::check_watchdogs"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": true,
+        "hit@3": true,
+        "top3_anchors": [
+          "concept::看门狗三级",
+          "concept::9-1-恢复",
+          "concept::异步版核心环"
+        ],
+        "n_q_terms": 37,
+        "gold_equiv_ranked": [
+          {
+            "node_id": "concept::看门狗三级",
+            "rank_1based": 1,
+            "score": 5.1395,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "盯着"
+            ]
+          }
+        ],
+        "best_equiv_rank_1based": 1,
+        "best_equiv_score": 5.1395,
+        "classification": "pass"
+      },
+      {
+        "id": "FZ-d03",
+        "question": "程序半路挂了之后怎么自己爬起来接着干",
+        "gold_entity": "concept::崩溃恢复算法",
+        "gold_equiv_size": 4,
+        "gold_equiv_in_corpus": [
+          "concept::崩溃恢复算法",
+          "multi-agent-orch::src/orch/scheduler/recover.py",
+          "multi-agent-orch::src/orch/scheduler/recover.py::_blackboard_intact",
+          "multi-agent-orch::src/orch/scheduler/recover.py::recover"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": true,
+        "hit@3": true,
+        "top3_anchors": [
+          "multi-agent-orch::src/orch/scheduler/recover.py::recover",
+          "concept::崩溃恢复算法",
+          "concept::审计-g-解耦"
+        ],
+        "n_q_terms": 45,
+        "gold_equiv_ranked": [
+          {
+            "node_id": "concept::崩溃恢复算法",
+            "rank_1based": 2,
+            "score": 4.8694,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "程序"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/scheduler/recover.py::recover",
+            "rank_1based": 1,
+            "score": 10.8826,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "接着干",
+              "着干"
+            ]
+          }
+        ],
+        "best_equiv_rank_1based": 1,
+        "best_equiv_score": 10.8826,
+        "classification": "pass"
+      },
+      {
+        "id": "FZ-d04",
+        "question": "系统自己往台账上补记一笔是哪段逻辑",
+        "gold_entity": "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event",
+        "gold_equiv_size": 2,
+        "gold_equiv_in_corpus": [
+          "concept::系统执行器",
+          "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": false,
+        "hit@3": true,
+        "top3_anchors": [
+          "multi-agent-orch::commit::8c38a0bd0d9053df0240cf2c12e297236a9b1594",
+          "multi-agent-orch::src/orch/scheduler/_dispatch.py::session_rows",
+          "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event"
+        ],
+        "n_q_terms": 44,
+        "gold_equiv_ranked": [
+          {
+            "node_id": "concept::系统执行器",
+            "rank_1based": 6,
+            "score": 5.7183,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "系统"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event",
+            "rank_1based": 3,
+            "score": 6.6708,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "系统"
+            ]
+          }
+        ],
+        "best_equiv_rank_1based": 3,
+        "best_equiv_score": 6.6708,
+        "classification": "pass"
+      },
+      {
+        "id": "FZ-d05",
+        "question": "怎么估摸一段话大概占多少篇幅",
+        "gold_entity": "multi-agent-orch::src/orch/render/__init__.py::estimate_tokens",
+        "gold_equiv_size": 2,
+        "gold_equiv_in_corpus": [
+          "concept::render四层视图组装",
+          "multi-agent-orch::src/orch/render/__init__.py::estimate_tokens"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": true,
+        "hit@3": true,
+        "top3_anchors": [
+          "multi-agent-orch::src/orch/render/__init__.py::estimate_tokens",
+          "multi-agent-orch::src/orch/render/__init__.py::_join_focus",
+          "multi-agent-orch::src/orch/render/__init__.py::_join_background"
+        ],
+        "n_q_terms": 34,
+        "gold_equiv_ranked": [
+          {
+            "node_id": "multi-agent-orch::src/orch/render/__init__.py::estimate_tokens",
+            "rank_1based": 1,
+            "score": 13.9955,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "占多",
+              "占多少",
+              "段话"
+            ]
+          }
+        ],
+        "best_equiv_rank_1based": 1,
+        "best_equiv_score": 13.9955,
+        "classification": "pass"
+      },
+      {
+        "id": "FZ-d06",
+        "question": "给每个干活的单独开个小隔间互不打扰",
+        "gold_entity": "concept::worktree-隔离",
+        "gold_equiv_size": 3,
+        "gold_equiv_in_corpus": [
+          "concept::worktree-隔离",
+          "multi-agent-orch::src/orch/scheduler/permissions.py",
+          "multi-agent-orch::src/orch/scheduler/permissions.py::ensure_worktrees"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": false,
+        "hit@3": false,
+        "top3_anchors": [
+          "multi-agent-orch::src/orch/scheduler/_dispatch.py::dispatching_rows",
+          "concept::9-1-恢复",
+          "concept::异步作业"
+        ],
+        "n_q_terms": 45,
+        "gold_equiv_ranked": [],
+        "best_equiv_rank_1based": null,
+        "best_equiv_score": 0.0,
+        "classification": "词面不可达"
+      },
+      {
+        "id": "FZ-d07",
+        "question": "活干完自动留个存档不用手动保存",
+        "gold_entity": "concept::autocommit",
+        "gold_equiv_size": 3,
+        "gold_equiv_in_corpus": [
+          "concept::autocommit",
+          "multi-agent-orch::src/orch/scheduler/permissions.py",
+          "multi-agent-orch::src/orch/scheduler/permissions.py::autocommit"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": true,
+        "hit@3": true,
+        "top3_anchors": [
+          "multi-agent-orch::src/orch/scheduler/permissions.py::autocommit",
+          "concept::last-ok-commit-生产回路",
+          "concept::ledger-落盘"
+        ],
+        "n_q_terms": 39,
+        "gold_equiv_ranked": [
+          {
+            "node_id": "concept::autocommit",
+            "rank_1based": 4,
+            "score": 5.7001,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "自动"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/scheduler/permissions.py::autocommit",
+            "rank_1based": 1,
+            "score": 24.0489,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "存档",
+              "完自",
+              "完自动",
+              "自动"
+            ]
+          }
+        ],
+        "best_equiv_rank_1based": 1,
+        "best_equiv_score": 24.0489,
+        "classification": "pass"
+      },
+      {
+        "id": "FZ-d08",
+        "question": "管谁能碰哪块、越界了就拦下来那套",
+        "gold_entity": "concept::权限三件套",
+        "gold_equiv_size": 8,
+        "gold_equiv_in_corpus": [
+          "concept::权限三件套",
+          "multi-agent-orch::commit::5c6bb736c8b009d244b343cb0ee310e65c17c1f7",
+          "multi-agent-orch::commit::c792c69e6047be138a917b0f76be0ea8bef4b0aa",
+          "multi-agent-orch::src/orch/scheduler/core.py::run_thread",
+          "multi-agent-orch::src/orch/scheduler/permissions.py",
+          "multi-agent-orch::src/orch/scheduler/permissions.py::audit_write_scope",
+          "multi-agent-orch::src/orch/scheduler/permissions.py::autocommit",
+          "multi-agent-orch::src/orch/scheduler/permissions.py::ensure_worktrees"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": false,
+        "hit@3": true,
+        "top3_anchors": [
+          "concept::发送者约束",
+          "multi-agent-orch::src/orch/scheduler/permissions.py::audit_write_scope"
+        ],
+        "n_q_terms": 30,
+        "gold_equiv_ranked": [
+          {
+            "node_id": "multi-agent-orch::src/orch/scheduler/permissions.py::audit_write_scope",
+            "rank_1based": 2,
+            "score": 4.9343,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "越界"
+            ]
+          }
+        ],
+        "best_equiv_rank_1based": 2,
+        "best_equiv_score": 4.9343,
+        "classification": "pass"
+      },
+      {
+        "id": "FZ-d09",
+        "question": "存心使坏来测系统扛不扛揍",
+        "gold_entity": "concept::故障注入",
+        "gold_equiv_size": 7,
+        "gold_equiv_in_corpus": [
+          "concept::故障注入",
+          "multi-agent-orch::commit::69a4a589f43ee205a84e7b2e058c6d003639bbf9",
+          "multi-agent-orch::src/orch/store/__init__.py::FaultInjector.__init__",
+          "multi-agent-orch::src/orch/store/__init__.py::clear_fault_injector"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": false,
+        "hit@3": false,
+        "top3_anchors": [
+          "multi-agent-orch::src/orch/scheduler/systemexec.py::append_system_event",
+          "concept::系统执行器",
+          "multi-agent-orch::src/orch/adapters/__init__.py::_strip_to_author_fields"
+        ],
+        "n_q_terms": 30,
+        "gold_equiv_ranked": [],
+        "best_equiv_rank_1based": null,
+        "best_equiv_score": 0.0,
+        "classification": "词面不可达"
+      },
+      {
+        "id": "FZ-d10",
+        "question": "放行还是拦下的那道关卡在哪判",
+        "gold_entity": "concept::门禁裁决入口",
+        "gold_equiv_size": 6,
+        "gold_equiv_in_corpus": [
+          "concept::门禁裁决入口",
+          "multi-agent-orch::src/orch/scheduler/systemexec.py",
+          "multi-agent-orch::src/orch/scheduler/systemexec.py::_find_gate_decision",
+          "multi-agent-orch::src/orch/scheduler/systemexec.py::_find_gate_request",
+          "multi-agent-orch::src/orch/scheduler/systemexec.py::apply_gate_decision"
+        ],
+        "mode": "topic",
+        "route_label": "entity_local",
+        "hit@1": false,
+        "hit@3": false,
+        "top3_anchors": [
+          "concept::热续接入调度层三门控",
+          "concept::find-informal-gate-生成形-corr-反解",
+          "concept::审计不再-fail-open-c-4"
+        ],
+        "n_q_terms": 33,
+        "gold_equiv_ranked": [
+          {
+            "node_id": "concept::门禁裁决入口",
+            "rank_1based": 10,
+            "score": 3.5161,
+            "surfaced_top8_minscore": false,
+            "lexical_intersection": [
+              "放行"
+            ]
+          },
+          {
+            "node_id": "multi-agent-orch::src/orch/scheduler/systemexec.py::apply_gate_decision",
+            "rank_1based": 4,
+            "score": 5.566,
+            "surfaced_top8_minscore": true,
+            "lexical_intersection": [
+              "放行"
+            ]
+          }
+        ],
+        "best_equiv_rank_1based": 4,
+        "best_equiv_score": 5.566,
+        "classification": "排序失利"
+      }
+    ]
+  }
+}

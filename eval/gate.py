@@ -354,8 +354,12 @@ def main() -> int:
         "锁定失败 B-1/B-2/B-3": {"threshold": "修复后不得回退", "effective": "各自翻绿起",
                  "status": "RED(baseline)",
                  "b1_red": b1_red, "b2_red": b2_red, "b3_red": b3_red},
-        "主集三层准确率": {"threshold": "较 v0.1 下降 ≤3pt", "effective": "Phase D",
-                 "status": "PENDING", "note": "主集 V4 未落地，无对照"},
+        "主集三层准确率": {"threshold": "较 v0.1 下降 ≤3pt → 降级为「v0.2 首测基线记录」",
+                 "effective": "Phase D",
+                 "status": "BASELINE-REC(v0.2)",
+                 "note": "v0.1 主集从未物化（V4/D-P3 核实：eval/ 原无任何 L1/L2/L3 集），"
+                         "「较 v0.1 下降 ≤3pt」无对照可比，本门禁条降级为 v0.2 首测基线记录（非 pass/fail）；"
+                         "Phase D D2 两组三层准确率见 eval/report.md §1（本 gate 仅跑 48 题，不含主集 60 题）"},
         "路由准确率(48题标注)": {"threshold": "≥ 0.9", "effective": "Phase C1",
                  "measured": route_acc, "status": "PENDING",
                  "would_pass": route_acc >= 0.9, "mismatches": route_detail},
