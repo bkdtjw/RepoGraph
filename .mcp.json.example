@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "repograph": {
+      "command": "python",
+      "args": ["-m", "repograph.mcp_server"],
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/代码库知识图谱/src",
+        "REPOGRAPH_GRAPH": "/ABSOLUTE/PATH/TO/代码库知识图谱/output/graph.json"
+      }
+    }
+  }
+}

@@ -148,6 +148,8 @@
 **引用**：落地设计 §3.3 表行3、§4.2；适配报告 §5 §7.2；计划书 §2.2（D-14）。落地设计 §3 将本行归「砍除（能力保留）」，计划书按能力保留视角归「改造」，同一裁定两视角；MCP 工具形态整体推迟见 D-23。
 **复审触发**：Phase E 复归 MCP 工具形态时。
 
+> **Phase E 回填（2026-07-23，E1）——工具形态复归，显式损失消除**：`repo_overview` 能力已由「meta 路由注入」复归为 MCP **按需工具**（`src/repograph/mcp_server.py` 的 `repo_overview()`，缓存优先读 `output/repo_card.json`、缺失现场确定性重建）。上游 Agent 现可**主动按需**拉概览（本条「push 模型下 Agent 无法主动拉概览」的显式损失消除）；meta 路由注入路径保留不动（离线 gate 仍走它，零回归）。真测断言真实计数 139/259/22/15/75（`tests/test_mcp_server.py::test_repo_overview`）。工具形态见 D-23、选型（stdlib 非 SDK）见 D-N8。
+
 ## D-15 | 2026-07-22 | 状态: 生效
 **裁定**：改造（改造采纳）——level-1 包级概览「进向量层 chunk」→ 改存为顶层包 Module 聚合节点 `overview` 属性（120 字，索引期经网关语义通道生成），global 路由直接注入属性文本，不进任何 chunk 池（本就无池）。
 **动因**：P1——无向量层，但本图规模下顶层包可枚举，聚合属性注入即可满足全局概览。
@@ -211,6 +213,8 @@
 **引用**：计划书 §1 G4、§2.2（D-23）、§4 Phase E（E1/E2）；落地设计 §3.3 表行3（repo_overview 工具形态侧）、§4.7 砍除清单；关联 D-14（能力保留侧）。
 **复审触发**：Phase E 启动，或项目定位再次变更。
 
+> **Phase E 回填（2026-07-23，E1）——MCP 工具形态落地，接口预留兑现**：以**纯 stdlib** stdio 薄适配器（非 FastMCP，选型见 D-N8）复归三工具 `ask_repo` / `impact_analysis` / `repo_overview`（archive §8.2 第四件 `query_graph` 推迟 v0.4，见 D-N7）。产物：`src/repograph/mcp_server.py`、仓库根 `.mcp.json.example`（Claude Code 格式，`command=python -m repograph.mcp_server`）、端到端真测 `tests/test_mcp_server.py`（子进程真实 JSON-RPC stdio 15 用例，pytest + 独立 runner 双绿）。G4 三验收动作（archive §8.3）本机**等价真实调用实测通过**并附用户录屏手册（`design_work/e2_acceptance.md`，探针 `design_work/e2_acceptance_probe.py`）。「接口预留、Phase E 复归」兑现。
+
 ## D-24 | 2026-07-22 | 状态: 生效
 **裁定**：砍除——`ask_repo` 的 `context: list[str]` 参数。维持砍除。
 **动因**：网关本就持有 `sess["messages"]` 全历史，`_rg_llm_rewrite` 可直接吃最近 N 轮做指代消解，优于传参。
@@ -270,6 +274,20 @@
 **显式损失**：无（放宽约束）；计划书 §0/§1 中「简历数字冻结」「8/31 硬截止」及 D-23「不影响 8/31 简历数字冻结」等表述随此**过时**，as-built 以本条为准；G4 MCP 录屏推迟（D-23）不再受 8/31 约束。
 **引用**：计划书 §0/§1（表述更正）、§2.2；任务背景（本轮用户参数变更）；关联 D-23（MCP/G4 推迟 Phase E）、D-P3（主集补建吃缓冲、8/31 解除后无工期压力）。
 **复审触发**：用户重新设定投递目标或截止日期。
+
+## D-N7 | 2026-07-23 | 状态: 生效
+**裁定**：复议新增——`query_graph`（text2cypher 工具）**推迟至 v0.4**，Phase E 只交付三工具（`ask_repo` / `impact_analysis` / `repo_overview`）。archive §8.2 原设四工具，本 Phase 按 R2 显式砍到三件并登记。
+**动因**：archive §8.2 第四件 `query_graph`（自然语言→Cypher，只读结构查询）在 v0.3 as-built **无载体**——structural/text2cypher 模板层未建（spec §3 表外附属决策已核「本仓无 text2cypher/`query_graph` 承载」，D-10 复审触发亦挂此），活跃后端 `GraphStore` 是内存 dict + JSON、无 Cypher 引擎（`ddl.sql` 的 AGE 预留、`age.py` 零读写，见 D-N3）。硬造 text2cypher 须引 LLM 生成 + 注入防护 + 模板层，属**新机制**而非「薄适配器包装现有检索函数」，越出 Phase E 范围。
+**显式损失**：上游 Agent 无法用自然语言直接跑精确结构查询（「改动次数最多的前 10 个函数」「没被任何代码调用的函数」这类）；其中**可确定性计数者已被部分覆盖**——热点函数（MODIFIES 计数 top5）、核心概念（IMPLEMENTS 落点）由 `repo_overview` 给出，影响面由 `impact_analysis` 给出；仅**死代码类**（`fan_in=0 ∧ 非 entrypoint`）仍缺口，属查询层缺位的已知边界（spec §3 表外附属决策 A7 已标同款损失）。
+**引用**：archive §8.2（四工具原设）、spec §3.3 表行23 / §3 表外附属决策 A7；计划书 §4 Phase E（E1 原列四工具）；产物 `src/repograph/mcp_server.py`（交付三件）、`tests/test_mcp_server.py`；关联 D-10（`query_graph` 模板层落地复审触发）、D-23（MCP 工具形态复归）、D-N3（stdlib 后端无 Cypher）。
+**复审触发**：structural/text2cypher 模板层落地（v0.4 或之后），或引入 Cypher 引擎（AGE/SQL 后端迁移，D-N3 复审）时。
+
+## D-N8 | 2026-07-23 | 状态: 生效
+**裁定**：复议新增——MCP stdio 服务器**选纯 stdlib JSON-RPC 2.0 实现**，不引官方 `mcp` python-sdk（FastMCP）。官方 SDK 本机**可用**（v1.26.0，Python 3.14 上 FastMCP 实测可导入 + `@mcp.tool()` 注册成功），仍**主动选 stdlib**：`src/repograph/mcp_server.py` 单文件自实现 `initialize` / `notifications/initialized` / `tools/list` / `tools/call`（+ `ping`）最小方法集，零第三方依赖。
+**动因**：守项目「**运行时零第三方依赖**」叙事主线（检索/服务路径全 stdlib，见 D-22 砍向量层、D-N3 stdlib 存储、D-17 json 替 yaml）；官方 SDK 引入 anyio/httpx/starlette/sse-starlette/uvicorn 依赖树，为「3 方法 stdio 协议」引重依赖**不成比例**。stdlib 实现使 `python -m repograph.mcp_server` **无需任何 `pip install`** 即可被 Claude Code 拉起（clone 即跑，5 分钟起库门槛更低）；MCP stdio 协议面小而稳定（换行分隔 JSON-RPC，3 方法即通 Claude Code），自实现成本低、可审计。计划书/archive 原写「FastMCP 薄适配器」，本条按 as-built 更正为 **stdlib 薄适配器**（选型如实记录，履行任务「选了哪条如实记录 / 若 stdlib 入台账草案说明」要求）。
+**显式损失**：不享官方 SDK 的协议演进自动跟随（未来 MCP 协议大改需手工补方法）与 `@mcp.tool()` 类型→schema 自动生成（本实现手写 `inputSchema`）；当前 3 方法/3 工具规模下成本可忽略。**能力无损失**——三工具行为等价，端到端真测 15 用例（`tests/test_mcp_server.py`）pytest 与独立 runner 双绿。
+**引用**：计划书 §4 Phase E（E1「FastMCP 薄适配器」表述更正）、archive §8.1（原设 `mcp` SDK/FastMCP）；spec §3.3 砍除清单（stdlib 运行时约束）；产物 `src/repograph/mcp_server.py`、`tests/test_mcp_server.py`、`.mcp.json.example`；关联 D-22/D-N3（stdlib 叙事）、D-23（MCP 复归）、D-14（`repo_overview` 工具复归）、D-N7（三工具范围）。
+**复审触发**：MCP 协议不兼容变更致自实现维护成本上升，或需 SDK 独有能力（SSE 传输、sampling、resources/prompts 等）时评估引入官方 SDK。
 
 ---
 
@@ -361,9 +379,9 @@ D-01(#1) D-02(#6) D-03(#8) D-04(#15) D-05(#18) D-06(#5) D-07(#9) D-08(#10) D-09(
 
 ## 自检小结
 
-- **具名条目**：D-01..24（24）+ D-R2 + D-N1..N6（7，含 2026-07-23 新增 D-N5 评测通道 / D-N6 计划参数变更）= **31 条**（≥26 验收线达标）。
+- **具名条目**：D-01..24（24）+ D-R2 + D-N1..N8（9，含 2026-07-23 新增 D-N5 评测通道 / D-N6 计划参数变更 / D-N7 query_graph 推迟 v0.4 / D-N8 MCP=stdlib 非 SDK）= **33 条**（≥26 验收线达标）。
 - **Phase B/D 回填条目**：D-P1（分词=n-gram 守 stdlib）/D-P2（blocking=词面 Jaccard 守 stdlib）/D-P3（主集走补建分支）三条据 V1/V3/V4 实测「待验证」**转「生效」**；D-P4（F9 定量）已由 **2026-07-23 Phase D·V5 回填转「生效」**（FZ-test 词面不可达 2/10=0.20，`design_work/d3_f9.json` 可复现）；四条均为 v0.3 验证配套，**不占 §3 表 24 槽位、不计入 26 验收线**。
 - **D-11 状态变更**：由「待验证」转「**重议中**」——V1 FZ-dev 卡片零净提升触发重议警报，但 FZ-test 证明机制有效未证伪，重议方向=修卡片质量（归 C2），非砍除；仍占 §3 表改造槽位（映射不变）。
 - **§3 表对账**：24 行逐行映射到 D-编号，D-01..24 全部出现，**24/24 齐**（D-11 状态变更不改映射）。
 - **10/10/4 分布复核**：平移 10 = D-01..10；改造 10 = D-11..20（D-20 含 S3+schema v2 两机制；D-11 重议中仍居改造位）；砍除 4 = D-21/D-22/D-23/D-24（D-23 改判推迟，D-14 承接 repo_overview 能力保留侧）。
-- **横切裁定**：D-R2（基线）/D-N1（分带）/D-N2（S2 升格）/D-N3（存储）/D-N4（索引期语义通道切换）/D-N5（Phase D 评测/裁判通道=grok 中转站）/D-N6（计划参数变更：简历取消+8/31 解除）为 v0.3 复议层，不占 §3 表 24 槽位。
+- **横切裁定**：D-R2（基线）/D-N1（分带）/D-N2（S2 升格）/D-N3（存储）/D-N4（索引期语义通道切换）/D-N5（Phase D 评测/裁判通道=grok 中转站）/D-N6（计划参数变更：简历取消+8/31 解除）/D-N7（query_graph 推迟 v0.4）/D-N8（MCP stdio=stdlib 非 SDK）为 v0.3 复议层，不占 §3 表 24 槽位。
