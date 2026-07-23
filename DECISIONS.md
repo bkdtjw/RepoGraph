@@ -213,7 +213,7 @@
 **引用**：计划书 §1 G4、§2.2（D-23）、§4 Phase E（E1/E2）；落地设计 §3.3 表行3（repo_overview 工具形态侧）、§4.7 砍除清单；关联 D-14（能力保留侧）。
 **复审触发**：Phase E 启动，或项目定位再次变更。
 
-> **Phase E 回填（2026-07-23，E1）——MCP 工具形态落地，接口预留兑现**：以**纯 stdlib** stdio 薄适配器（非 FastMCP，选型见 D-N8）复归三工具 `ask_repo` / `impact_analysis` / `repo_overview`（archive §8.2 第四件 `query_graph` 推迟 v0.4，见 D-N7）。产物：`src/repograph/mcp_server.py`、仓库根 `.mcp.json.example`（Claude Code 格式，`command=python -m repograph.mcp_server`）、端到端真测 `tests/test_mcp_server.py`（子进程真实 JSON-RPC stdio 15 用例，pytest + 独立 runner 双绿）。G4 三验收动作（archive §8.3）本机**等价真实调用实测通过**并附用户录屏手册（`design_work/e2_acceptance.md`，探针 `design_work/e2_acceptance_probe.py`）。「接口预留、Phase E 复归」兑现。
+> **Phase E 回填（2026-07-23，E1）——MCP 工具形态落地，接口预留兑现**：以**纯 stdlib** stdio 薄适配器（非 FastMCP，选型见 D-N8）复归三工具 `ask_repo` / `impact_analysis` / `repo_overview`（archive §8.2 第四件 `query_graph` 推迟 v0.4，见 D-N7）。产物：`src/repograph/mcp_server.py`、仓库根 `.mcp.json.example`（Claude Code 格式，`command=python -m repograph.mcp_server`）、端到端真测 `tests/test_mcp_server.py`（子进程真实 JSON-RPC stdio 16 用例，pytest + 独立 runner 双绿）。G4 三验收动作（archive §8.3）本机**等价真实调用实测通过**并附用户录屏手册（`design_work/e2_acceptance.md`，探针 `design_work/e2_acceptance_probe.py`）。「接口预留、Phase E 复归」兑现。
 
 ## D-24 | 2026-07-22 | 状态: 生效
 **裁定**：砍除——`ask_repo` 的 `context: list[str]` 参数。维持砍除。
@@ -285,9 +285,11 @@
 ## D-N8 | 2026-07-23 | 状态: 生效
 **裁定**：复议新增——MCP stdio 服务器**选纯 stdlib JSON-RPC 2.0 实现**，不引官方 `mcp` python-sdk（FastMCP）。官方 SDK 本机**可用**（v1.26.0，Python 3.14 上 FastMCP 实测可导入 + `@mcp.tool()` 注册成功），仍**主动选 stdlib**：`src/repograph/mcp_server.py` 单文件自实现 `initialize` / `notifications/initialized` / `tools/list` / `tools/call`（+ `ping`）最小方法集，零第三方依赖。
 **动因**：守项目「**运行时零第三方依赖**」叙事主线（检索/服务路径全 stdlib，见 D-22 砍向量层、D-N3 stdlib 存储、D-17 json 替 yaml）；官方 SDK 引入 anyio/httpx/starlette/sse-starlette/uvicorn 依赖树，为「3 方法 stdio 协议」引重依赖**不成比例**。stdlib 实现使 `python -m repograph.mcp_server` **无需任何 `pip install`** 即可被 Claude Code 拉起（clone 即跑，5 分钟起库门槛更低）；MCP stdio 协议面小而稳定（换行分隔 JSON-RPC，3 方法即通 Claude Code），自实现成本低、可审计。计划书/archive 原写「FastMCP 薄适配器」，本条按 as-built 更正为 **stdlib 薄适配器**（选型如实记录，履行任务「选了哪条如实记录 / 若 stdlib 入台账草案说明」要求）。
-**显式损失**：不享官方 SDK 的协议演进自动跟随（未来 MCP 协议大改需手工补方法）与 `@mcp.tool()` 类型→schema 自动生成（本实现手写 `inputSchema`）；当前 3 方法/3 工具规模下成本可忽略。**能力无损失**——三工具行为等价，端到端真测 15 用例（`tests/test_mcp_server.py`）pytest 与独立 runner 双绿。
+**显式损失**：不享官方 SDK 的协议演进自动跟随（未来 MCP 协议大改需手工补方法）与 `@mcp.tool()` 类型→schema 自动生成（本实现手写 `inputSchema`）；当前 3 方法/3 工具规模下成本可忽略。**能力无损失**——三工具行为等价，端到端真测 16 用例（`tests/test_mcp_server.py`）pytest 与独立 runner 双绿。
 **引用**：计划书 §4 Phase E（E1「FastMCP 薄适配器」表述更正）、archive §8.1（原设 `mcp` SDK/FastMCP）；spec §3.3 砍除清单（stdlib 运行时约束）；产物 `src/repograph/mcp_server.py`、`tests/test_mcp_server.py`、`.mcp.json.example`；关联 D-22/D-N3（stdlib 叙事）、D-23（MCP 复归）、D-14（`repo_overview` 工具复归）、D-N7（三工具范围）。
 **复审触发**：MCP 协议不兼容变更致自实现维护成本上升，或需 SDK 独有能力（SSE 传输、sampling、resources/prompts 等）时评估引入官方 SDK。
+
+> **E-Verify 补审（2026-07-24，独立核验）——「工具层失败绝不冒泡 -32603」契约结构性闭合**：opencode（qwen3.8-max-preview）审查指出两处 try 边界未完整包裹——`_handle_tools_call` 成功结果的 JSON 序列化在 try 外（工具 payload 若不可序列化会穿透为 -32603）、`_StoreHolder.get()` 的 lazy `from .models import GraphStore` 在 try 外（ImportError 冒泡 + 异常后缓存态 `(None,None)` 致 message=null）。两处均已收进 try、归一为 isError/可读 graph_unavailable（承 E1-R1 同一契约）。16 用例（pytest + 独立 runner）复跑双绿；mcp_server 对评测路径 import 隔离，图谱/门禁数字零变动。审查记录 `design_work/verify-e.md`、`design_work/review_e/`。
 
 ---
 

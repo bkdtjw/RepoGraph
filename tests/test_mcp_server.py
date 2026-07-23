@@ -344,6 +344,11 @@ def test_ping():
     c = _client()
     resp = c.request("ping")
     assert resp["result"] == {}, "ping 返回空结果"
+    # 边界（E-Verify 审查补覆盖）：id=null 是**请求**（"id" 键存在，非通知），须回 id:null 的响应，
+    # 不得被 "id" not in msg 的通知判定误吞——正是协议层 id 存在性边界。
+    c._write({"jsonrpc": "2.0", "id": None, "method": "ping"})
+    r2 = json.loads(c._q.get(timeout=30))
+    assert r2.get("id") is None and r2.get("result") == {}, "id:null 请求应回 id:null 空结果"
     print("test_ping OK")
 
 
@@ -359,6 +364,14 @@ def test_unknown_tool():
     res = c.call_tool("does_not_exist", {})
     assert res["isError"] is True
     assert res["structuredContent"]["error"] == "unknown_tool"
+    # 边界（E-Verify 审查补覆盖）：畸形 tools/call 一律归一为 isError（不崩传输、不冒泡协议层 -32603）
+    #   ① arguments 非 dict     ② 必填 question 缺失     ③ symbol 非字符串
+    r2 = c.request("tools/call", {"name": "ask_repo", "arguments": "bad"})["result"]
+    assert r2["isError"] is True and r2["structuredContent"]["error"] == "invalid_arguments"
+    r3 = c.call_tool("ask_repo", {})
+    assert r3["isError"] is True and r3["structuredContent"]["error"] == "invalid_argument"
+    r4 = c.call_tool("impact_analysis", {"symbol": 123})
+    assert r4["isError"] is True and r4["structuredContent"]["error"] == "invalid_argument"
     print("test_unknown_tool OK")
 
 

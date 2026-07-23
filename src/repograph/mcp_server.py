@@ -52,7 +52,7 @@ _SERVER_VERSION = "0.3.0"
 _PARSE_ERROR = -32700
 _INVALID_REQUEST = -32600
 _METHOD_NOT_FOUND = -32601
-_INVALID_PARAMS = -32602
+_INVALID_PARAMS = -32602    # 标准码，保留作完整参照；本适配器工具入参错一律走 tools/call isError（非协议层码）
 _INTERNAL_ERROR = -32603
 
 
@@ -93,20 +93,22 @@ class _StoreHolder:
         if self._loaded:
             return self._store, self._error
         self._loaded = True
-        from .models import GraphStore
-
-        if not os.path.exists(self.path):
-            self._error = (
-                f"找不到图谱文件: {self.path}\n"
-                f"      请先运行 `repograph index --repo <PATH> --name <NAME>` 生成，"
-                f"或用 REPOGRAPH_GRAPH 环境变量指向已有 graph.json。"
-            )
-            return None, self._error
         try:
+            from .models import GraphStore
+
+            if not os.path.exists(self.path):
+                self._error = (
+                    f"找不到图谱文件: {self.path}\n"
+                    f"      请先运行 `repograph index --repo <PATH> --name <NAME>` 生成，"
+                    f"或用 REPOGRAPH_GRAPH 环境变量指向已有 graph.json。"
+                )
+                return None, self._error
             self._store = GraphStore.load(self.path)
-        except Exception as exc:  # noqa: BLE001 — 任何载入失败（含结构错位致的 TypeError/
-            # AttributeError：graph.json 是合法 JSON 但顶层为 null/list 等）都归一为可读
-            # graph_unavailable 的 isError 通路，绝不冒泡为协议层 -32603（opencode 审查 E1-R1）。
+        except Exception as exc:  # noqa: BLE001 — 任何载入失败（含 `from .models` 的 ImportError、
+            # 结构错位致的 TypeError/AttributeError：graph.json 是合法 JSON 但顶层为 null/list 等）
+            # 都归一为可读 graph_unavailable 的 isError 通路，绝不冒泡为协议层 -32603；且 _error
+            # 必被赋值——避免 lazy import 抛错后缓存态 (None, None) 致工具回包 message=null
+            # （opencode 审查 E1-R1 补审于 E-Verify：import 段一并纳入 try）。
             self._error = f"图谱文件载入失败 ({type(exc).__name__}): {self.path} — {exc}"
             return None, self._error
         return self._store, None
@@ -179,9 +181,10 @@ _TOOLS: list[dict] = [
         "name": "repo_overview",
         "description": (
             "返回仓库 level-0 概览卡片 repo_card（规模统计 stats、顶层模块 top_modules、热点函数 "
-            "hot_functions、核心概念 core_concepts、入口点 entrypoints、summary）。零检索、"
-            "直接读 output/repo_card.json；缺失/损坏则现场确定性重建（degraded=true，字段与 "
-            "build_overview 同源、为其超集）。适合『这个项目是做什么的 / 整体结构 / 有哪些模块』类元问题。"
+            "hot_functions、核心概念 core_concepts、入口点 entrypoints、summary；另附 source/degraded "
+            "两个溯源标记）。零检索、直接读 output/repo_card.json；缺失/损坏则现场确定性重建"
+            "（degraded=true，source 标注结果来源，字段与 build_overview 同源、为其超集）。"
+            "适合『这个项目是做什么的 / 整体结构 / 有哪些模块』类元问题。"
         ),
         "inputSchema": {
             "type": "object",
@@ -343,13 +346,16 @@ def _handle_tools_call(holder: _StoreHolder, params: dict, out) -> tuple[bool, A
 
     try:
         payload = _TOOL_IMPL[name](store, args)
+        # 成功结果的 JSON 序列化（_tool_result_content 内 json.dumps）亦纳入 try：若工具 payload
+        # 含不可序列化值，在此抛错并归一为 isError，绝不穿透 _dispatch 冒泡为协议层 -32603
+        # （E-Verify 审查：与 _StoreHolder 的 graph_unavailable 归一同一契约）。
+        return True, _tool_result_content(payload, is_error=False)
     except _ToolArgError as exc:
         return True, _tool_result_content(
             {"error": "invalid_argument", "message": str(exc)}, is_error=True)
-    except Exception as exc:  # noqa: BLE001 — 工具内部异常兜底为 isError，绝不崩传输
+    except Exception as exc:  # noqa: BLE001 — 工具内部异常/结果序列化异常兜底为 isError，绝不崩传输
         return True, _tool_result_content(
             {"error": "tool_error", "message": f"{type(exc).__name__}: {exc}"}, is_error=True)
-    return True, _tool_result_content(payload, is_error=False)
 
 
 def _dispatch(holder: _StoreHolder, msg: dict, out) -> None:

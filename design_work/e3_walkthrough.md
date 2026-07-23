@@ -49,7 +49,7 @@ test_initialize OK ... test_repo_overview OK ... test_graph_override_malformed O
 ALL 16 MCP TESTS PASSED
 ```
 
-16 用例全绿（README §3.3 与 §8 导览表所述「16 用例」以此为准）。**口径差异（已知，留 E1 台账后续订正）**：DECISIONS D-23/D-N8 回填与 `e2_acceptance.md` 写「15 用例」，为 opencode E1-R1 审查补入第 16 例 `test_graph_override_malformed` 时的旧计数；HEAD `61e8081` 的测试文件实为 16 例，README 采用运行时真值。E3 scope 限 README + MCP 新文件，**不改 DECISIONS**，差异如实标注而非隐藏。
+16 用例全绿（README §3.3 与 §8 导览表所述「16 用例」以此为准）。**口径差异（已知，留 E1 台账后续订正）**：DECISIONS D-23/D-N8 回填与 `e2_acceptance.md` 写「15 用例」，为 opencode E1-R1 审查补入第 16 例 `test_graph_override_malformed` 时的旧计数；HEAD `61e8081` 的测试文件实为 16 例，README 采用运行时真值。E3 scope 限 README + MCP 新文件，**不改 DECISIONS**，差异如实标注而非隐藏。**〔E-Verify 2026-07-24 已闭环〕** 独立核验阶段已将 DECISIONS D-23/D-N8 回填与 `e2_acceptance.md` 的旧计数「15」统一订正为 **16**（运行时真值），全仓计数一致；详见 `design_work/verify-e.md`。
 
 ## 步骤 4 裸协议 MCP 自检输出
 

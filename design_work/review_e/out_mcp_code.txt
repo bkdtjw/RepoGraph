@@ -1,0 +1,114 @@
+## 审查结果
+
+### 维度 1：协议正确性
+
+**[major] mcp_server.py:352 — `_tool_result_content(payload)` 在 try/except 之外，序列化失败会冒泡为 -32603**
+
+依据：`_handle_tools_call` 的 try/except（344-351）只包裹 `_TOOL_IMPL[name](store, args)` 的调用。第 352 行 `_tool_result_content(payload, is_error=False)` 在 try 块外。若 payload 含不可 JSON 序列化值，`json.dumps`（第 300 行）抛异常 → 穿透 `_dispatch` → 被第 427 行兜底捕获 → 回 -32603。违反「工具层任何失败绝不冒泡为 -32603」的绝对契约。
+
+建议：将第 352 行纳入 try 块，或把整个 `_handle_tools_call` 函数体包在 try/except 中统一归一为 isError。
+
+---
+
+**[major] mcp_server.py:96 — `from .models import GraphStore` 在 try/except 之外，ImportError 冒泡为 -32603**
+
+依据：`_StoreHolder.get()` 第 95 行先置 `_loaded = True`，第 96 行做 lazy import。若该 import 抛 ImportError（如 models.py 损坏），异常穿透 `holder.get()`（调用点 339 行无 try）→ `_dispatch` → 427 行 -32603。同时 `_loaded=True` 已置而 `_error=None`，后续调用返回 `(None, None)` → graph_unavailable 的 message 为 null，不可读。
+
+建议：将 96-111 行整体包入 try/except，异常时写 `self._error` 后 return；或将 `_loaded = True` 移至成功路径末尾。
+
+---
+
+**[nit] mcp_server.py:55 — `_INVALID_PARAMS = -32602` 定义后从未使用**
+
+依据：全文无任何引用。死代码。
+
+建议：删除，或在工具入参校验处考虑是否该用 -32602（但按当前契约工具入参错走 isError，不用协议层错误码，故删除即可）。
+
+---
+
+其余协议面未见问题：
+- 通知判定 `"id" not in msg`（358 行）正确区分无 id 与 `id=null`；通知绝不回响应（367-368）。
+- -32700/-32600/-32601 使用语义正确；错误回包结构 `{jsonrpc,id,error{code,message,data?}}` 合规。
+- initialize 回显客户端 protocolVersion（313 行）正确；notifications/initialized 吞掉正确。
+- 空行跳过（414）、EOF 自然退出（412 for 循环）、batch（数组）被 421 行 -32600 拒绝、半行由 Python 行迭代在 EOF 时完整交出——均稳健。
+
+---
+
+### 维度 2：工具 schema 与描述准确性
+
+**[nit] mcp_server.py:140/175/189 — `additionalProperties: false` 声明但服务端未强制校验**
+
+依据：第 329 行 `args = params.get("arguments") or {}` 后，实现只取已知键（`args.get("question")` 等），对 schema 外的多余键静默忽略。schema 承诺 `additionalProperties: false` 但名实不完全相符（非 MCP 客户端的调用方可传多余键而不被拒绝）。
+
+建议：在 `_handle_tools_call` 中按 `_TOOLS` 的 properties 键集做多余键检测，多余时返回 isError（`invalid_arguments`）；或在 description 中注明「多余键被忽略」以消除歧义。严格程度视项目取舍，nit 级。
+
+---
+
+**[nit] mcp_server.py:180-184 — repo_overview description 未提及始终返回的 `source` 字段**
+
+依据：实现（259-261 行）总是附加 `source` 键，但 description 只列了 stats/top_modules/hot_functions/core_concepts/entrypoints/summary 与 degraded。上游 Agent 若严格依 description 解析返回，可能忽略 source。
+
+建议：在 description 中补 `source` 字段说明。
+
+---
+
+其余未见问题：
+- ask_repo schema（question:string:required）与实现校验（212 行 isinstance+strip）严格一致。
+- impact_analysis 的 depth 白名单含 bool 排除（241 行 `isinstance(depth, bool)` 前置）正确；mode enum 与实现（243 行）一致；default 值与 schema 声明一致。
+- structuredContent 与 content[text] 双通道由 `json.dumps`/`json.loads` 互逆保证一致（300 行 vs 303 行），测试 119 行亦断言。
+
+---
+
+### 维度 3：并发与超时
+
+**[major]（与维度 1 第 2 条同根）mcp_server.py:95 — `_loaded=True` 先置于 import/load 之前，异常路径状态不一致**
+
+依据：若 96 行 import 或 106 行 load 之前的代码抛异常，`_loaded` 已为 True 而 `_error` 为 None。后续 `get()` 直接返回 `(None, None)`，工具回传 `graph_unavailable` 但 message=null，丧失可读诊断。失败后不重试本身可接受（单进程、文件不变），但错误状态须正确记录。
+
+建议：将 `_loaded = True` 移至函数末尾（成功与失败路径均经过后再置），或在 except 中确保 `_error` 被赋值。
+
+---
+
+**[nit] test_mcp_server.py:129-130 — `close()` 无 kill 兜底**
+
+依据：`terminate()` + `wait(timeout=5)` 若超时（Unix 下进程忽略 SIGTERM），`wait` 抛 TimeoutExpired 被外层 except 吞掉，进程残留。Windows 下 `terminate()` 即 `TerminateProcess` 立即生效，实际风险极低。
+
+建议：except 中补 `self.proc.kill()` + 短 wait。
+
+---
+
+其余未见问题：
+- 服务器单线程阻塞 `for line in stdin`，无并发、无死锁、无资源泄漏。
+- stderr 泵（测试 76 行）持续读取，服务器启动仅写 1-2 行 stderr（407-410），管道不会满阻塞。
+- 测试客户端 queue + 后台读线程 + 30s 超时 + atexit 注册 + close 幂等（poll 前置检查），无竞态/僵尸风险。
+
+---
+
+### 维度 4：真实性与健壮性风险
+
+**[minor] test_mcp_server.py — 缺少 `arguments` 非 dict / 缺失 / null 的边界用例**
+
+依据：服务器 335-337 行有 `isinstance(args, dict)` 分支，但测试中 `call_tool` 始终传 dict。未覆盖：`arguments: "str"`、`arguments: [1]`、params 中无 arguments 键、`arguments: null`。这些路径若回归无测试守护。
+
+建议：增加 1-2 个用例，如 `c.request("tools/call", {"name":"ask_repo","arguments":"bad"})` 断言 isError + `invalid_arguments`；`c.request("tools/call", {"name":"ask_repo"})` 断言 isError（question 缺失）。
+
+---
+
+**[minor] test_mcp_server.py — 缺少非 str symbol / `id:null` 边界用例**
+
+依据：服务器 236 行校验 symbol 为 str，但无测试传 `{"symbol": 123}` 验证 isError。JSON-RPC `"id": null` 的请求（非通知）应获响应，无测试覆盖此边界。
+
+建议：补 `impact_analysis` symbol=123 → isError；补一条 `{"jsonrpc":"2.0","id":null,"method":"ping"}` 断言收到 `id:null` 的响应。
+
+---
+
+其余未见问题：
+- 测试为真实子进程 + 真实 stdio + 真实图谱，无 mock、无吞错；断言精确到具体计数（259/139/6/9/22/15/75）与具体调用方名称，不存在「假绿」风险。
+- UTF-8 处理正确：服务器 reconfigure（391 行）+ 测试端 PYTHONUTF8=1 + 二进制管道 decode utf-8，Windows GBK 问题已规避。
+- 超大 depth（9）已覆盖（307-313 行）；bool depth 排除有实现但无专项测试（可归入上述 minor 补充）。
+
+---
+
+### 总体结论
+
+协议主干正确、工具契约与 schema 高度一致、测试真实且断言扎实；主要缺陷集中在 `_handle_tools_call` 第 352 行与 `_StoreHolder.get()` 第 96 行两处 try/except 边界未完整包裹，存在理论上违反「工具层失败绝不冒泡 -32603」绝对契约的结构性缺口，修复成本极低（各扩一行 try），建议优先补上。

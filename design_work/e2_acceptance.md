@@ -92,7 +92,7 @@ tools/call ask_repo {"question": "终止清单这套设计是怎么演化来的"
 | B 设计溯源 | `ask_repo` | 「终止清单这套设计是怎么演化来的」 | topic 档、命中概念 + 4 条 DESCRIBES 提交 | 通过 |
 | C 关 MCP 对比 | grep vs `impact_analysis` | 同符号 `_handle_terminate` | grep 只给「在哪」，工具给调用闭包/受影响模块/截断信号 | 通过 |
 
-全部经**真实子进程 stdio JSON-RPC**产出，可由 `python design_work/e2_acceptance_probe.py` 复现；等价的断言化真测见 `tests/test_mcp_server.py`（15 用例，pytest 与独立 runner 双绿）。
+全部经**真实子进程 stdio JSON-RPC**产出，可由 `python design_work/e2_acceptance_probe.py` 复现；等价的断言化真测见 `tests/test_mcp_server.py`（16 用例，pytest 与独立 runner 双绿）。
 
 ---
 
@@ -127,7 +127,7 @@ tools/call ask_repo {"question": "终止清单这套设计是怎么演化来的"
 录屏前建议先确认服务器能起（避免录制时卡壳）：
 ```bash
 cd C:/Users/nirvana/Desktop/代码库知识图谱
-python tests/test_mcp_server.py     # 期望：ALL 15 MCP TESTS PASSED
+python tests/test_mcp_server.py     # 期望：ALL 16 MCP TESTS PASSED
 ```
 或手动喂一行 JSON-RPC（PowerShell/bash 均可，见文末「附录：裸协议自检」）。
 
